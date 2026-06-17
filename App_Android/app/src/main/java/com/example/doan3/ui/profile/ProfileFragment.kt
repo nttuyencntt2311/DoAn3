@@ -1,4 +1,4 @@
-package UI.profile
+package com.example.doan3.ui.profile
 
 import android.os.Bundle
 import android.view.LayoutInflater
