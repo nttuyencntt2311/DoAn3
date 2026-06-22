@@ -1,5 +1,6 @@
 package com.example.doan3
 
+import android.content.Intent // Đã thêm import này để dùng Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -27,13 +28,14 @@ class MainActivity : AppCompatActivity() {
                     replaceFragment(HomeFragment())
                     true
                 }
-                // Sau này bạn làm tiếp các trang Khám phá, AI, Hồ sơ thì thêm vào đây:
-                /*
-                R.id.nav_explore -> {
-                    replaceFragment(ExploreFragment())
+
+                // THÊM ĐOẠN NÀY: Xử lý khi bấm nút "Hồ sơ" để mở Activity hoso
+                R.id.nav_profile -> {
+                    val intent = Intent(this, com.example.doan3.ui.profile.hoso::class.java)
+                    startActivity(intent)
                     true
                 }
-                */
+
                 else -> false
             }
         }

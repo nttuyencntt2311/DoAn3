@@ -21,6 +21,42 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.profile.hoso"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.dangnhap"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.TaiKhoanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.ThongTinCaNhanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.DoiMatKhauActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".ui.profile.KhamPhaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.IeltsQuizActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.HelpCenterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.SendEmailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.DieuKhoanActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

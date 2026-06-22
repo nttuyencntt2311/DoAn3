@@ -1,5 +1,6 @@
 package com.example.doan3.ui.home
 
+import android.content.Intent // Đã thêm import này
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -73,7 +74,7 @@ class HomeFragment : Fragment() {
             binding.tvTimeLearned.text = "$hours giờ"
         }
 
-        // 3. XỬ LÝ SỰ KIỆN CLICK MỞ TRANG HỌC TẬP TỪ MỚI
+        // 3. XỬ LÝ SỰ KIỆN CLICK MỞ TRANG HỌC TẬP TỪ MỚI VÀ ĐĂNG KÝ
         binding.btnStartLearning.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.learning.LearningFragment())
@@ -81,19 +82,21 @@ class HomeFragment : Fragment() {
                 .commit()
         }
 
+        // Đã sửa thành Intent để mở RegisterActivity thành công
         binding.btnViewPro.setOnClickListener {
-            // Logic mở lộ trình PRO
+            val intent = Intent(requireContext(), com.example.doan3.ui.profile.RegisterActivity::class.java)
+            startActivity(intent)
         }
 
         // 4. SỰ KIỆN CLICK VÀO THẺ "TỪ VỰNG ĐÃ THUỘC" ĐỂ CHUYỂN TRANG
         binding.cardLearnedVocab.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, VocabularyFragment()) // nav_host_fragment là ID container ở MainActivity
-                .addToBackStack(null) // Ghi nhớ lịch sử để bấm nút Back điện thoại có thể quay lại
+                .replace(R.id.nav_host_fragment, VocabularyFragment())
+                .addToBackStack(null)
                 .commit()
         }
 
-        // 5. ĐÃ THÊM: SỰ KIỆN CLICK VÀO THẺ "THỜI GIAN HỌC" ĐỂ CHUYỂN SANG TRANG THỐNG KÊ
+        // 5. SỰ KIỆN CLICK VÀO THẺ "THỜI GIAN HỌC" ĐỂ CHUYỂN SANG TRANG THỐNG KÊ
         binding.cardTimeLearned.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
