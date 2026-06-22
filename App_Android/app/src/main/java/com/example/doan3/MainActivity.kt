@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
-import com.example.doan3.ui.profile.ProfileFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,32 +20,20 @@ class MainActivity : AppCompatActivity() {
             replaceFragment(HomeFragment())
         }
 
-        // Bắt sự kiện chuyển đổi giữa các tab khi bấm vào Bottom Navigation
+        // Bắt sự kiện chuyển đổi giữa các tab ở thanh menu dưới cùng (Bottom Navigation)
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
                     replaceFragment(HomeFragment())
                     true
                 }
-                R.id.nav_profile -> { 
-                    replaceFragment(ProfileFragment())
+                // Sau này bạn làm tiếp các trang Khám phá, AI, Hồ sơ thì thêm vào đây:
+                /*
+                R.id.nav_explore -> {
+                    replaceFragment(ExploreFragment())
                     true
                 }
-                else -> false
-            }
-        }
-        // Bên trong hàm onCreate, tìm đoạn setOnItemSelectedListener và cập nhật:
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    replaceFragment(HomeFragment())
-                    true
-                }
-                R.id.nav_profile -> {
-                    replaceFragment(ProfileFragment()) // Chuyển sang trang Hồ sơ
-                    true
-                }
-                // Thêm các tab khác ở đây nếu có
+                */
                 else -> false
             }
         }

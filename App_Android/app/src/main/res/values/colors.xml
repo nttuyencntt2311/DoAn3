@@ -49,4 +49,17 @@
     <color name="lexivt_danger">#DC2626</color>
 
     <string name="_50_xp_ti_m_n_ng">⚡ +50 XP tiềm năng</string>
+
+
+    <color name="card_blue_bg">#2563EB</color>
+    <color name="card_green_bg">#6EE7B7</color>
+    <color name="card_green_text_dark">#047857</color>
+    <color name="trend_card_bg">#E2E8F0</color>
+    <color name="trend_badge_bg">#059669</color>
+    <color name="chip_active_bg">#0256C4</color>
+    <color name="chip_inactive_bg">#E2E8F0</color>
+    <color name="progress_track">#E5E7EB</color>
+    <color name="progress_fill">#059669</color>
+    <color name="speaker_bg">#EFF6FF</color>
+    <color name="divider_color">#E5E7EB</color>
 </resources>
