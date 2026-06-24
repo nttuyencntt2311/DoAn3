@@ -1,4 +1,6 @@
 package com.example.doan3.ui.home
+
+import android.content.Intent // Đã thêm import này
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +11,7 @@ import android.view.animation.AnimationUtils
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.doan3.R
+import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.databinding.FragmentHomeBinding
 
 class HomeFragment : Fragment() {
@@ -34,14 +37,12 @@ class HomeFragment : Fragment() {
         val shakeAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.shake)
 
         // Áp dụng animation xuất hiện ban đầu (Fading & Sliding)
-        // Mình áp dụng cho 4 thẻ quan trọng: stats, pro, next lesson, card daily task
         binding.layoutStats.startAnimation(fadeInSlideAnim)
         binding.cardPro.startAnimation(fadeInSlideAnim)
         binding.cardNextLesson.startAnimation(fadeInSlideAnim)
         binding.cardDailyTask.startAnimation(fadeInSlideAnim)
 
         // 1. DỮ LIỆU ĐỘNG CHO THANH PROGRESS (Thanh chạy)
-        // Ta dùng Handler để tạo hiệu ứng thanh progress chạy lên
         viewModel.progressBarPercent.observe(viewLifecycleOwner) { percent ->
             var currentPercent = 0
             val handler = Handler(Looper.getMainLooper())
@@ -60,7 +61,7 @@ class HomeFragment : Fragment() {
             }, 500) // Delay 500ms trước khi chạy
         }
 
-        // 2. LẮNG NGHE DỮ LIỆU KHÁC (Giữ nguyên)
+        // 2. LẮNG NGHE DỮ LIỆU KHÁC
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             binding.tvUserName.text = name
         }
@@ -73,17 +74,34 @@ class HomeFragment : Fragment() {
             binding.tvTimeLearned.text = "$hours giờ"
         }
 
-        // 3. XỬ LÝ SỰ KIỆN CLICK (Thêm hiệu ứng Rung/Shake nếu muốn)
+        // 3. XỬ LÝ SỰ KIỆN CLICK MỞ TRANG HỌC TẬP TỪ MỚI VÀ ĐĂNG KÝ
         binding.btnStartLearning.setOnClickListener {
-            // Hiệu ứng click/ripple đã có sẵn
-            // Bạn có thể thêm hiệu ứng shake nếu muốn báo lỗi (ví dụ: cần PRO banner)
-            // binding.btnStartLearning.startAnimation(shakeAnim)
-
-            // Logic mở màn hình học tập
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, com.example.doan3.ui.learning.LearningFragment())
+                .addToBackStack(null)
+                .commit()
         }
 
+        // Đã sửa thành Intent để mở RegisterActivity thành công
         binding.btnViewPro.setOnClickListener {
-            // Logic mở lộ trình PRO
+            val intent = Intent(requireContext(), com.example.doan3.ui.profile.RegisterActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 4. SỰ KIỆN CLICK VÀO THẺ "TỪ VỰNG ĐÃ THUỘC" ĐỂ CHUYỂN TRANG
+        binding.cardLearnedVocab.setOnClickListener {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, VocabularyFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // 5. SỰ KIỆN CLICK VÀO THẺ "THỜI GIAN HỌC" ĐỂ CHUYỂN SANG TRANG THỐNG KÊ
+        binding.cardTimeLearned.setOnClickListener {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
 

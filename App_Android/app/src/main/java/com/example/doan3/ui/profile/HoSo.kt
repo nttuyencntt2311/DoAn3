@@ -1,0 +1,140 @@
+package com.example.doan3.ui.profile
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
+import com.example.doan3.MainActivity
+import com.example.doan3.R
+
+
+class hoso : AppCompatActivity() {
+
+    private lateinit var tvProfileName: TextView
+    private lateinit var tvAccountType: TextView
+    private lateinit var tvHeaderStreak: TextView
+    private lateinit var tvStatLevel: TextView
+    private lateinit var tvStatVocab: TextView
+    private lateinit var tvStatDays: TextView
+
+    private lateinit var btnUpgradePro: RelativeLayout
+    private lateinit var btnChangePassword: RelativeLayout
+    private lateinit var switchNotifications: SwitchCompat
+    private lateinit var btnHelpCenter: RelativeLayout
+    private lateinit var btnLogout: RelativeLayout
+    private lateinit var btnSettings: View
+
+    private lateinit var navTrangChu: LinearLayout
+    private lateinit var navKhamPha: LinearLayout
+    private lateinit var navTroLyAI: LinearLayout
+    private lateinit var navHoSo: LinearLayout
+    private lateinit var navTaiKhoan: LinearLayout
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.hoso)
+
+        anhXaGiaoDien()
+        loadDataFromApi()
+        setupListeners()
+        setupBottomNavigation()
+    }
+
+    private fun anhXaGiaoDien() {
+        tvProfileName = findViewById(R.id.tvProfileName)
+        tvAccountType = findViewById(R.id.tvAccountType)
+        tvHeaderStreak = findViewById(R.id.tvHeaderStreak)
+        tvStatLevel = findViewById(R.id.tvStatLevel)
+        tvStatVocab = findViewById(R.id.tvStatVocab)
+        tvStatDays = findViewById(R.id.tvStatDays)
+
+        btnUpgradePro = findViewById(R.id.btnUpgradePro)
+        btnChangePassword = findViewById(R.id.btnChangePassword)
+        switchNotifications = findViewById(R.id.switchNotifications)
+        btnHelpCenter = findViewById(R.id.btnHelpCenter)
+        btnLogout = findViewById(R.id.btnLogout)
+        btnSettings = findViewById(R.id.btnSettings)
+
+        navTrangChu = findViewById(R.id.btnTrangChu)
+        navKhamPha = findViewById(R.id.btnKhamPha)
+        navTroLyAI = findViewById(R.id.btnTroLyAI)
+        navHoSo = findViewById(R.id.btnHoSo)
+        navTaiKhoan = findViewById(R.id.btnTaiKhoan)
+    }
+
+    private fun loadDataFromApi() {
+        val mockName = "Phan Le Tu Van"
+        val mockRole = "Học viên"
+        val mockStreak = 5
+        val mockLevel = 12
+        val mockVocab = "2.4k"
+        val mockDays = 45
+
+        tvProfileName.text = mockName
+        tvAccountType.text = mockRole
+        tvHeaderStreak.text = "$mockStreak 🔥"
+        tvStatLevel.text = mockLevel.toString()
+        tvStatVocab.text = mockVocab
+        tvStatDays.text = mockDays.toString()
+    }
+
+    private fun setupListeners() {
+        btnUpgradePro.setOnClickListener {
+            Toast.makeText(this, "Chuyển sang trang thanh toán PRO", Toast.LENGTH_SHORT).show()
+        }
+
+        // ==========================================
+        // ĐÃ SỬA CHỖ NÀY: MỞ TRANG ĐỔI MẬT KHẨU
+        // ==========================================
+        btnChangePassword.setOnClickListener {
+            val intent = Intent(this, DoiMatKhauActivity::class.java)
+            startActivity(intent)
+        }
+
+        switchNotifications.setOnCheckedChangeListener { _, isChecked ->
+            val msg = if (isChecked) "Đã bật nhắc nhở học tập" else "Đã tắt nhắc nhở"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+        btnHelpCenter.setOnClickListener {
+            startActivity(Intent(this, HelpCenterActivity::class.java))
+        }
+        btnSettings.setOnClickListener {
+            startActivity(Intent(this, TaiKhoanActivity::class.java))
+        }
+        btnLogout.setOnClickListener {
+            Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, dangnhap::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    private fun setupBottomNavigation() {
+        navTrangChu.setOnClickListener {
+            Toast.makeText(this, "Trang chủ đang phát triển", Toast.LENGTH_SHORT).show()
+        }
+        navKhamPha.setOnClickListener {
+            startActivity(Intent(this, KhamPhaActivity::class.java))
+            overridePendingTransition(0, 0)
+        }
+        navTroLyAI.setOnClickListener {
+            Toast.makeText(this, "Trợ lý AI đang phát triển", Toast.LENGTH_SHORT).show()
+        }
+        navHoSo.setOnClickListener {
+            // Đang ở Hồ sơ nên không làm gì
+        }
+        navTaiKhoan.setOnClickListener {
+            startActivity(Intent(this, TaiKhoanActivity::class.java))
+            overridePendingTransition(0, 0)
+        }
+    }
+}

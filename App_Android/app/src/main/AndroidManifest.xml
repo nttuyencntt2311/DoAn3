@@ -14,12 +14,48 @@
 
         <activity
             android:name=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.hoso"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.profile.dangnhap"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.profile.RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.TaiKhoanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.ThongTinCaNhanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.DoiMatKhauActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.KhamPhaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.IeltsQuizActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.HelpCenterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.SendEmailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.DieuKhoanActivity"
+            android:exported="false" />
 
     </application>
 

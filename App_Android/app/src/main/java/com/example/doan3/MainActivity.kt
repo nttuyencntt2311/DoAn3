@@ -1,11 +1,13 @@
 package com.example.doan3
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
-import com.example.doan3.ui.profile.ProfileFragment
+// Import sẵn hoso để dùng ở dưới
+import com.example.doan3.ui.profile.hoso
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,41 +23,45 @@ class MainActivity : AppCompatActivity() {
             replaceFragment(HomeFragment())
         }
 
-        // Bắt sự kiện chuyển đổi giữa các tab khi bấm vào Bottom Navigation
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    replaceFragment(HomeFragment())
-                    true
-                }
-                R.id.nav_profile -> { 
-                    replaceFragment(ProfileFragment())
-                    true
-                }
-                else -> false
-            }
+        /* * BẮT SỰ KIỆN CHO THANH MENU CUSTOM BẰNG LINEARLAYOUT
+         * Sử dụng đúng ID từ menu nãy: btnTrangChu, btnKhamPha, btnTroLyAI, btnHoSo, btnTaiKhoan
+         */
+
+        // 1. Nút Trang chủ
+        binding.btnTrangChu.setOnClickListener {
+            replaceFragment(HomeFragment())
         }
-        // Bên trong hàm onCreate, tìm đoạn setOnItemSelectedListener và cập nhật:
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    replaceFragment(HomeFragment())
-                    true
-                }
-                R.id.nav_profile -> {
-                    replaceFragment(ProfileFragment()) // Chuyển sang trang Hồ sơ
-                    true
-                }
-                // Thêm các tab khác ở đây nếu có
-                else -> false
-            }
+
+        // 2. Nút Khám phá
+        binding.btnKhamPha.setOnClickListener {
+            // Thay thế bằng Fragment Khám phá của bạn (nếu có)
+            // replaceFragment(KhamPhaFragment())
+        }
+
+        // 3. Nút Trợ lý AI
+        binding.btnTroLyAI.setOnClickListener {
+            // Thay thế bằng Fragment Trợ lý AI (nếu có)
+            // replaceFragment(AiFragment())
+        }
+
+        // 4. Nút Hồ sơ (Mở Activity hoso như bạn yêu cầu)
+        binding.btnHoSo.setOnClickListener {
+            val intent = Intent(this, hoso::class.java)
+            startActivity(intent)
+        }
+
+        // 5. Nút Tài khoản
+        binding.btnTaiKhoan.setOnClickListener {
+            // Xử lý mở màn hình Tài khoản (nếu có)
+            // val intent = Intent(this, TaiKhoanActivity::class.java)
+            // startActivity(intent)
         }
     }
 
-    // Hàm hỗ trợ đổi Fragment mượt mà
+    // Hàm hỗ trợ đổi Fragment mượt mà trong Activity
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.nav_host_fragment, fragment)
+            .replace(R.id.nav_host_fragment, fragment) // ID này phải khớp với FragmentContainerView trong activity_main.xml
             .commit()
     }
 }
