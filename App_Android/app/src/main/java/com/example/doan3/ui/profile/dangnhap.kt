@@ -30,7 +30,7 @@ class dangnhap : AppCompatActivity() {
             Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
 
             // Chuyển thẳng vào không gian học tập (Khám Phá)
-            val intent = Intent(this, KhamPhaActivity::class.java)
+            val intent = Intent(this, com.example.doan3.MainActivity::class.java)
             startActivity(intent)
 
             // Đóng trang đăng nhập này lại để ấn nút Back không bị quay lùi về đây
