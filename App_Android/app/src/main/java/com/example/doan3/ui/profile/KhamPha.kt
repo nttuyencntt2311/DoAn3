@@ -12,6 +12,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.card.MaterialCardView
 import com.example.doan3.R
+import com.example.doan3.MainActivity
+
 
 
 class KhamPhaActivity : AppCompatActivity() {
@@ -32,10 +34,12 @@ class KhamPhaActivity : AppCompatActivity() {
         // 2. Xử lý chuyển trang Trang Chủ (Tạm thời đang link về Đăng nhập)
         val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         btnTrangChu.setOnClickListener {
-            val intent = Intent(this, dangnhap::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-            finish()
+            overridePendingTransition(0, 0)
+
         }
+
 
         // ======================================================
         // THÊM MỚI: Xử lý chuyển sang trang Hồ Sơ

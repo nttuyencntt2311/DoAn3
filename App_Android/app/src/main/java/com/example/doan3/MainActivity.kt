@@ -8,6 +8,8 @@ import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
 // Import sẵn hoso để dùng ở dưới
 import com.example.doan3.ui.profile.hoso
+import com.example.doan3.ui.profile.KhamPhaActivity
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,8 +36,11 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Nút Khám phá
         binding.btnKhamPha.setOnClickListener {
-            // Thay thế bằng Fragment Khám phá của bạn (nếu có)
-            // replaceFragment(KhamPhaFragment())
+            // Khởi tạo Intent trỏ tới đúng tên class là KhamPhaActivity
+            val intent = Intent(this, KhamPhaActivity::class.java)
+
+            // Lệnh yêu cầu Android mở trang đó lên
+            startActivity(intent)
         }
 
         // 3. Nút Trợ lý AI

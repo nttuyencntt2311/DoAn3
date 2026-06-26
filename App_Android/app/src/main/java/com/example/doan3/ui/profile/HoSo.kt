@@ -120,7 +120,17 @@ class hoso : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         navTrangChu.setOnClickListener {
-            Toast.makeText(this, "Trang chủ đang phát triển", Toast.LENGTH_SHORT).show()
+            // Khởi tạo Intent để gọi về MainActivity (Trang chủ)
+            val intent = Intent(this, MainActivity::class.java)
+
+            // Dùng cờ này để nếu MainActivity đang chạy ở dưới thì gọi nó lên luôn,
+            // tránh việc tạo ra nhiều màn hình MainActivity xếp chồng lên nhau gây nặng máy
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+            startActivity(intent)
+
+            // Tắt hiệu ứng trượt màn hình mặc định để cảm giác chuyển Tab được mượt mà hơn
+            overridePendingTransition(0, 0)
         }
         navKhamPha.setOnClickListener {
             startActivity(Intent(this, KhamPhaActivity::class.java))
