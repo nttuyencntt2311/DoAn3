@@ -2,18 +2,31 @@ package com.example.doan3.ui.vocabulary
 
 import java.io.Serializable
 
-// Định nghĩa cấu trúc của 1 từ vựng
 data class Vocabulary(
     val word: String,
     val pronunciation: String,
-    val meaning: String,
-    val proficiency: Int, // Mức độ thông thạo (%)
+    val meaning: String, // Định nghĩa tiếng Việt
+    val defEng: String,  // Định nghĩa tiếng Anh
+    val proficiency: Int,
+    val type: String = "Noun",
 
-    // THÊM CÁC TRƯỜNG DÀNH CHO TRANG CHI TIẾT TỪ VỰNG
-    val type: String = "NOUN",
-    val exampleEng: String = "The campaign is gaining momentum as more people join.",
-    val exampleVi: String = "Chiến dịch đang lấy được đà khi có thêm nhiều người tham gia.",
+    // Danh sách ví dụ (chứa tiếng Anh và tiếng Việt)
+    val examples: List<ExampleSentence> = listOf(),
+
+    // Đồng nghĩa & Trái nghĩa
+    val synonyms: List<String> = listOf(),
+    val antonyms: List<String> = listOf(),
+
+    // AI Tip & Score
+    val aiTip: String = "",
+    val popularityScore: Int = 0,
+    val popularityText: String = "Độ phổ biến: Cao",
+
     val imageUrl: String = "",
-    val imageCaption: String = "Hình ảnh minh họa",
-    val lastReviewTime: String = "22:45 • Hôm qua"
-) : Serializable // Cần có Serializable để có thể gửi dữ liệu từ trang này sang trang kia
+    val lastReviewTime: String = ""
+) : Serializable
+
+data class ExampleSentence(
+    val eng: String,
+    val vi: String
+) : Serializable

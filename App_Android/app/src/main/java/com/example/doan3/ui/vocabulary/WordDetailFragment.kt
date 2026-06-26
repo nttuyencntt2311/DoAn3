@@ -1,5 +1,7 @@
 package com.example.doan3.ui.vocabulary
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,17 +9,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.doan3.databinding.FragmentWordDetailBinding
+import com.google.android.material.chip.Chip
 
 class WordDetailFragment : Fragment() {
 
     private var _binding: FragmentWordDetailBinding? = null
     private val binding get() = _binding!!
 
-    // Biến để chứa từ vựng được truyền sang
     private var vocabulary: Vocabulary? = null
 
     companion object {
-        // Hàm đóng gói dữ liệu để truyền
         fun newInstance(vocab: Vocabulary): WordDetailFragment {
             val fragment = WordDetailFragment()
             val args = Bundle()
@@ -29,7 +30,6 @@ class WordDetailFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Mở gói và lấy dữ liệu ra
         arguments?.let {
             vocabulary = it.getSerializable("VOCAB_DATA") as? Vocabulary
         }
@@ -46,31 +46,76 @@ class WordDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. GẮN DỮ LIỆU ĐÃ NHẬN LÊN GIAO DIỆN
         vocabulary?.let { vocab ->
+            // Thông tin cơ bản
             binding.tvWordTitle.text = vocab.word
             binding.tvPronunciation.text = vocab.pronunciation
-            binding.tvDefinition.text = vocab.meaning
             binding.tvWordType.text = vocab.type
-            binding.tvExampleEng1.text = vocab.exampleEng
-            binding.tvExampleVi1.text = vocab.exampleVi
-            binding.tvMasteryPercent.text = "${vocab.proficiency}%"
-            binding.tvLastReviewTime.text = vocab.lastReviewTime
-            binding.tvImageCaption.text = vocab.imageCaption
+
+            // Định nghĩa
+            binding.tvDefinitionVi.text = vocab.meaning
+            binding.tvDefinitionEn.text = vocab.defEng
+
+            // Ví dụ (Kiểm tra xem có đủ 2 ví dụ không để hiển thị)
+            if (vocab.examples.isNotEmpty()) {
+                binding.cardExample1.visibility = View.VISIBLE
+                binding.tvEx1Eng.text = "\"${vocab.examples[0].eng}\""
+                binding.tvEx1Vi.text = vocab.examples[0].vi
+            } else {
+                binding.cardExample1.visibility = View.GONE
+            }
+
+            if (vocab.examples.size > 1) {
+                binding.cardExample2.visibility = View.VISIBLE
+                binding.tvEx2Eng.text = "\"${vocab.examples[1].eng}\""
+                binding.tvEx2Vi.text = vocab.examples[1].vi
+            } else {
+                binding.cardExample2.visibility = View.GONE
+            }
+
+            // Đồng nghĩa (Màu xanh)
+            binding.cgSynonyms.removeAllViews()
+            for (syn in vocab.synonyms) {
+                val chip = Chip(requireContext()).apply {
+                    text = syn
+                    setTextColor(Color.parseColor("#008A27"))
+                    chipBackgroundColor = ColorStateList.valueOf(Color.parseColor("#66FFA6"))
+                    isCheckable = false
+                    isCloseIconVisible = false
+                }
+                binding.cgSynonyms.addView(chip)
+            }
+
+            // Trái nghĩa (Màu đỏ)
+            binding.cgAntonyms.removeAllViews()
+            for (ant in vocab.antonyms) {
+                val chip = Chip(requireContext()).apply {
+                    text = ant
+                    setTextColor(Color.parseColor("#D32F2F"))
+                    chipBackgroundColor = ColorStateList.valueOf(Color.parseColor("#FFCDD2"))
+                    isCheckable = false
+                    isCloseIconVisible = false
+                }
+                binding.cgAntonyms.addView(chip)
+            }
+
+            // AI Tip & Điểm
+            binding.tvAiTipContent.text = vocab.aiTip
+            binding.popularityProgressBar.progress = vocab.popularityScore
+            binding.tvPopularityDesc.text = vocab.popularityText
         }
 
-        // 2. Xử lý nút mũi tên quay về danh sách
+        // Các nút bấm
         binding.btnBack.setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        // 3. Nút bấm chức năng (Chưa có tính năng nên hiện chữ lên cho vui)
         binding.btnPlayAudio.setOnClickListener {
             Toast.makeText(requireContext(), "Phát âm: ${vocabulary?.word}", Toast.LENGTH_SHORT).show()
         }
 
-        binding.btnAddToFlashcard.setOnClickListener {
-            Toast.makeText(requireContext(), "Đã thêm vào Flashcard!", Toast.LENGTH_SHORT).show()
+        binding.btnSave.setOnClickListener {
+            Toast.makeText(requireContext(), "Đã lưu từ vựng!", Toast.LENGTH_SHORT).show()
         }
     }
 

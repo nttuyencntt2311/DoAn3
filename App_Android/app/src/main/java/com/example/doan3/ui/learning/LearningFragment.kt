@@ -1,13 +1,20 @@
 package com.example.doan3.ui.learning
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.Button
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.doan3.R
 import com.example.doan3.databinding.FragmentLearningBinding
+import com.google.android.material.button.MaterialButton
 
 class LearningFragment : Fragment() {
 
@@ -27,69 +34,94 @@ class LearningFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        observeViewModel()
+        // Setup RecyclerView
+        val adapter = LessonAdapter()
+        binding.rvLessons.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvLessons.adapter = adapter
 
-        // 1. Nút quay lại trang chủ
-        binding.btnBack.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+        // Theo dõi dữ liệu từ ViewModel và cập nhật danh sách
+        viewModel.learningList.observe(viewLifecycleOwner) { lessons ->
+            adapter.submitList(lessons)
         }
-
-        // 2. Nút "Xem nghĩa" (Chuyển đổi ẩn/hiện nghĩa)
-        binding.btnShowMeaning.setOnClickListener {
-            if (binding.tvMeaning.visibility == View.GONE) {
-                binding.tvMeaning.visibility = View.VISIBLE
-                binding.ivWordImage.visibility = View.GONE // Ẩn ảnh để nhường chỗ cho chữ
-                binding.btnShowMeaning.text = "Ẩn nghĩa"
-            } else {
-                binding.tvMeaning.visibility = View.GONE
-                binding.ivWordImage.visibility = View.VISIBLE
-                binding.btnShowMeaning.text = "Xem nghĩa"
-            }
-        }
-
-        // 3. Nút Phát âm
-        binding.btnPlayAudio.setOnClickListener {
-            val word = binding.tvWord.text.toString()
-            Toast.makeText(requireContext(), "Phát âm: $word", Toast.LENGTH_SHORT).show()
-        }
-
-        // 4. Mũi tên điều hướng
-        binding.btnNext.setOnClickListener {
-            viewModel.nextWord()
-            resetCardState() // Đổi từ thì phải giấu cái nghĩa đi
-        }
-
-        binding.btnPrev.setOnClickListener {
-            viewModel.prevWord()
-            resetCardState()
-        }
-    }
-
-    private fun observeViewModel() {
-        viewModel.currentIndex.observe(viewLifecycleOwner) { index ->
-            val list = viewModel.learningList.value
-            if (!list.isNullOrEmpty()) {
-                val currentVocab = list[index]
-
-                // Cập nhật UI Flashcard
-                binding.tvWord.text = currentVocab.word
-                binding.tvPronunciation.text = currentVocab.pronunciation
-                binding.tvMeaning.text = currentVocab.meaning
-
-                // Cập nhật thanh tiến độ (VD: 1/3)
-                binding.tvProgress.text = "${index + 1}/${list.size}"
-            }
-        }
-    }
-
-    private fun resetCardState() {
-        binding.tvMeaning.visibility = View.GONE
-        binding.ivWordImage.visibility = View.VISIBLE
-        binding.btnShowMeaning.text = "Xem nghĩa"
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    // Adapter nội bộ để hiển thị danh sách (Thực tế nên tách ra file riêng)
+    inner class LessonAdapter : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
+
+        private var lessonList = listOf<Lesson>()
+
+        fun submitList(list: List<Lesson>) {
+            lessonList = list
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_lesson, parent, false)
+            return LessonViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
+            val lesson = lessonList[position]
+            holder.bind(lesson)
+        }
+
+        override fun getItemCount() = lessonList.size
+
+        inner class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            private val tvDifficulty: TextView = itemView.findViewById(R.id.tvDifficulty)
+            private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
+            private val tvSubtitle: TextView = itemView.findViewById(R.id.tvSubtitle)
+            private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
+            private val progressBar: ProgressBar = itemView.findViewById(R.id.progressBar)
+            private val tvVocabCount: TextView = itemView.findViewById(R.id.tvVocabCount)
+            private val tvExerciseCount: TextView = itemView.findViewById(R.id.tvExerciseCount)
+            private val btnAction: MaterialButton = itemView.findViewById(R.id.btnAction)
+
+            fun bind(lesson: Lesson) {
+                tvTitle.text = lesson.title
+                tvSubtitle.text = "${lesson.category} • Bài ${lesson.lessonNumber}"
+                tvProgressPercent.text = "${lesson.progressPercent}%"
+                progressBar.progress = lesson.progressPercent
+                tvVocabCount.text = "${lesson.vocabCount} từ vựng"
+                tvExerciseCount.text = "${lesson.exerciseCount} bài tập"
+
+                // Cấu hình Badge Độ khó (Màu sắc)
+                tvDifficulty.text = lesson.difficultyLevel
+                when (lesson.difficultyLevel) {
+                    "DỄ" -> {
+                        tvDifficulty.setTextColor(Color.parseColor("#117A65"))
+                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#D1F2EB"))
+                    }
+                    "TRUNG BÌNH" -> {
+                        tvDifficulty.setTextColor(Color.parseColor("#B9770E"))
+                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FDEBD0"))
+                    }
+                    "KHÓ" -> {
+                        tvDifficulty.setTextColor(Color.parseColor("#943126"))
+                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FADBD8"))
+                    }
+                }
+
+                // Cấu hình Nút bấm (Style)
+                btnAction.text = lesson.buttonText
+                if (lesson.isButtonOutlined) {
+                    // Style Outline (Nền trắng, viền xanh)
+                    btnAction.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+                    btnAction.strokeWidth = 3
+                    btnAction.strokeColor = android.content.res.ColorStateList.valueOf(Color.parseColor("#0056D2"))
+                    btnAction.setTextColor(Color.parseColor("#0056D2"))
+                } else {
+                    // Style Filled (Nền xanh đậm, chữ trắng)
+                    btnAction.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0056D2"))
+                    btnAction.strokeWidth = 0
+                    btnAction.setTextColor(Color.WHITE)
+                }
+            }
+        }
     }
 }

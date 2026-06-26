@@ -56,7 +56,7 @@ class hoso : AppCompatActivity() {
         tvStatVocab = findViewById(R.id.tvStatVocab)
         tvStatDays = findViewById(R.id.tvStatDays)
 
-        btnUpgradePro = findViewById(R.id.btnUpgradePro)
+//        btnUpgradePro = findViewById(R.id.btnUpgradePro)
         btnChangePassword = findViewById(R.id.btnChangePassword)
         switchNotifications = findViewById(R.id.switchNotifications)
         btnHelpCenter = findViewById(R.id.btnHelpCenter)
@@ -87,9 +87,9 @@ class hoso : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        btnUpgradePro.setOnClickListener {
-            Toast.makeText(this, "Chuyển sang trang thanh toán PRO", Toast.LENGTH_SHORT).show()
-        }
+//        btnUpgradePro.setOnClickListener {
+//            Toast.makeText(this, "Chuyển sang trang thanh toán PRO", Toast.LENGTH_SHORT).show()
+//        }
 
         // ==========================================
         // ĐÃ SỬA CHỖ NÀY: MỞ TRANG ĐỔI MẬT KHẨU
@@ -120,15 +120,35 @@ class hoso : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         navTrangChu.setOnClickListener {
-            Toast.makeText(this, "Trang chủ đang phát triển", Toast.LENGTH_SHORT).show()
+            // Khởi tạo Intent để gọi về MainActivity (Trang chủ)
+            val intent = Intent(this, MainActivity::class.java)
+
+            // Dùng cờ này để nếu MainActivity đang chạy ở dưới thì gọi nó lên luôn,
+            // tránh việc tạo ra nhiều màn hình MainActivity xếp chồng lên nhau gây nặng máy
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+            startActivity(intent)
+
+            // Tắt hiệu ứng trượt màn hình mặc định để cảm giác chuyển Tab được mượt mà hơn
+            overridePendingTransition(0, 0)
         }
         navKhamPha.setOnClickListener {
             startActivity(Intent(this, KhamPhaActivity::class.java))
             overridePendingTransition(0, 0)
         }
         navTroLyAI.setOnClickListener {
-            Toast.makeText(this, "Trợ lý AI đang phát triển", Toast.LENGTH_SHORT).show()
+            // Chuyển hướng sang TroLyAIActivity
+            val intent = Intent(this, TroLyAIActivity::class.java)
+
+            // Sử dụng cờ REORDER_TO_FRONT để chuyển tab mượt mà, tránh mở đè nhiều màn hình giống nhau
+            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+
+            startActivity(intent)
+
+            // Tắt hiệu ứng trượt để trải nghiệm giống thanh điều hướng Bottom Navigation thực tế
+            overridePendingTransition(0, 0)
         }
+
         navHoSo.setOnClickListener {
             // Đang ở Hồ sơ nên không làm gì
         }
