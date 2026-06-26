@@ -43,17 +43,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 3. Nút Trợ lý AI (Đã gộp code của Vân)
-//        binding.btnTroLyAI.setOnClickListener {
-//            val intent = Intent(this, TroLyAIActivity::class.java)
-//            startActivity(intent)
-//            // Không gọi finish() để khi nhấn back vẫn quay về được Trang chủ
-//        }
-
-        // 3. Nút Trợ lý AI (Mở giao diện Tạo Quiz mới)
         binding.btnTroLyAI.setOnClickListener {
-            val intent = Intent(this, TaoQuizActivity::class.java)
+            val intent = Intent(this, TroLyAIActivity::class.java)
             startActivity(intent)
+            // Không gọi finish() để khi nhấn back vẫn quay về được Trang chủ
         }
+
+//        // 3. Nút Trợ lý AI (Mở giao diện Tạo Quiz mới)
+//        binding.btnTroLyAI.setOnClickListener {
+//            val intent = Intent(this, TaoQuizActivity::class.java)
+//            startActivity(intent)
+//        }
 
         // 4. Nút Hồ sơ
         binding.btnHoSo.setOnClickListener {

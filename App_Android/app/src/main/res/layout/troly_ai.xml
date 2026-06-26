@@ -4,57 +4,356 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8FAFC"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:fitsSystemWindows="true">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:fillViewport="true"
         android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingHorizontal="24dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="40dp">
 
-            <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Xin chào, tôi là LexiVT AI" android:textStyle="bold" android:textSize="20sp" android:textColor="#1E293B"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_lexi_book"
+                        app:tint="#0056B3" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="LexiVT"
+                        android:textColor="#0056B3"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1dp">
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_person" />
+                </com.google.android.material.card.MaterialCardView>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xin chào, tôi là "
+                    android:textColor="#1E293B"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LexiVT AI"
+                    android:textColor="#007BFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Hệ thống trợ lý ngôn ngữ thông minh giúp bạn làm chủ tiếng Anh mỗi ngày."
+                android:textColor="#64748B"
+                android:textSize="14sp"
+                android:lineSpacingExtra="4dp"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="26dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="16dp">
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_toStartOf="@id/btnQuickSend"
+                        android:background="@null"
+                        android:hint="Hỏi AI bất cứ điều gì (VD: Cách dùng...)"
+                        android:textColorHint="#94A3B8"
+                        android:textSize="14sp" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnQuickSend"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        app:cardBackgroundColor="#007BFF"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp">
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_lexi_send"
+                            app:tint="#FFFFFF" />
+                    </com.google.android.material.card.MaterialCardView>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical">
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#EFF6FF" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_book" app:tint="#2563EB"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Giải thích từ vựng" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Phân tích sâu nghĩa, từ loại và nguồn gốc." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#ECFEFF" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_chat" app:tint="#0891B2"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ví dụ ngữ cảnh" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Xem cách dùng từ trong giao tiếp thực tế." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#FFF7ED" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_quiz" app:tint="#EA580C"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tạo Quiz" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Biến tài liệu thành bài kiểm tra nhanh." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#F0FDF4" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_flashcard" app:tint="#16A34A"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flashcard" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Tạo bộ thẻ ghi nhớ thông minh từ bài học." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#FEF2F2" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_path" app:tint="#DC2626"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lộ trình học" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Kế hoạch học tập tối ưu cho mục tiêu của bạn." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp" android:clickable="true" android:foreground="?attr/selectableItemBackground">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="40dp" android:layout_height="40dp" app:cardBackgroundColor="#FEFCE8" app:cardCornerRadius="10dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_qa" app:tint="#CA8A04"/>
+                        </com.google.android.material.card.MaterialCardView>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hỏi đáp" android:textColor="#1E293B" android:textStyle="bold" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Giải đáp mọi thắc mắc về văn hóa &amp; ngôn ngữ." android:textColor="#64748B" android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_lexi_chat" app:tint="#007BFF"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Trò chuyện trực tiếp" android:textColor="#1E293B" android:textSize="18sp" android:textStyle="bold"/>
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:text="Lịch sử ↺" android:textColor="#007BFF" android:textSize="13sp" android:textStyle="bold"/>
             </RelativeLayout>
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="15dp"
-                app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
-                <EditText android:layout_width="match_parent" android:layout_height="match_parent"
-                    android:hint="Hỏi AI bất cứ điều gì..." android:padding="15dp" android:background="@null"/>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp">
 
-            <androidx.gridlayout.widget.GridLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="20dp" app:columnCount="2">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="150dp" android:layout_height="120dp" android:layout_margin="8dp"
-                    app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="15dp" android:gravity="center">
-                        <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@android:drawable/ic_menu_agenda"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Giải thích" android:textStyle="bold" android:layout_marginTop="10dp"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="28dp" android:layout_height="28dp" app:cardBackgroundColor="#EFF6FF" app:cardCornerRadius="14dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="14dp" android:layout_height="14dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_book" app:tint="#2563EB"/>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:background="@drawable/chat_bubble_ai"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="12dp"
+                            android:text="Chào bạn! Tôi có thể giúp gì cho việc học tiếng Anh của bạn hôm nay? Bạn có muốn tôi giải thích một từ nào đó không?"
+                            android:textColor="#334155"
+                            android:textSize="14sp"
+                            android:lineSpacingExtra="4dp"/>
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </androidx.gridlayout.widget.GridLayout>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trò chuyện trực tiếp" android:textStyle="bold" android:layout_marginTop="20dp"/>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
-                app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="15dp">
-                    <TextView android:background="#F1F5F9" android:padding="10dp" android:text="Chào bạn! Tôi có thể giúp gì cho việc học của bạn?" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                    <TextView android:background="#007BFF" android:padding="10dp" android:text="Phân biệt Efficient và Effective với nhé!" android:textColor="#FFFFFF" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:layout_marginTop="10dp"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="end"
+                        android:layout_marginBottom="24dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/chat_bubble_user"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="12dp"
+                            android:text="Phân biệt giúp mình 'Efficient' và 'Effective' với nhé!"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:lineSpacingExtra="4dp"/>
+
+                        <com.google.android.material.card.MaterialCardView android:layout_width="28dp" android:layout_height="28dp" app:cardCornerRadius="14dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@drawable/ic_person"/>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9" android:layout_marginBottom="12dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_input_add" app:tint="#64748B"/>
+
+                        <EditText
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="12dp"
+                            android:background="@drawable/chat_bubble_ai"
+                            android:hint="Nhập câu trả lời..."
+                            android:paddingHorizontal="16dp"
+                            android:textColorHint="#94A3B8"
+                            android:textSize="14sp"
+                            android:singleLine="true"/>
+
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lexi_mic" app:tint="#64748B" android:layout_marginEnd="12dp"/>
+                        <com.google.android.material.card.MaterialCardView android:layout_width="32dp" android:layout_height="32dp" app:cardBackgroundColor="#007BFF" app:cardCornerRadius="16dp" app:cardElevation="0dp">
+                            <ImageView android:layout_width="14dp" android:layout_height="14dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_send" app:tint="#FFFFFF"/>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:background="@color/white"
+        android:elevation="24dp"
+        android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/btnTrangChu" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" app:tint="#94A3B8" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Trang chủ" android:textColor="#94A3B8" android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/btnKhamPha" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_explore" app:tint="#94A3B8" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Khám phá" android:textColor="#94A3B8" android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/btnTroLyAI" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" app:cardBackgroundColor="#EFF6FF" app:cardCornerRadius="20dp" app:cardElevation="0dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingVertical="8dp">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_robot" app:tint="#2563EB" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Trợ lý AI" android:textColor="#2563EB" android:textSize="11sp" android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/btnHoSo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_person" app:tint="#94A3B8"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Hồ sơ" android:textSize="11sp" android:textColor="#94A3B8"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/btnTaiKhoan" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_account" app:tint="#94A3B8"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Tài khoản" android:textSize="11sp" android:textColor="#94A3B8"/>
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>
