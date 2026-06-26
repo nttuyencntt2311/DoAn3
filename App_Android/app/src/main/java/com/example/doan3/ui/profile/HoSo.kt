@@ -137,8 +137,18 @@ class hoso : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
         navTroLyAI.setOnClickListener {
-            Toast.makeText(this, "Trợ lý AI đang phát triển", Toast.LENGTH_SHORT).show()
+            // Chuyển hướng sang TroLyAIActivity
+            val intent = Intent(this, TroLyAIActivity::class.java)
+
+            // Sử dụng cờ REORDER_TO_FRONT để chuyển tab mượt mà, tránh mở đè nhiều màn hình giống nhau
+            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+
+            startActivity(intent)
+
+            // Tắt hiệu ứng trượt để trải nghiệm giống thanh điều hướng Bottom Navigation thực tế
+            overridePendingTransition(0, 0)
         }
+
         navHoSo.setOnClickListener {
             // Đang ở Hồ sơ nên không làm gì
         }
