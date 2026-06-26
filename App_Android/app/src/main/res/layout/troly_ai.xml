@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Xin chào, tôi là LexiVT AI" android:textStyle="bold" android:textSize="20sp" android:textColor="#1E293B"/>
+            </RelativeLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="15dp"
+                app:cardCornerRadius="12dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
+                <EditText android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:hint="Hỏi AI bất cứ điều gì..." android:padding="15dp" android:background="@null"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <androidx.gridlayout.widget.GridLayout
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="20dp" app:columnCount="2">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="150dp" android:layout_height="120dp" android:layout_margin="8dp"
+                    app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="15dp" android:gravity="center">
+                        <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@android:drawable/ic_menu_agenda"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Giải thích" android:textStyle="bold" android:layout_marginTop="10dp"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </androidx.gridlayout.widget.GridLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trò chuyện trực tiếp" android:textStyle="bold" android:layout_marginTop="20dp"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="#E2E8F0" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="15dp">
+                    <TextView android:background="#F1F5F9" android:padding="10dp" android:text="Chào bạn! Tôi có thể giúp gì cho việc học của bạn?" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:background="#007BFF" android:padding="10dp" android:text="Phân biệt Efficient và Effective với nhé!" android:textColor="#FFFFFF" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:layout_marginTop="10dp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

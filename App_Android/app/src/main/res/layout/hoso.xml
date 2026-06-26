@@ -447,66 +447,66 @@
                     android:orientation="vertical"
                     android:paddingVertical="16dp">
 
-                    <RelativeLayout
-                        android:id="@+id/btnUpgradePro"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:paddingHorizontal="24dp"
-                        android:paddingVertical="12dp">
+<!--                    <RelativeLayout-->
+<!--                        android:id="@+id/btnUpgradePro"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:clickable="true"-->
+<!--                        android:foreground="?attr/selectableItemBackground"-->
+<!--                        android:paddingHorizontal="24dp"-->
+<!--                        android:paddingVertical="12dp">-->
 
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/icPro"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:layout_centerVertical="true"
-                            app:cardBackgroundColor="#F3E8FF"
-                            app:cardCornerRadius="22dp"
-                            app:cardElevation="0dp">
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_pro_badge"
-                                app:tint="#8B5CF6" />
-                        </com.google.android.material.card.MaterialCardView>
+<!--                        <com.google.android.material.card.MaterialCardView-->
+<!--                            android:id="@+id/icPro"-->
+<!--                            android:layout_width="44dp"-->
+<!--                            android:layout_height="44dp"-->
+<!--                            android:layout_centerVertical="true"-->
+<!--                            app:cardBackgroundColor="#F3E8FF"-->
+<!--                            app:cardCornerRadius="22dp"-->
+<!--                            app:cardElevation="0dp">-->
+<!--                            <ImageView-->
+<!--                                android:layout_width="22dp"-->
+<!--                                android:layout_height="22dp"-->
+<!--                                android:layout_gravity="center"-->
+<!--                                android:src="@drawable/ic_pro_badge"-->
+<!--                                app:tint="#8B5CF6" />-->
+<!--                        </com.google.android.material.card.MaterialCardView>-->
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerVertical="true"
-                            android:layout_marginStart="16dp"
-                            android:layout_toEndOf="@id/icPro"
-                            android:text="Nâng cấp gói PRO"
-                            android:textColor="#1E293B"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+<!--                        <TextView-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_centerVertical="true"-->
+<!--                            android:layout_marginStart="16dp"-->
+<!--                            android:layout_toEndOf="@id/icPro"-->
+<!--                            android:text="Nâng cấp gói PRO"-->
+<!--                            android:textColor="#1E293B"-->
+<!--                            android:textSize="16sp"-->
+<!--                            android:textStyle="bold" />-->
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerVertical="true"
-                            android:layout_marginEnd="12dp"
-                            android:layout_toStartOf="@id/arrowPro"
-                            android:background="@drawable/bg_circle_gray"
-                            android:backgroundTint="#FDF2F8"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="4dp"
-                            android:text="HOT"
-                            android:textColor="#EC4899"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
+<!--                        <TextView-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:layout_centerVertical="true"-->
+<!--                            android:layout_marginEnd="12dp"-->
+<!--                            android:layout_toStartOf="@id/arrowPro"-->
+<!--                            android:background="@drawable/bg_circle_gray"-->
+<!--                            android:backgroundTint="#FDF2F8"-->
+<!--                            android:paddingHorizontal="8dp"-->
+<!--                            android:paddingVertical="4dp"-->
+<!--                            android:text="HOT"-->
+<!--                            android:textColor="#EC4899"-->
+<!--                            android:textSize="10sp"-->
+<!--                            android:textStyle="bold" />-->
 
-                        <ImageView
-                            android:id="@+id/arrowPro"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:src="@drawable/ic_arrow"
-                            app:tint="#CBD5E1" />
-                    </RelativeLayout>
+<!--                        <ImageView-->
+<!--                            android:id="@+id/arrowPro"-->
+<!--                            android:layout_width="16dp"-->
+<!--                            android:layout_height="16dp"-->
+<!--                            android:layout_alignParentEnd="true"-->
+<!--                            android:layout_centerVertical="true"-->
+<!--                            android:src="@drawable/ic_arrow"-->
+<!--                            app:tint="#CBD5E1" />-->
+<!--                    </RelativeLayout>-->
 
                     <RelativeLayout
                         android:id="@+id/btnChangePassword"

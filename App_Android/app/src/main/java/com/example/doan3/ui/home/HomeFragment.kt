@@ -13,6 +13,7 @@ import androidx.fragment.app.viewModels
 import com.example.doan3.R
 import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.databinding.FragmentHomeBinding
+import com.example.doan3.ui.roadmap.RoadmapFragment
 
 class HomeFragment : Fragment() {
 
@@ -84,8 +85,10 @@ class HomeFragment : Fragment() {
 
         // Đã sửa thành Intent để mở RegisterActivity thành công
         binding.btnViewPro.setOnClickListener {
-            val intent = Intent(requireContext(), com.example.doan3.ui.profile.RegisterActivity::class.java)
-            startActivity(intent)
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, RoadmapFragment())
+                .addToBackStack(null)
+                .commit()
         }
 
         // 4. SỰ KIỆN CLICK VÀO THẺ "TỪ VỰNG ĐÃ THUỘC" ĐỂ CHUYỂN TRANG

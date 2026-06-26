@@ -56,7 +56,7 @@ class hoso : AppCompatActivity() {
         tvStatVocab = findViewById(R.id.tvStatVocab)
         tvStatDays = findViewById(R.id.tvStatDays)
 
-        btnUpgradePro = findViewById(R.id.btnUpgradePro)
+//        btnUpgradePro = findViewById(R.id.btnUpgradePro)
         btnChangePassword = findViewById(R.id.btnChangePassword)
         switchNotifications = findViewById(R.id.switchNotifications)
         btnHelpCenter = findViewById(R.id.btnHelpCenter)
@@ -87,9 +87,9 @@ class hoso : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        btnUpgradePro.setOnClickListener {
-            Toast.makeText(this, "Chuyển sang trang thanh toán PRO", Toast.LENGTH_SHORT).show()
-        }
+//        btnUpgradePro.setOnClickListener {
+//            Toast.makeText(this, "Chuyển sang trang thanh toán PRO", Toast.LENGTH_SHORT).show()
+//        }
 
         // ==========================================
         // ĐÃ SỬA CHỖ NÀY: MỞ TRANG ĐỔI MẬT KHẨU

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/lineTop"
+        android:layout_width="2dp"
+        android:layout_height="32dp"
+        android:background="#059669"
+        app:layout_constraintEnd_toEndOf="@id/layoutIconOuter"
+        app:layout_constraintStart_toStartOf="@id/layoutIconOuter"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/lineBottom"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:background="#E2E8F0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/layoutIconOuter"
+        app:layout_constraintStart_toStartOf="@id/layoutIconOuter"
+        app:layout_constraintTop_toBottomOf="@id/layoutIconOuter" />
+
+    <FrameLayout
+        android:id="@+id/layoutIconOuter"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_circle_blue"
+        android:backgroundTint="#DBEAFE"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lineTop">
+
+        <FrameLayout
+            android:id="@+id/layoutIconInner"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_circle_blue"
+            android:backgroundTint="#0A52CC">
+
+            <ImageView
+                android:id="@+id/ivStepIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardContent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="#2563EB"
+        app:strokeWidth="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layoutIconOuter"
+        app:layout_constraintTop_toTopOf="@id/layoutIconOuter">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvStepTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="GIAO TIẾP CƠ BẢN"
+                android:textColor="#2563EB"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/tvTag"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:id="@+id/tvTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#DBEAFE"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="HIỆN TẠI"
+                android:textColor="#1E40AF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvStepDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Tiến trình bài học"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvStepTitle" />
+
+            <TextView
+                android:id="@+id/tvProgressText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 / 40 từ"
+                android:textColor="#2563EB"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/tvStepDesc"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvStepDesc" />
+
+            <ProgressBar
+                android:id="@+id/progressStep"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:layout_marginTop="8dp"
+                android:max="40"
+                android:progress="15"
+                android:progressTint="#2563EB"
+                android:progressBackgroundTint="#E2E8F0"
+                app:layout_constraintTop_toBottomOf="@id/tvStepDesc" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnContinueLearning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Tiếp tục học ngay"
+                app:backgroundTint="#0A52CC"
+                app:cornerRadius="24dp"
+                app:layout_constraintTop_toBottomOf="@id/progressStep" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
