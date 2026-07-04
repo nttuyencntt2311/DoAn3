@@ -2,30 +2,75 @@ package com.example.doan3.ui.profile
 
 import android.os.Bundle
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
+import com.google.firebase.auth.FirebaseAuth
 
 class RegisterActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Gọi file giao diện dangky.xml của bạn
         setContentView(R.layout.dangky)
 
-        // Đoạn này xử lý tràn viền (nhớ thêm android:id="@+id/main" vào thẻ ngoài cùng của file dangky.xml giống lúc nãy nhé)
+        auth = FirebaseAuth.getInstance()
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Xử lý nút "Đăng nhập" để quay lại trang trước
+        // Nút lùi về trang đăng nhập
         val tvLogin = findViewById<TextView>(R.id.tvLogin)
-        tvLogin?.setOnClickListener {
-            finish() // Đóng trang đăng ký này lại, màn hình sẽ tự động lùi về MainActivity
+        tvLogin.setOnClickListener { finish() }
+
+        // Ánh xạ các UI từ dangky.xml
+        val edtName = findViewById<TextInputEditText>(R.id.edtName)
+        val edtEmail = findViewById<TextInputEditText>(R.id.edtEmail)
+        val edtPassword = findViewById<TextInputEditText>(R.id.edtPassword)
+        val edtConfirmPassword = findViewById<TextInputEditText>(R.id.edtConfirmPassword)
+        val btnRegister = findViewById<MaterialButton>(R.id.btnRegister)
+
+        // Xử lý nút Đăng ký
+        btnRegister.setOnClickListener {
+            val email = edtEmail.text.toString().trim()
+            val password = edtPassword.text.toString().trim()
+            val confirmPassword = edtConfirmPassword.text.toString().trim()
+
+            if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (password != confirmPassword) {
+                Toast.makeText(this, "Mật khẩu xác nhận không khớp!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (password.length < 6) {
+                Toast.makeText(this, "Mật khẩu phải từ 6 ký tự trở lên!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Gọi Firebase tạo tài khoản
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show()
+                        finish() // Quay về trang đăng nhập
+                    } else {
+                        Toast.makeText(this, "Đăng ký thất bại: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
         }
     }
 }

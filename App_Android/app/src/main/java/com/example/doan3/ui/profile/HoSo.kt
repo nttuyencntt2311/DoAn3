@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import com.example.doan3.MainActivity
 import com.example.doan3.R
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 class hoso : AppCompatActivity() {
@@ -46,6 +48,40 @@ class hoso : AppCompatActivity() {
         loadDataFromApi()
         setupListeners()
         setupBottomNavigation()
+
+        // =========================================================
+        // CODE ĐỒNG BỘ: TỰ ĐỘNG TẢI DỮ LIỆU TỪ FIRESTORE VỀ APP
+        // =========================================================
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
+        val currentUser = auth.currentUser
+
+        if (currentUser != null) {
+            // Nếu đã đăng nhập, lấy UID của người này để vào đúng "Ngăn kéo" của họ
+            db.collection("Users").document(currentUser.uid).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        // Kéo thông tin từ Firestore xuống
+                        val tenTrenMang = document.getString("hoVaTen") ?: "Người dùng mới"
+                        // val gioiTinh = document.getString("gioiTinh")
+
+                        // Cập nhật lên giao diện (Ní nhớ check lại ID của TextView tên người dùng nhé, tui đang lấy ví dụ là tvProfileName)
+                        tvProfileName.text = tenTrenMang
+
+                    } else {
+                        // Nếu tài khoản mới tạo, chưa có dữ liệu trên Firestore
+                        tvProfileName.text = "Chưa cập nhật tên"
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Lỗi khi đồng bộ dữ liệu!", Toast.LENGTH_SHORT).show()
+                }
+        } else {
+            // Nếu chưa đăng nhập mà lọt vào đây thì đá về trang Đăng nhập
+            val intent = Intent(this, dangnhap::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun anhXaGiaoDien() {
