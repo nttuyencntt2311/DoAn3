@@ -1,18 +1,14 @@
 package com.example.doan3.ui.home
 
-import android.content.Intent // Đã thêm import này
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.doan3.R
-import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.databinding.FragmentHomeBinding
+import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.ui.roadmap.RoadmapFragment
 
 class HomeFragment : Fragment() {
@@ -33,49 +29,57 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Lấy các animation
-        val fadeInSlideAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.fade_in_slide)
-        val shakeAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.shake)
+        // Tự động làm mới dữ liệu từ Firestore mỗi lần user mở tab Trang chủ
+        viewModel.fetchUserData()
 
-        // Áp dụng animation xuất hiện ban đầu (Fading & Sliding)
-        binding.layoutStats.startAnimation(fadeInSlideAnim)
-        binding.cardPro.startAnimation(fadeInSlideAnim)
-        binding.cardNextLesson.startAnimation(fadeInSlideAnim)
-        binding.cardDailyTask.startAnimation(fadeInSlideAnim)
+        // =============================================================
+        // ĐỔNG BỘ TOÀN BỘ DỮ LIỆU ĐỘNG VÀO CÁC ID CÓ SẴN TRONG XML CỦA BẠN
+        // =============================================================
 
-        // 1. DỮ LIỆU ĐỘNG CHO THANH PROGRESS (Thanh chạy)
-        viewModel.progressBarPercent.observe(viewLifecycleOwner) { percent ->
-            var currentPercent = 0
-            val handler = Handler(Looper.getMainLooper())
-            handler.postDelayed(object : Runnable {
-                override fun run() {
-                    if (currentPercent < percent) {
-                        currentPercent += 5 // Chạy lên 5% mỗi lần
-                        binding.progressBar.progress = currentPercent
-                        binding.tvTaskPercent.text = "$currentPercent% Hoàn\nthành"
-                        handler.postDelayed(this, 30) // Chạy lại sau 30ms
-                    } else {
-                        binding.progressBar.progress = percent
-                        binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
-                    }
-                }
-            }, 500) // Delay 500ms trước khi chạy
-        }
-
-        // 2. LẮNG NGHE DỮ LIỆU KHÁC
+        // 1. Khung thông tin cá nhân (Avatar giữ nguyên mặc định của bạn)
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             binding.tvUserName.text = name
         }
 
-        viewModel.wordsLearned.observe(viewLifecycleOwner) { words ->
-            binding.tvWordsCount.text = String.format("%,d", words)
+        viewModel.userLevel.observe(viewLifecycleOwner) { level ->
+            binding.tvUserLevel.text = level
         }
 
-        viewModel.timeLearned.observe(viewLifecycleOwner) { hours ->
-            binding.tvTimeLearned.text = "$hours giờ"
+        viewModel.streakDays.observe(viewLifecycleOwner) { streak ->
+            binding.chipStreak.text = "$streak ngày"
         }
 
-        // 3. XỬ LÝ SỰ KIỆN CLICK MỞ TRANG HỌC TẬP TỪ MỚI VÀ ĐĂNG KÝ
+        // 2. Khung Nhiệm vụ hàng ngày (cardDailyTask)
+        viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
+            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
+            binding.progressBar.progress = percent
+        }
+
+        viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
+            binding.tvTaskTarget.text = targetText
+        }
+
+        // 3. Khung lưới Thống kê (layoutStats)
+        viewModel.wordsCount.observe(viewLifecycleOwner) { count ->
+            binding.tvWordsCount.text = String.format("%,d", count)
+        }
+
+        viewModel.timeLearned.observe(viewLifecycleOwner) { time ->
+            binding.tvTimeLearned.text = time
+        }
+
+        // 4. Khung Bài học tiếp theo (cardNextLesson) - ĐÃ ĐỒNG BỘ THÔNG MINH
+        viewModel.nextLessonName.observe(viewLifecycleOwner) { lessonName ->
+            binding.tvLessonName.text = lessonName
+        }
+
+        viewModel.nextLessonXp.observe(viewLifecycleOwner) { xpText ->
+            binding.tvXp.text = xpText
+        }
+
+        // =============================================================
+        // CÁC SỰ KIỆN CLICK CHUYỂN MÀN HÌNH (GIỮ NGUYÊN HOÀN TOÀN HÀNH VI CỦA BẠN)
+        // =============================================================
         binding.btnStartLearning.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.learning.LearningFragment())
@@ -83,7 +87,6 @@ class HomeFragment : Fragment() {
                 .commit()
         }
 
-        // Đã sửa thành Intent để mở RegisterActivity thành công
         binding.btnViewPro.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, RoadmapFragment())
@@ -91,7 +94,6 @@ class HomeFragment : Fragment() {
                 .commit()
         }
 
-        // 4. SỰ KIỆN CLICK VÀO THẺ "TỪ VỰNG ĐÃ THUỘC" ĐỂ CHUYỂN TRANG
         binding.cardLearnedVocab.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, VocabularyFragment())
@@ -99,7 +101,6 @@ class HomeFragment : Fragment() {
                 .commit()
         }
 
-        // 5. SỰ KIỆN CLICK VÀO THẺ "THỜI GIAN HỌC" ĐỂ CHUYỂN SANG TRANG THỐNG KÊ
         binding.cardTimeLearned.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())

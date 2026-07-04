@@ -10,6 +10,7 @@ import com.example.doan3.ui.profile.hoso
 import com.example.doan3.ui.profile.KhamPhaActivity // Code của Tuyền
 import com.example.doan3.ui.profile.TroLyAIActivity // Code của Vân
 import com.example.doan3.ui.profile.TaoQuizActivity
+import com.example.doan3.ui.profile.TaiKhoanActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,9 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Nút Khám phá (Đã gộp code của Tuyền)
         binding.btnKhamPha.setOnClickListener {
-            // Khởi tạo Intent trỏ tới đúng tên class là KhamPhaActivity
             val intent = Intent(this, KhamPhaActivity::class.java)
-            // Lệnh yêu cầu Android mở trang đó lên
             startActivity(intent)
         }
 
@@ -46,14 +45,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnTroLyAI.setOnClickListener {
             val intent = Intent(this, TroLyAIActivity::class.java)
             startActivity(intent)
-            // Không gọi finish() để khi nhấn back vẫn quay về được Trang chủ
         }
-
-//        // 3. Nút Trợ lý AI (Mở giao diện Tạo Quiz mới)
-//        binding.btnTroLyAI.setOnClickListener {
-//            val intent = Intent(this, TaoQuizActivity::class.java)
-//            startActivity(intent)
-//        }
 
         // 4. Nút Hồ sơ
         binding.btnHoSo.setOnClickListener {
@@ -61,18 +53,17 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // 5. Nút Tài khoản
+        // 5. Nút Tài khoản (ĐÃ MỞ KHÓA: Kết nối sang TaiKhoanActivity)
         binding.btnTaiKhoan.setOnClickListener {
-            // Xử lý mở màn hình Tài khoản (nếu có sau này)
-            // val intent = Intent(this, TaiKhoanActivity::class.java)
-            // startActivity(intent)
+            val intent = Intent(this, TaiKhoanActivity::class.java)
+            startActivity(intent)
         }
     }
 
     // Hàm hỗ trợ đổi Fragment mượt mà trong Activity
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
-            .replace(R.id.nav_host_fragment, fragment) // ID này phải khớp với FragmentContainerView trong activity_main.xml
+            .replace(R.id.nav_host_fragment, fragment)
             .commit()
     }
 }

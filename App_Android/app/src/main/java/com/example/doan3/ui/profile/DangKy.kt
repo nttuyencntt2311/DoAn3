@@ -11,10 +11,12 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +24,7 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.dangky)
 
         auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -42,11 +45,12 @@ class RegisterActivity : AppCompatActivity() {
 
         // Xử lý nút Đăng ký
         btnRegister.setOnClickListener {
+            val name = edtName.text.toString().trim()
             val email = edtEmail.text.toString().trim()
             val password = edtPassword.text.toString().trim()
             val confirmPassword = edtConfirmPassword.text.toString().trim()
 
-            if (email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            if (name.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -65,8 +69,24 @@ class RegisterActivity : AppCompatActivity() {
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show()
-                        finish() // Quay về trang đăng nhập
+                        val uid = auth.currentUser?.uid
+                        val userMap = hashMapOf(
+                            "hoVaTen" to name,
+                            "email" to email,
+                            "gioiTinh" to "Nam",
+                            "ngaySinh" to ""
+                        )
+
+                        if (uid != null) {
+                            db.collection("Users").document(uid).set(userMap)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show()
+                                    finish() // Quay về trang đăng nhập
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, "Lỗi tạo dữ liệu: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        }
                     } else {
                         Toast.makeText(this, "Đăng ký thất bại: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                     }
