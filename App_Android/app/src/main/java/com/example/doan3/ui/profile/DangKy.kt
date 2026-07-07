@@ -10,6 +10,9 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -57,12 +60,23 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // TODO: Gọi API POST /api/register xuống Node.js/MongoDB để tạo tài khoản
-            // Dữ liệu cần gửi: name, email, password, "Nam" (giới tính mặc định)
+            // GỌI API ĐĂNG KÝ XUỐNG NODE.JS
+            val request = RegisterRequest(name, email, password)
 
-            // Giả lập thành công để test UI
-            Toast.makeText(this, "Đăng ký thành công! Vui lòng đăng nhập lại.", Toast.LENGTH_SHORT).show()
-            finish() // Quay về trang đăng nhập
+            RetrofitClient.instance.registerUser(request).enqueue(object : Callback<RegisterResponse> {
+                override fun onResponse(call: Call<RegisterResponse>, response: Response<RegisterResponse>) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@RegisterActivity, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_SHORT).show()
+                        finish() // Tự động đóng màn hình Đăng ký để quay lại màn hình Đăng nhập
+                    } else {
+                        Toast.makeText(this@RegisterActivity, "Đăng ký thất bại: Email đã tồn tại!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<RegisterResponse>, t: Throwable) {
+                    Toast.makeText(this@RegisterActivity, "Lỗi kết nối máy chủ: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            })
         }
     }
 }

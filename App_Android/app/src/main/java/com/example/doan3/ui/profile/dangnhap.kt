@@ -10,6 +10,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
 import com.example.doan3.MainActivity
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class dangnhap : AppCompatActivity() {
 
@@ -40,14 +43,41 @@ class dangnhap : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // TODO: Gọi API POST /api/login đến Node.js ở đây
-            // Giả lập đăng nhập thành công tạm thời để test UI
-            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
+            // GỌI API ĐĂNG NHẬP XUỐNG NODE.JS
+            val request = LoginRequest(email, password)
 
-            // Chuyển vào trang chủ (MainActivity)
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            RetrofitClient.instance.loginUser(request).enqueue(object : Callback<LoginResponse> {
+                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val loginData = response.body()
+                        val token = loginData?.token
+                        val userId = loginData?.user?.id
+                        val userName = loginData?.user?.name
+
+                        // LƯU TOKEN VÀ THÔNG TIN USER VÀO BỘ NHỚ ĐIỆN THOẠI (SharedPreferences)
+                        val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
+                        sharedPreferences.edit().apply {
+                            putString("JWT_TOKEN", token)
+                            putString("USER_ID", userId)
+                            putString("USER_NAME", userName)
+                            apply()
+                        }
+
+                        Toast.makeText(this@dangnhap, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
+
+                        // Chuyển hướng thẳng vào trang chủ (MainActivity)
+                        val intent = Intent(this@dangnhap, MainActivity::class.java)
+                        startActivity(intent)
+                        finish() // Đóng luôn màn hình đăng nhập để khi bấm nút Back không bị quay lại đây
+                    } else {
+                        Toast.makeText(this@dangnhap, "Sai email hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    Toast.makeText(this@dangnhap, "Không thể kết nối đến máy chủ Backend!", Toast.LENGTH_LONG).show()
+                }
+            })
         }
     }
 }
