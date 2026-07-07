@@ -9,15 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.MainActivity
 import com.example.doan3.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class hoso : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
-
-    // Đổi toàn bộ sang kiểu View? gốc để KHÔNG BAO GIỜ bị sập do lệch kiểu dữ liệu (ClassCastException)
     private var tvProfileName: View? = null
     private var tvAccountType: View? = null
     private var tvHeaderStreak: View? = null
@@ -38,13 +32,9 @@ class hoso : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Bọc toàn bộ onCreate vào try - catch để hứng lỗi, quyết không cho app bị văng
         try {
             enableEdgeToEdge()
             setContentView(R.layout.hoso)
-
-            auth = FirebaseAuth.getInstance()
-            db = FirebaseFirestore.getInstance()
 
             // Ánh xạ an toàn dưới dạng View chung
             tvProfileName = findViewById(R.id.tvProfileName)
@@ -64,15 +54,15 @@ class hoso : AppCompatActivity() {
             navHoSo = findViewById(R.id.btnHoSo)
             navTaiKhoan = findViewById(R.id.btnTaiKhoan)
 
-            // Cài đặt sự kiện click
+            // Cài đặt sự kiện chuyển màn hình cho thanh Menu Bottom
             setupBottomNavigation()
 
+            // Nút cài đặt chuyển sang trang Tài Khoản
             btnSettings?.setOnClickListener {
                 startActivity(Intent(this, TaiKhoanActivity::class.java))
             }
 
             btnLogout?.setOnClickListener {
-                auth.signOut()
                 Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, dangnhap::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -80,91 +70,67 @@ class hoso : AppCompatActivity() {
                 finish()
             }
 
-            // Gọi hàm lấy dữ liệu Firebase
-            loadUserStatsRealtime()
+            // Gọi hàm lấy dữ liệu từ hệ thống API mới
+            loadUserStatsFromAPI()
 
         } catch (e: Exception) {
-            // NẾU CÓ LỖI XẢY RA (Ví dụ lỗi giao diện XML), APP SẼ HIỆN TOAST THÔNG BÁO CHỨ KHÔNG BỊ THOÁT
             Toast.makeText(this, "Lỗi khởi tạo màn hình: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
 
-    private fun loadUserStatsRealtime() {
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
-            setDefaultStatsUI()
-            return
-        }
+    override fun onResume() {
+        super.onResume()
+        loadUserStatsFromAPI()
+    }
 
-        db.collection("Users").document(currentUser.uid)
-            .addSnapshotListener { document, error ->
-                if (error != null) {
-                    setDefaultStatsUI()
-                    return@addSnapshotListener
-                }
-
-                if (document == null || !document.exists()) {
-                    setDefaultStatsUI()
-                } else {
-                    val hoVaTen = document.getString("hoVaTen")
-                    setSafeText(tvProfileName, if (!hoVaTen.isNullOrEmpty()) hoVaTen else "Người dùng LexiVT")
-
-                    val accountType = document.getString("accountType")
-                    setSafeText(tvAccountType, if (!accountType.isNullOrEmpty()) accountType else "Học viên")
-
-                    val streak = document.getLong("streak") ?: 0L
-                    setSafeText(tvHeaderStreak, "$streak ngày")
-
-                    val level = document.getLong("level") ?: 1L
-                    setSafeText(tvStatLevel, "Cấp $level")
-
-                    val vocabCount = document.getLong("vocabCount") ?: 0L
-                    setSafeText(tvStatVocab, "$vocabCount từ")
-
-                    val learningDays = document.getLong("learningDays") ?: 0L
-                    setSafeText(tvStatDays, "$learningDays ngày")
-
-                    val weeklyMinutes = document.getLong("weeklyMinutes") ?: 0L
-                    setSafeText(tvStatMinutes, "$weeklyMinutes phút")
-                }
-            }
+    private fun loadUserStatsFromAPI() {
+        // Hiện tại kích hoạt UI hiển thị dữ liệu mặc định an toàn để không văng App
+        setDefaultStatsUI()
     }
 
     private fun setDefaultStatsUI() {
-        setSafeText(tvProfileName, "Người dùng")
+        setSafeText(tvProfileName, "Người dùng LexiVT")
         setSafeText(tvAccountType, "Học viên")
         setSafeText(tvHeaderStreak, "0 ngày")
-        setSafeText(tvStatLevel, "1")
-        setSafeText(tvStatVocab, "0")
-        setSafeText(tvStatDays, "0")
-        setSafeText(tvStatMinutes, "0")
+        setSafeText(tvStatLevel, "Cấp 1")
+        setSafeText(tvStatVocab, "0 từ")
+        setSafeText(tvStatDays, "0 ngày")
+        setSafeText(tvStatMinutes, "0 phút")
     }
 
-    // Hàm bổ trợ: Chỉ ép kiểu sang TextView khi thực hiện gán text để tránh ClassCastException
     private fun setSafeText(view: View?, text: String) {
         (view as? TextView)?.text = text
     }
 
     private fun setupBottomNavigation() {
+        // 1. Nút Trang chủ -> Về MainActivity
         navTrangChu?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
             overridePendingTransition(0, 0)
         }
+
+        // 2. Nút Khám phá -> KHÔI PHỤC: Mở KhamPhaActivity (Code của Tuyền)
         navKhamPha?.setOnClickListener {
-            startActivity(Intent(this, KhamPhaActivity::class.java))
+            val intent = Intent(this, KhamPhaActivity::class.java)
+            startActivity(intent)
             overridePendingTransition(0, 0)
         }
+
+        // 3. Nút Trợ lý AI -> KHÔI PHỤC: Mở TroLyAIActivity (Code của Vân)
         navTroLyAI?.setOnClickListener {
             val intent = Intent(this, TroLyAIActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             startActivity(intent)
             overridePendingTransition(0, 0)
         }
+
+        // 4. Nút Tài khoản -> Mở TaiKhoanActivity
         navTaiKhoan?.setOnClickListener {
-            startActivity(Intent(this, TaiKhoanActivity::class.java))
+            val intent = Intent(this, TaiKhoanActivity::class.java)
+            startActivity(intent)
             overridePendingTransition(0, 0)
         }
     }

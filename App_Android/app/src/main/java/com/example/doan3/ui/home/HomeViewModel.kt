@@ -3,8 +3,6 @@ package com.example.doan3.ui.home
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeViewModel : ViewModel() {
 
@@ -37,9 +35,6 @@ class HomeViewModel : ViewModel() {
     private val _nextLessonXp = MutableLiveData<String>()
     val nextLessonXp: LiveData<String> = _nextLessonXp
 
-    private val auth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
-
     init {
         // Gán trạng thái mặc định an toàn cho người mới trong lúc chờ tải dữ liệu mạng
         setDefaultNewUserValues()
@@ -47,59 +42,19 @@ class HomeViewModel : ViewModel() {
     }
 
     fun fetchUserData() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            db.collection("Users").document(currentUser.uid)
-                .addSnapshotListener { document, error ->
-                    if (error != null) {
-                        setDefaultNewUserValues()
-                        return@addSnapshotListener
-                    }
+        // TODO: Sau này bạn dùng Retrofit gọi API GET /api/user/home từ backend Node.js (MongoDB) ở đây.
 
-                    if (document != null && document.exists()) {
-                        // 1. Đồng bộ thông tin cá nhân khách hàng
-                        val name = document.getString("hoVaTen")
-                        _userName.value = if (name != null && name.isNotEmpty()) name else "Học viên"
+        // Hiện tại: Gán dữ liệu giả lập tĩnh để test giao diện Trang chủ mà không bị lỗi
+        _userName.value = "Người dùng LexiVT"
+        _userLevel.value = "Cấp 1"
+        _streakDays.value = 5
+        _progressPercent.value = 50
+        _taskTargetText.value = "Mục tiêu hôm nay: 5/10 từ mới"
+        _wordsCount.value = 120
+        _timeLearned.value = "2 giờ"
 
-                        // ĐỒNG BỘ: Chuyển sang lấy getLong("level") để khớp 100% với file HoSo.kt
-                        val level = document.getLong("level")
-                        _userLevel.value = if (level != null) "Cấp $level" else "Mới nhập môn"
-
-                        // Chuyển Long từ Firebase thành Int bằng .toInt() và chống null bằng ?: 0
-                        _streakDays.value = document.getLong("streak")?.toInt() ?: 0
-
-                        // 2. Đồng bộ tiến độ & Nhiệm vụ hàng ngày
-                        val progress = document.getLong("progress")?.toInt() ?: 0
-                        _progressPercent.value = progress
-
-                        val currentTaskProgress = document.getLong("taskProgress")?.toInt() ?: 0
-                        val maxTask = document.getLong("taskMax")?.toInt() ?: 10
-                        _taskTargetText.value = "Mục tiêu hôm nay: $currentTaskProgress/$maxTask từ mới"
-
-                        // 3. Thống kê tổng số từ và thời gian học thực tế
-                        _wordsCount.value = document.getLong("wordsLearned")?.toInt() ?: 0
-                        val time = document.getLong("timeLearned")?.toInt() ?: 0
-                        _timeLearned.value = "$time giờ"
-
-                        // 4. BÀI HỌC TIẾP THEO (Code bất tử chống mọi loại lỗi đỏ)
-                        val savedNextLesson = document.getString("nextLesson") ?: ""
-
-                        if (savedNextLesson.isNotEmpty()) {
-                            _nextLessonName.value = savedNextLesson
-                            _nextLessonXp.value = "+50 XP Tiềm năng"
-                        } else {
-                            _nextLessonName.value = "Bài 1: Khởi động & Từ vựng cơ bản"
-                            _nextLessonXp.value = "Nhấn để bắt đầu bài học đầu tiên!"
-                        }
-                    } else {
-                        setDefaultNewUserValues()
-                    }
-                }
-        } else {
-            _userName.value = "Chưa đăng nhập"
-            _nextLessonName.value = "Vui lòng đăng nhập"
-            _nextLessonXp.value = ""
-        }
+        _nextLessonName.value = "Bài 2: Giao tiếp cơ bản"
+        _nextLessonXp.value = "+50 XP Tiềm năng"
     }
 
     private fun setDefaultNewUserValues() {

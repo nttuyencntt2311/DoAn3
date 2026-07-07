@@ -10,21 +10,13 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class RegisterActivity : AppCompatActivity() {
-
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.dangky)
-
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -65,32 +57,12 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Gọi Firebase tạo tài khoản
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        val uid = auth.currentUser?.uid
-                        val userMap = hashMapOf(
-                            "hoVaTen" to name,
-                            "email" to email,
-                            "gioiTinh" to "Nam",
-                            "ngaySinh" to ""
-                        )
+            // TODO: Gọi API POST /api/register xuống Node.js/MongoDB để tạo tài khoản
+            // Dữ liệu cần gửi: name, email, password, "Nam" (giới tính mặc định)
 
-                        if (uid != null) {
-                            db.collection("Users").document(uid).set(userMap)
-                                .addOnSuccessListener {
-                                    Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show()
-                                    finish() // Quay về trang đăng nhập
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this, "Lỗi tạo dữ liệu: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                        }
-                    } else {
-                        Toast.makeText(this, "Đăng ký thất bại: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
+            // Giả lập thành công để test UI
+            Toast.makeText(this, "Đăng ký thành công! Vui lòng đăng nhập lại.", Toast.LENGTH_SHORT).show()
+            finish() // Quay về trang đăng nhập
         }
     }
 }

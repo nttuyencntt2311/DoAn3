@@ -11,13 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.card.MaterialCardView
 import com.example.doan3.R
 import com.example.doan3.ui.profile.dangnhap
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class TaiKhoanActivity : AppCompatActivity() {
-
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
 
     private lateinit var tvUserFullName: TextView
     private lateinit var tvUserEmail: TextView
@@ -26,9 +21,6 @@ class TaiKhoanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.taikkhoan)
-
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
 
         // Ánh xạ View
         tvUserFullName = findViewById(R.id.tvUserFullName)
@@ -47,7 +39,8 @@ class TaiKhoanActivity : AppCompatActivity() {
 
         // 3. Nút Đăng xuất
         findViewById<MaterialCardView>(R.id.btnLogout).setOnClickListener {
-            auth.signOut()
+            // TODO: Xóa SharedPreferences lưu Token/Session ở đây khi có API
+
             Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
             val intent = Intent(this, dangnhap::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -61,28 +54,16 @@ class TaiKhoanActivity : AppCompatActivity() {
         }
     }
 
-    // Luôn luôn tải lại dữ liệu mới nhất khi màn hình hiển thị hoặc được quay lại
     override fun onResume() {
         super.onResume()
         loadAccountData()
     }
 
     private fun loadAccountData() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            tvUserEmail.text = currentUser.email ?: ""
+        // TODO: Gọi API GET /api/users/profile để lấy tên và email từ MongoDB
 
-            db.collection("Users").document(currentUser.uid).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        val tenHienThi = document.getString("hoVaTen")
-                        if (!tenHienThi.isNullOrEmpty()) {
-                            tvUserFullName.text = tenHienThi
-                        } else {
-                            tvUserFullName.text = "Người dùng LexiVT"
-                        }
-                    }
-                }
-        }
+        // Giả lập dữ liệu hiển thị tạm thời
+        tvUserEmail.text = "user@example.com"
+        tvUserFullName.text = "Người dùng LexiVT"
     }
 }

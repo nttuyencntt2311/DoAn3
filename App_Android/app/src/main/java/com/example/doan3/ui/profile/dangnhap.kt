@@ -10,18 +10,13 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
 import com.example.doan3.MainActivity
-import com.google.firebase.auth.FirebaseAuth
 
 class dangnhap : AppCompatActivity() {
-
-    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.dangnhap)
-
-        auth = FirebaseAuth.getInstance()
 
         // Nút chuyển qua trang Đăng Ký
         val tvRegister = findViewById<TextView>(R.id.tvRegister)
@@ -30,7 +25,7 @@ class dangnhap : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Ánh xạ UI (Lưu ý: Phải thêm ID vào file XML như hướng dẫn ở bước 1)
+        // Ánh xạ UI
         val edtEmailLogin = findViewById<TextInputEditText>(R.id.edtEmailLogin)
         val edtPasswordLogin = findViewById<TextInputEditText>(R.id.edtPasswordLogin)
         val btnLogin = findViewById<MaterialButton>(R.id.btnLogin)
@@ -45,19 +40,14 @@ class dangnhap : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Gọi Firebase đăng nhập
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-                        // Chuyển vào trang chủ (MainActivity)
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-                        finish() // Đóng trang đăng nhập để không cho back lại bằng nút quay về của điện thoại
-                    } else {
-                        Toast.makeText(this, "Sai Email hoặc Mật khẩu!", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            // TODO: Gọi API POST /api/login đến Node.js ở đây
+            // Giả lập đăng nhập thành công tạm thời để test UI
+            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
+
+            // Chuyển vào trang chủ (MainActivity)
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
         }
     }
 }

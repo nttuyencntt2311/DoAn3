@@ -9,16 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.example.doan3.R
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 
 class ThongTinCaNhanActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
-
-    // Khai báo đúng các biến ID có trong file XML của bạn
     private lateinit var edtName: TextInputEditText
     private lateinit var edtBirthDate: TextInputEditText
     private lateinit var btnMale: MaterialCardView
@@ -33,12 +26,9 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.thongtincanhan)
 
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
-
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
-        // Ánh xạ đúng 100% ID từ file thongtincanhan.xml
+        // Ánh xạ ID
         edtName = findViewById(R.id.edtName)
         edtBirthDate = findViewById(R.id.edtBirthDate)
         btnMale = findViewById(R.id.btnMale)
@@ -59,58 +49,32 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
             updateGioiTinhUI()
         }
 
-        // Kéo dữ liệu từ Firebase về
-        loadUserDataFromFirebase()
+        // Lấy dữ liệu từ API về
+        loadUserDataFromAPI()
 
-        val currentUser = auth.currentUser
         val saveAction = {
-            if (currentUser != null) {
-                val userMap = hashMapOf(
-                    "hoVaTen" to edtName.text.toString().trim(),
-                    "ngaySinh" to edtBirthDate.text.toString().trim(),
-                    "gioiTinh" to gioiTinhDuocChon
-                )
+            val hoVaTen = edtName.text.toString().trim()
+            val ngaySinh = edtBirthDate.text.toString().trim()
 
-                // Lưu dữ liệu lên Firestore
-                db.collection("Users").document(currentUser.uid)
-                    .set(userMap, SetOptions.merge()) // Thêm merge để không làm mất email
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Đã lưu thông tin thành công!", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(this, "Lỗi khi lưu dữ liệu: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-            } else {
-                Toast.makeText(this, "Lỗi: Bạn chưa đăng nhập!", Toast.LENGTH_SHORT).show()
-            }
+            // TODO: Gọi API PUT hoặc PATCH /api/users/profile để lưu dữ liệu lên MongoDB
+            // Gửi lên: hoVaTen, ngaySinh, gioiTinhDuocChon
+
+            Toast.makeText(this, "Đã lưu thông tin (Giả lập)!", Toast.LENGTH_SHORT).show()
+            finish()
         }
 
         btnSaveTop.setOnClickListener { saveAction() }
         btnSaveBottom.setOnClickListener { saveAction() }
     }
 
-    private fun loadUserDataFromFirebase() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            db.collection("Users").document(currentUser.uid).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        val hoVaTen = document.getString("hoVaTen") ?: ""
-                        val ngaySinh = document.getString("ngaySinh") ?: ""
-                        val gioiTinh = document.getString("gioiTinh") ?: "Nam"
+    private fun loadUserDataFromAPI() {
+        // TODO: Gọi API GET /api/users/profile để lấy dữ liệu từ MongoDB fill vào UI
 
-                        edtName.setText(hoVaTen)
-                        edtBirthDate.setText(ngaySinh)
-
-                        gioiTinhDuocChon = gioiTinh
-                        updateGioiTinhUI()
-                    }
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "Không thể tải dữ liệu: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        }
+        // Dữ liệu giả lập tạm thời
+        edtName.setText("Người dùng LexiVT")
+        edtBirthDate.setText("")
+        gioiTinhDuocChon = "Nam"
+        updateGioiTinhUI()
     }
 
     private fun updateGioiTinhUI() {
