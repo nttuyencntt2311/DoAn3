@@ -3,62 +3,31 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
-const connectDB = require('./config/db.js');
+const connectDB = require('./config/db.js'); // Kéo file kết nối database của bạn vào
+
+// 1. NHẬP CÁC FILE ĐỊNH TUYẾN (ROUTES) ĐÃ CHIA NHỎ
+const authRoutes = require('./routes/authRoutes.js'); // Quản lý Đăng ký, Đăng nhập, Đăng xuất, Refresh Token
+const quizRoutes = require('./routes/quizRoutes.js'); // Quản lý Nộp điểm TOEIC
 
 const app = express();
 
 // 2. KÍCH HOẠT KẾT NỐI DATABASE
 connectDB();
 
-// 3. KHỞI TẠO MODEL (Cấu trúc bảng lưu lịch sử làm bài TOEIC)
-const historySchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  topic: { type: String },
-  score: { type: Number, required: true },
-  totalQuestions: { type: Number },
-  createdAt: { type: Date, default: Date.now }
-});
-const HistoryModel = mongoose.model('History', historySchema);
-
-// 4. CẤU HÌNH MIDDLEWARE
+// 3. CẤU HÌNH MIDDLEWARE CHUNG
 app.use(cors()); 
 app.use(express.json()); 
 
-// 5. API: Nhận điểm bài test TOEIC và lưu vào MongoDB
-app.post('/api/quiz/submit', async (req, res) => {
-  try {
-    const { userId, topic, score, totalQuestions } = req.body;
+// 4. KHAI BÁO SỬ DỤNG CÁC CỤM API
+// Khi app Android gọi đến địa chỉ bắt đầu bằng /api/auth/..., Express sẽ tự chuyển tiếp vào file authRoutes.js
+app.use('/api/auth', authRoutes);
 
-    if (!userId || score === undefined) {
-      return res.status(400).json({ error: "Thiếu dữ liệu truyền lên!" });
-    }
+// Khi app Android gọi đến địa chỉ bắt đầu bằng /api/quiz/..., Express sẽ tự chuyển tiếp vào file quizRoutes.js
+app.use('/api/quiz', quizRoutes);
 
-    // Tạo bản ghi mới từ dữ liệu Android gửi lên
-    const newRecord = new HistoryModel({ 
-      userId, 
-      topic, 
-      score, 
-      totalQuestions 
-    });
-
-    // Lưu trực tiếp vào MongoDB
-    await newRecord.save();
-
-    res.status(200).json({ 
-      message: "Lưu kết quả thành công!", 
-      recordId: newRecord._id 
-    });
-
-  } catch (error) {
-    console.error("Lỗi khi lưu điểm:", error);
-    res.status(500).json({ error: "Lỗi hệ thống máy chủ" });
-  }
-});
-
-// 6. CHẠY SERVER
-// Sẽ lấy PORT=3000 từ file .env, nếu không có thì mặc định chạy cổng 3000
+// 5. KHỞI CHẠY SERVER
+// Sẽ lấy PORT từ file .env, nếu không có thì mặc định chạy cổng 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server đang chạy tại cổng http://localhost:${PORT}`);
+  console.log(`🚀 Server Enterprise đang chạy mượt mà tại cổng http://localhost:${PORT}`);
 });
