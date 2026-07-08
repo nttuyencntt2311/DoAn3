@@ -8,7 +8,7 @@ const connectDB = require('./config/db.js'); // Kéo file kết nối database c
 // 1. NHẬP CÁC FILE ĐỊNH TUYẾN (ROUTES) ĐÃ CHIA NHỎ
 const authRoutes = require('./routes/authRoutes.js'); // Quản lý Đăng ký, Đăng nhập, Đăng xuất, Refresh Token
 const quizRoutes = require('./routes/quizRoutes.js'); // Quản lý Nộp điểm TOEIC
-
+const vocabRoutes = require('./routes/vocabRoutes.js');
 const app = express();
 
 // 2. KÍCH HOẠT KẾT NỐI DATABASE
@@ -24,7 +24,8 @@ app.use('/api/auth', authRoutes);
 
 // Khi app Android gọi đến địa chỉ bắt đầu bằng /api/quiz/..., Express sẽ tự chuyển tiếp vào file quizRoutes.js
 app.use('/api/quiz', quizRoutes);
-
+// THÊM DÒNG NÀY ĐỂ KÍCH HOẠT ĐƯỜNG DẪN /api/vocabulary
+app.use('/api', vocabRoutes);
 // 5. KHỞI CHẠY SERVER
 // Sẽ lấy PORT từ file .env, nếu không có thì mặc định chạy cổng 3000
 const PORT = process.env.PORT || 3000;
