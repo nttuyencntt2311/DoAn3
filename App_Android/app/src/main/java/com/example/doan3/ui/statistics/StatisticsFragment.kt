@@ -7,14 +7,13 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.example.doan3.R // Import R của bạn để lấy icon
+import com.example.doan3.R
 import com.example.doan3.databinding.FragmentStatisticsBinding
-import com.google.android.material.card.MaterialCardView
+import com.example.doan3.ui.profile.MemoryItem
 
 class StatisticsFragment : Fragment() {
 
@@ -38,137 +37,131 @@ class StatisticsFragment : Fragment() {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        setupTabs()
+        setupTabs() // Giữ nguyên hàm điều hướng tab của bạn (nếu có)
 
-        // Lắng nghe dữ liệu THỐNG KÊ
+        // Ra lệnh cho ViewModel gọi API lấy thống kê
+        viewModel.fetchRealStatistics(requireContext())
+
+        // =========================================================
+        // LẮNG NGHE VÀ KÉO DỮ LIỆU ĐỔ VÀO GIAO DIỆN
+        // =========================================================
         viewModel.statsData.observe(viewLifecycleOwner) { stats ->
-            binding.tvStreakDays.text = stats.streakDays.toString()
-            binding.tvTotalTime.text = "${stats.totalHours} giờ"
-            binding.tvTotalWords.text = String.format("%,d", stats.totalWords) // Thêm dấu phẩy cho đẹp (1,240)
-            binding.tvAccuracy.text = "${stats.accuracyPercent}%"
-            drawWeeklyChart(stats.chartData)
-        }
 
-        // Lắng nghe dữ liệu KỶ NIỆM
+            // 1. Kéo dữ liệu cho Chuỗi ngày học
+            binding.tvStreakDays.text = stats.streakDays.toString()
+
+            // 2. Kéo dữ liệu vào bảng MaterialCardView (Tổng giờ, Từ vựng, Chính xác)
+            // Lưu ý: Nối thêm chữ " giờ" và "%" để giống với thiết kế XML của bạn
+            binding.tvTotalTime.text = "${stats.totalHours} giờ"
+            binding.tvTotalWords.text = stats.totalWords.toString()
+            binding.tvAccuracy.text = "${stats.accuracyPercent}%"
+
+            // 3. Kéo mảng dữ liệu (List<Int>) truyền vào hàm vẽ biểu đồ
+            drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
+        }
+        // LẮNG NGHE DỮ LIỆU KỶ NIỆM TỪ VIEWMODEL
         viewModel.memoriesData.observe(viewLifecycleOwner) { memories ->
-            drawMemories(memories)
+            binding.containerMemories.removeAllViews() // Xóa view cũ tránh trùng lặp
+
+            if (memories.isEmpty()) {
+                val emptyText = TextView(requireContext()).apply {
+                    text = "Bạn chưa có kỷ niệm nào. Hãy học chăm chỉ hơn nhé!"
+                    textSize = 14f
+                    setTextColor(Color.parseColor("#888888"))
+                    setPadding(0, 50, 0, 0)
+                    gravity = Gravity.CENTER
+                }
+                binding.containerMemories.addView(emptyText)
+            } else {
+                // Vẽ từng tấm thẻ Kỷ niệm
+                for (memory in memories) {
+                    val cardView = createMemoryCard(memory)
+                    binding.containerMemories.addView(cardView)
+                }
+            }
         }
     }
+    // Hàm hỗ trợ vẽ thẻ CardView cho mỗi Kỷ niệm
+    private fun createMemoryCard(memory: MemoryItem): View {
+        val layout = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, (16 * resources.displayMetrics.density).toInt()) // Margin Bottom 16dp
+            }
+            setBackgroundResource(R.drawable.bg_bar_rounded) // Tạo sẵn một background bo góc màu trắng trong res/drawable
+            setPadding(40, 40, 40, 40)
+            elevation = 4f
+        }
 
+        val tvTitle = TextView(requireContext()).apply {
+            text = memory.title
+            textSize = 16f
+            setTextColor(Color.parseColor("#1A1A1A"))
+            setTypeface(null, Typeface.BOLD)
+        }
+
+        val tvDesc = TextView(requireContext()).apply {
+            text = memory.description
+            textSize = 14f
+            setTextColor(Color.parseColor("#64748B"))
+            setPadding(0, 10, 0, 10)
+        }
+
+        val tvDateAndXp = TextView(requireContext()).apply {
+            text = "${memory.date} • +${memory.xp} XP"
+            textSize = 12f
+            setTextColor(Color.parseColor("#2563EB")) // Màu xanh nổi bật
+            setTypeface(null, Typeface.BOLD_ITALIC)
+        }
+
+        layout.addView(tvTitle)
+        layout.addView(tvDesc)
+        layout.addView(tvDateAndXp)
+
+        return layout
+    }
+
+    // Hàm thiết lập Tabs (Giữ nguyên phần khung của bạn)
     private fun setupTabs() {
-        val density = resources.displayMetrics.density
-
+        // 1. KHI NGƯỜI DÙNG BẤM VÀO TAB "THỐNG KÊ"
         binding.tabStatistics.setOnClickListener {
+            // --- TAB THỐNG KÊ (ACTIVE) ---
             binding.tabStatistics.setCardBackgroundColor(Color.WHITE)
-            binding.tabStatistics.cardElevation = 2f * density
             binding.tvTabStatistics.setTextColor(Color.parseColor("#1A1A1A"))
+            binding.tabStatistics.cardElevation = 8f // Bật lại bóng đổ cho tab đang chọn
 
+            // --- TAB KỶ NIỆM (INACTIVE) ---
             binding.tabMemories.setCardBackgroundColor(Color.TRANSPARENT)
-            binding.tabMemories.cardElevation = 0f
             binding.tvTabMemories.setTextColor(Color.parseColor("#888888"))
+            binding.tabMemories.cardElevation = 0f // Tắt bóng đổ để xóa viền đen mờ mờ
 
+            // Hiển thị phần Thống Kê (thông qua Group), Ẩn phần Kỷ niệm
             binding.groupStatistics.visibility = View.VISIBLE
             binding.layoutMemories.visibility = View.GONE
         }
 
+        // 2. KHI NGƯỜI DÙNG BẤM VÀO TAB "KỶ NIỆM"
         binding.tabMemories.setOnClickListener {
+            // --- TAB KỶ NIỆM (ACTIVE) ---
             binding.tabMemories.setCardBackgroundColor(Color.WHITE)
-            binding.tabMemories.cardElevation = 2f * density
             binding.tvTabMemories.setTextColor(Color.parseColor("#1A1A1A"))
+            binding.tabMemories.cardElevation = 8f // Bật lại bóng đổ cho tab đang chọn
 
+            // --- TAB THỐNG KÊ (INACTIVE) ---
             binding.tabStatistics.setCardBackgroundColor(Color.TRANSPARENT)
-            binding.tabStatistics.cardElevation = 0f
             binding.tvTabStatistics.setTextColor(Color.parseColor("#888888"))
+            binding.tabStatistics.cardElevation = 0f // Tắt bóng đổ để xóa viền đen mờ mờ
 
-            binding.groupStatistics.visibility = View.GONE
+            // Hiển thị phần Kỷ niệm, Ẩn phần Thống Kê (thông qua Group)
             binding.layoutMemories.visibility = View.VISIBLE
+            binding.groupStatistics.visibility = View.GONE
         }
     }
-
-    // ĐÃ VIẾT LẠI HÀM NÀY ĐỂ GIỐNG ẢNH THIẾT KẾ CỦA BẠN (CÓ ICON VÀ +XP)
-    private fun drawMemories(memories: List<MemoryItem>) {
-        binding.containerMemories.removeAllViews()
-        val density = resources.displayMetrics.density
-
-        for (memory in memories) {
-            // Thẻ Card bên ngoài
-            val card = MaterialCardView(requireContext()).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { bottomMargin = (16 * density).toInt() }
-                setCardBackgroundColor(Color.WHITE)
-                radius = 16f * density
-                cardElevation = 2f * density
-                strokeWidth = 0
-            }
-
-            // Thanh ngang chứa toàn bộ (Icon - Text - XP)
-            val rowLayout = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding((16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt(), (16 * density).toInt())
-            }
-
-            // 1. Cục Icon bên trái (Tạm dùng icon ngôi sao mặc định)
-            val iconView = ImageView(requireContext()).apply {
-                layoutParams = LinearLayout.LayoutParams((48 * density).toInt(), (48 * density).toInt()).apply {
-                    marginEnd = (16 * density).toInt()
-                }
-                // Bạn có thể đổi hình vẽ thành icon xịn của bạn ở dòng dưới nhé
-                setImageResource(R.drawable.ic_launcher_foreground)
-                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
-            }
-
-            // 2. Cục Text ở giữa (Chứa Title, Desc, Date)
-            val textLayout = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-
-            val tvTitle = TextView(requireContext()).apply {
-                text = memory.title
-                textSize = 15f
-                setTextColor(Color.parseColor("#1A1A1A"))
-                setTypeface(null, Typeface.BOLD)
-            }
-
-            val tvDesc = TextView(requireContext()).apply {
-                text = memory.description
-                textSize = 13f
-                setTextColor(Color.parseColor("#666666"))
-                setPadding(0, (4 * density).toInt(), 0, (4 * density).toInt())
-            }
-
-            val tvDate = TextView(requireContext()).apply {
-                text = memory.date
-                textSize = 12f
-                setTextColor(Color.parseColor("#888888"))
-            }
-
-            textLayout.addView(tvTitle)
-            textLayout.addView(tvDesc)
-            textLayout.addView(tvDate)
-
-            // 3. Cục Điểm XP bên phải
-            val tvXp = TextView(requireContext()).apply {
-                text = "+${memory.xp} xp"
-                textSize = 16f
-                setTextColor(Color.parseColor("#FF9800")) // Màu cam giống ảnh
-                setTypeface(null, Typeface.BOLD)
-            }
-
-            // Gắn 3 cục vào thanh ngang
-            rowLayout.addView(iconView)
-            rowLayout.addView(textLayout)
-            rowLayout.addView(tvXp)
-
-            card.addView(rowLayout)
-            binding.containerMemories.addView(card)
-        }
-    }
-
-    private fun drawWeeklyChart(data: List<Int>) {
+    // Hàm vẽ biểu đồ cột 7 ngày (Giữ nguyên logic code tuyệt vời của bạn)
+    private fun drawChart(data: List<Int>) {
         binding.chartContainer.removeAllViews()
         val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
 
@@ -181,9 +174,15 @@ class StatisticsFragment : Fragment() {
             }
 
             val barView = View(requireContext()).apply {
-                setBackgroundColor(Color.parseColor("#0056D2"))
+                setBackgroundColor(Color.parseColor("#0056D2")) // Màu xanh chủ đạo
+
+                // Quy đổi chiều cao phần trăm ra pixel hiển thị
                 val heightInPx = ((percent / 100f) * 100 * resources.displayMetrics.density).toInt()
-                layoutParams = LinearLayout.LayoutParams((16 * resources.displayMetrics.density).toInt(), heightInPx).apply {
+
+                layoutParams = LinearLayout.LayoutParams(
+                    (16 * resources.displayMetrics.density).toInt(),
+                    heightInPx
+                ).apply {
                     bottomMargin = (8 * resources.displayMetrics.density).toInt()
                 }
             }

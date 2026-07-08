@@ -14,6 +14,7 @@ import com.example.doan3.R
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.view.View
 
 class TaiKhoanActivity : AppCompatActivity() {
 
@@ -34,34 +35,48 @@ class TaiKhoanActivity : AppCompatActivity() {
             finish()
         }
 
+        // 1. Nút quay lại (nếu ID này là ImageView thì cứ giữ nguyên ImageView, nếu lỗi thì đổi thành View)
+        findViewById<View>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
+
         // 2. Mở trang Thông tin cá nhân
-        findViewById<RelativeLayout>(R.id.btnPersonalInfo).setOnClickListener {
+        findViewById<View>(R.id.btnPersonalInfo).setOnClickListener {
             val intent = Intent(this, ThongTinCaNhanActivity::class.java)
             startActivity(intent)
         }
 
-        // 3. Mở trang Đổi mật khẩu (ĐOẠN CODE VỪA ĐƯỢC THÊM)
-        findViewById<RelativeLayout>(R.id.btnChangePassword).setOnClickListener {
+        // 3. Mở trang Đổi mật khẩu
+        findViewById<View>(R.id.btnChangePassword).setOnClickListener {
             val intent = Intent(this, DoiMatKhauActivity::class.java)
             startActivity(intent)
         }
 
         // 4. Mở trang Điều khoản & Chính sách
-        findViewById<RelativeLayout>(R.id.btnTerms).setOnClickListener {
+        findViewById<View>(R.id.btnTerms).setOnClickListener {
             startActivity(Intent(this, DieuKhoanActivity::class.java))
         }
 
-        findViewById<RelativeLayout>(R.id.btnLogout).setOnClickListener {
+        // 5. Nút đăng xuất
+        findViewById<View>(R.id.btnLogout).setOnClickListener {
+            // ... (Đoạn code đăng xuất bên trong bạn giữ nguyên không sửa gì cả)
+
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
 
             // GỌI API BÁO BACKEND HỦY TOKEN TRƯỚC KHI XÓA TRÊN MÁY
             if (refreshToken.isNotEmpty()) {
                 val request = RefreshTokenRequest(refreshToken)
-                RetrofitClient.getInstance(this).logout(request).enqueue(object : Callback<LogoutResponse> {
-                    override fun onResponse(call: Call<LogoutResponse>, response: Response<LogoutResponse>) { }
-                    override fun onFailure(call: Call<LogoutResponse>, t: Throwable) { }
-                })
+                RetrofitClient.getInstance(this).logout(request)
+                    .enqueue(object : Callback<LogoutResponse> {
+                        override fun onResponse(
+                            call: Call<LogoutResponse>,
+                            response: Response<LogoutResponse>
+                        ) {
+                        }
+
+                        override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {}
+                    })
             }
 
             // Dọn dẹp máy và chuyển màn hình (Giữ nguyên code cũ của bạn)
@@ -71,8 +86,9 @@ class TaiKhoanActivity : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
-
         }
+
+
     }
 
     override fun onResume() {

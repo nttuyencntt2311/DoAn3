@@ -104,6 +104,12 @@ class hoso : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+        tvHeaderStreak?.setOnClickListener {
+            // Vì StatisticsFragment nằm trong MainActivity, ta dùng Intent truyền tín hiệu về MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_STATISTICS", true) // Gửi kèm tín hiệu
+            startActivity(intent)
+        }
     }
 
     /**
@@ -133,6 +139,7 @@ class hoso : AppCompatActivity() {
                 setLoadingDefaultValues()
             }
         })
+
     }
 
     /**
@@ -191,5 +198,6 @@ class hoso : AppCompatActivity() {
             startActivity(intent)
             overridePendingTransition(0, 0)
         }
+
     }
 }

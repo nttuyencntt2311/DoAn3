@@ -1,25 +1,26 @@
 package com.example.doan3.ui.statistics
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.profile.LearningStatsResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import com.example.doan3.ui.profile.MemoryItem
 
-// 1. KHUÔN DỮ LIỆU THỐNG KÊ
+// 1. KHUÔN DỮ LIỆU THỐNG KÊ (Dùng để hiển thị lên UI)
 data class LearningStats(
     val streakDays: Int,
     val totalHours: Int,
     val totalWords: Int,
     val accuracyPercent: Int,
-    val chartData: List<Int>
+    val chartData: List<Int>?
 )
 
-// 2. KHUÔN DỮ LIỆU KỶ NIỆM (Đã thêm XP)
-data class MemoryItem(
-    val date: String,
-    val title: String,
-    val description: String,
-    val xp: Int // <-- Thêm trường điểm XP
-)
+
 
 class StatisticsViewModel : ViewModel() {
 
@@ -30,29 +31,53 @@ class StatisticsViewModel : ViewModel() {
     val memoriesData: LiveData<List<MemoryItem>> get() = _memoriesData
 
     init {
-        fetchStatistics()
+        // Tải danh sách kỷ niệm (Tạm thời dùng Mock Data)
         fetchMemories()
     }
 
-    private fun fetchStatistics() {
-        // ĐÃ ĐỒNG BỘ SỐ LIỆU VỚI HOME (45 giờ, 1240 từ)
-        val mockData = LearningStats(
-            streakDays = 15,
-            totalHours = 45,    // Khớp với Home
-            totalWords = 1240,  // Khớp với Home
-            accuracyPercent = 92,
-            chartData = listOf(40, 60, 80, 30, 100, 70, 90)
-        )
-        _statsData.value = mockData
+    // =========================================================================
+    // HÀM LẤY DỮ LIỆU THỐNG KÊ THẬT TỪ BACKEND (THAY THẾ MOCK DATA CŨ)
+    // =========================================================================
+// File: StatisticsViewModel.kt
+    fun fetchRealStatistics(context: Context) {
+        RetrofitClient.getInstance(context).getLearningStats()
+            .enqueue(object : Callback<LearningStatsResponse> {
+                override fun onResponse(call: Call<LearningStatsResponse>, response: Response<LearningStatsResponse>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val serverStats = response.body()!!
+
+                        // 1. Cập nhật thống kê chung
+                        _statsData.value = LearningStats(
+                            streakDays = serverStats.streakDays,
+                            totalHours = serverStats.totalHours,
+                            totalWords = serverStats.totalWords,
+                            accuracyPercent = serverStats.accuracyPercent,
+                            chartData = serverStats.chartData
+                        )
+
+                        // 2. CẬP NHẬT KỶ NIỆM (Lấy dữ liệu xịn từ Server)
+                        // Đảo ngược list để Kỷ niệm mới nhất hiện lên trên cùng (tùy chọn)
+                        _memoriesData.value = serverStats.memories?.reversed() ?: emptyList()
+                    } else {
+                        setEmptyStats()
+                    }
+                }
+
+                override fun onFailure(call: Call<LearningStatsResponse>, t: Throwable) {
+                    setEmptyStats()
+                }
+            })
+    }
+    // Hàm set giá trị mặc định khi có lỗi mạng
+    private fun setEmptyStats() {
+        _statsData.value = LearningStats(0, 0, 0, 0, listOf(0, 0, 0, 0, 0, 0, 0))
     }
 
+    // Giữ nguyên dữ liệu ảo cho phần Kỷ niệm (Memories)
     private fun fetchMemories() {
-        // ĐÃ THÊM ĐIỂM XP VÀO CUỐI
         val mockMemories = listOf(
             MemoryItem("Hôm nay", "🔥 Chuỗi 15 ngày rực cháy", "Bạn đã duy trì thói quen học tiếng Anh 15 ngày liên tiếp.", 50),
-            MemoryItem("10/06/2026", "📚 Vượt mốc 800 từ vựng", "Kho từ vựng của bạn đang ngày một phong phú.", 20),
-            MemoryItem("05/06/2026", "🎯 Cú đêm chăm chỉ", "Bạn đã hoàn thành bài học lúc 23:45. Tinh thần thật đáng nể!", 10),
-            MemoryItem("01/06/2026", "🌟 Khởi đầu hoàn hảo", "Chào mừng bạn gia nhập thế giới từ vựng LexiVT.", 100)
+            MemoryItem("10/06/2026", "📚 Vượt mốc 800 từ vựng", "Kho từ vựng của bạn đã được mở rộng đáng kể.", 100)
         )
         _memoriesData.value = mockMemories
     }

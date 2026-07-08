@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db.js'); // Kéo file kết nối database của bạn vào
+const statsRoutes = require('./routes/statsRoutes.js'); // <-- THÊM DÒNG NÀY
 
 // 1. NHẬP CÁC FILE ĐỊNH TUYẾN (ROUTES) ĐÃ CHIA NHỎ
 const authRoutes = require('./routes/authRoutes.js'); // Quản lý Đăng ký, Đăng nhập, Đăng xuất, Refresh Token
@@ -24,6 +25,8 @@ app.use('/api/auth', authRoutes);
 
 // Khi app Android gọi đến địa chỉ bắt đầu bằng /api/quiz/..., Express sẽ tự chuyển tiếp vào file quizRoutes.js
 app.use('/api/quiz', quizRoutes);
+
+app.use('/api/stats', statsRoutes); // <-- THÊM DÒNG NÀY (Tiền tố endpoint là /api/stats)
 
 // 5. KHỞI CHẠY SERVER
 // Sẽ lấy PORT từ file .env, nếu không có thì mặc định chạy cổng 3000

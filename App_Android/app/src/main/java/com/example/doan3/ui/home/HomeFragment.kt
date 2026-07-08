@@ -95,6 +95,11 @@ class HomeFragment : Fragment() {
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
                 .addToBackStack(null).commit()
         }
+        binding.tvStreakDays.setOnClickListener {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
+                .addToBackStack(null).commit()
+        }
     }
 
     override fun onDestroyView() {

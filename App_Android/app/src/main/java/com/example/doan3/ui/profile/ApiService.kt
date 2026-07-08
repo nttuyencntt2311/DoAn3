@@ -43,6 +43,31 @@ data class RefreshTokenRequest(val refreshToken: String)
 data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
 
+data class LearningStatsResponse(
+    val streakDays: Int,
+    val totalHours: Int,
+    val totalWords: Int,
+    val accuracyPercent: Int,
+    val chartData: List<Int>,
+    val memories: List<MemoryItem> // Đón dữ liệu Kỷ niệm từ Backend
+)
+data class MemoryItem(
+    val date: String,
+    val title: String,
+    val description: String,
+    val xp: Int
+)
+
+data class SubmitQuizRequest(
+    val topic: String,
+    val score: Int,
+    val totalQuestions: Int,
+    val earnedXp: Int,
+    val learnedWords: Int,
+    val timeSpentMinutes: Int // Đã đồng bộ trường mới với backend
+)
+data class SubmitQuizResponse(val message: String)
+
 // === API INTERFACE ===
 interface ApiService {
     @POST("api/auth/register")
@@ -57,8 +82,12 @@ interface ApiService {
     @PUT("api/auth/update-profile")
     fun updateProfile(@Body request: UpdateProfileRequest): Call<UpdateProfileResponse>
 
-    @GET("api/auth/stats")
+    @GET("api/auth/stats") // Endpoint cũ đáp ứng cho màn hình HOME
     fun getUserStats(): Call<UserStatsResponse>
+
+    @GET("api/stats/learning") // Gọi chính xác đến file statsRoutes mới ở Backend
+    fun getLearningStats(): Call<LearningStatsResponse>
+
 
     @PUT("api/auth/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<ChangePasswordResponse>
@@ -66,6 +95,9 @@ interface ApiService {
     // 2 HÀM MỚI THÊM:
     @POST("api/auth/refresh-token")
     fun refreshToken(@Body request: RefreshTokenRequest): Call<RefreshTokenResponse>
+
+    @POST("/api/quiz/submit")
+    fun submitQuiz(@Body request: SubmitQuizRequest): Call<SubmitQuizResponse>
 
     @POST("api/auth/logout")
     fun logout(@Body request: RefreshTokenRequest): Call<LogoutResponse>
