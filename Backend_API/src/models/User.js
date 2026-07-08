@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   
   // === THÊM CÁC CHỈ SỐ GAMIFICATION ===
   xp: { type: Number, default: 0 },                    // Điểm kinh nghiệm (Mặc định: 0)
-  level: { type: String, default: "Mới nhập môn" },    // Cấp độ (Mặc định: Mới nhập môn)
+  level: { type: Number, default: 0 },    // Cấp độ (Mặc định: Mới nhập môn)
   streakDays: { type: Number, default: 0 },            // Chuỗi ngày học (Mặc định: 0)
   wordsLearned: { type: Number, default: 0 },          // Số từ vựng đã học (Mặc định: 0)
   timeLearnedMinutes: { type: Number, default: 0 },    // Thời gian học (phút) (Mặc định: 0)

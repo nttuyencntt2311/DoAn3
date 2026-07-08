@@ -1,8 +1,14 @@
 package com.example.doan3.ui.home
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.profile.UserStatsResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class HomeViewModel : ViewModel() {
 
@@ -27,34 +33,42 @@ class HomeViewModel : ViewModel() {
     private val _timeLearned = MutableLiveData<String>()
     val timeLearned: LiveData<String> = _timeLearned
 
-    // Tên bài học động kết nối trực tiếp với tvLessonName trong XML của bạn
     private val _nextLessonName = MutableLiveData<String>()
     val nextLessonName: LiveData<String> = _nextLessonName
 
-    // Nội dung text XP kết nối trực tiếp với tvXp trong XML của bạn
     private val _nextLessonXp = MutableLiveData<String>()
     val nextLessonXp: LiveData<String> = _nextLessonXp
 
     init {
-        // Gán trạng thái mặc định an toàn cho người mới trong lúc chờ tải dữ liệu mạng
+        // Gán trạng thái mặc định ban đầu khi vừa mở màn hình
         setDefaultNewUserValues()
-        fetchUserData()
     }
 
-    fun fetchUserData() {
-        // TODO: Sau này bạn dùng Retrofit gọi API GET /api/user/home từ backend Node.js (MongoDB) ở đây.
+    fun fetchUserData(context: Context) {
+        RetrofitClient.getInstance(context).getUserStats().enqueue(object : Callback<UserStatsResponse> {
+            override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
+                val stats = response.body()?.stats
+                if (response.isSuccessful && stats != null) {
+                    _userName.value = stats.name
+                    _userLevel.value = "Cấp: ${stats.level}"
+                    _streakDays.value = stats.streakDays
+                    _wordsCount.value = stats.wordsLearned
+                    _timeLearned.value = "${stats.timeLearnedMinutes} phút"
+                    _nextLessonXp.value = "${stats.xp} XP"
 
-        // Hiện tại: Gán dữ liệu giả lập tĩnh để test giao diện Trang chủ mà không bị lỗi
-        _userName.value = "Người dùng LexiVT"
-        _userLevel.value = "Cấp 1"
-        _streakDays.value = 5
-        _progressPercent.value = 50
-        _taskTargetText.value = "Mục tiêu hôm nay: 5/10 từ mới"
-        _wordsCount.value = 120
-        _timeLearned.value = "2 giờ"
+                    // Tính phần trăm tiến trình giả lập dựa trên XP
+                    _progressPercent.value = if (stats.xp < 100) stats.xp else (stats.xp % 100)
+                } else {
+                    // Nếu server trả về lỗi (ví dụ 404, 500), đưa giao diện về mặc định
+                    setDefaultNewUserValues()
+                }
+            }
 
-        _nextLessonName.value = "Bài 2: Giao tiếp cơ bản"
-        _nextLessonXp.value = "+50 XP Tiềm năng"
+            override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
+                // ĐÃ KHÔI PHỤC: Chủ động đưa giao diện về mặc định khi mất kết nối mạng
+                setDefaultNewUserValues()
+            }
+        })
     }
 
     private fun setDefaultNewUserValues() {
@@ -64,10 +78,8 @@ class HomeViewModel : ViewModel() {
         _progressPercent.value = 0
         _taskTargetText.value = "Mục tiêu hôm nay: 0/10 từ mới"
         _wordsCount.value = 0
-        _timeLearned.value = "0 giờ"
-
-        // Giá trị mấu chốt xử lý logic cho người mới bắt đầu học bài đầu tiên
-        _nextLessonName.value = "Bài 1: Khởi động & Từ vựng cơ bản"
-        _nextLessonXp.value = "Nhấn để bắt đầu bài học đầu tiên!"
+        _timeLearned.value = "0 phút"
+        _nextLessonName.value = "Bài 1: Bắt đầu hành trình"
+        _nextLessonXp.value = "0 XP"
     }
 }

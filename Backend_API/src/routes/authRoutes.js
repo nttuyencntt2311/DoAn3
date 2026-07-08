@@ -39,37 +39,60 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
+    }
+
     const user = await UserModel.findOne({ email });
-    if (!user) return res.status(400).json({ error: "Sai email hoặc mật khẩu!" });
+    if (!user) {
+      return res.status(400).json({ error: "Email không tồn tại!" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Sai email hoặc mật khẩu!" });
+    if (!isMatch) {
+      return res.status(400).json({ error: "Mật khẩu không chính xác!" });
+    }
 
+    // 1. Tạo Access Token (Thời hạn 15 phút)
     const token = jwt.sign(
-      { userId: user._id, email: user.email }, 
-      process.env.JWT_SECRET || "ChuoiBiMatTamThoi", 
+      { userId: user._id }, 
+      process.env.JWT_SECRET || 'your_jwt_secret_key', 
+      { expiresIn: '15m' }
+    );
+
+    // 2. Tạo Refresh Token (Thời hạn 30 ngày)
+    const refreshToken = jwt.sign(
+      { userId: user._id }, 
+      process.env.REFRESH_SECRET || 'your_refresh_secret_key', 
       { expiresIn: '30d' }
     );
+
+    // 3. Lưu Refresh Token vào Database
+    user.refreshTokens.push(refreshToken);
+    await user.save();
 
     res.status(200).json({
       message: "Đăng nhập thành công!",
       token: token,
-      user: { id: user._id, name: user.name, email: user.email }
+      refreshToken: refreshToken, // Trả thêm refreshToken về cho App
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: "Lỗi hệ thống" });
+    res.status(500).json({ error: "Lỗi máy chủ hệ thống" });
   }
 });
 
 // =====================================
-// 3. API: LẤY THÔNG TIN CÁ NHÂN (GET) - ĐÃ BẢO MẬT
+// 3. API: LẤY THÔNG TIN CÁ NHÂN
 // =====================================
 router.get('/profile', verifyToken, async (req, res) => {
   try {
-    // Lấy ID trực tiếp từ Token đã được giải mã ở middleware, tuyệt đối bảo mật
     const user = await UserModel.findById(req.user.userId).select('-password');
     if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
-    
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
@@ -96,8 +119,6 @@ router.put('/profile', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
-
-  
 });
 
 // =====================================
@@ -110,10 +131,98 @@ router.get('/stats', verifyToken, async (req, res) => {
       .select('name xp level streakDays wordsLearned timeLearnedMinutes');
       
     if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
-    
     res.status(200).json({ stats: user });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
 });
+
+// =====================================
+// 6. API: ĐỔI MẬT KHẨU (MỚI THÊM)
+// =====================================
+router.put('/change-password', verifyToken, async (req, res) => {
+  try {
+    const { currentPass, newPass } = req.body;
+    
+    // Tìm user đang đăng nhập
+    const user = await UserModel.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: "Không tìm thấy người dùng!" });
+    }
+
+    // So sánh mật khẩu hiện tại (nhập vào) với mật khẩu đang lưu (mã hóa)
+    const isMatch = await bcrypt.compare(currentPass, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Mật khẩu hiện tại không chính xác!" });
+    }
+
+    // Mã hóa mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPass, salt);
+
+    // Cập nhật vào Database
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Đổi mật khẩu thành công!" });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi hệ thống khi đổi mật khẩu" });
+  }
+});
+
+// =====================================
+// 7. API: LÀM MỚI TOKEN (REFRESH TOKEN)
+// =====================================
+router.post('/refresh-token', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Thiếu Refresh Token!" });
+    }
+
+    const user = await UserModel.findOne({ refreshTokens: refreshToken });
+    if (!user) {
+      return res.status(403).json({ error: "Refresh Token không hợp lệ hoặc đã bị đăng xuất!" });
+    }
+
+    jwt.verify(refreshToken, process.env.REFRESH_SECRET || 'your_refresh_secret_key', (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ error: "Refresh Token đã hết hạn, vui lòng đăng nhập lại!" });
+      }
+
+      const newAccessToken = jwt.sign(
+        { userId: user._id }, 
+        process.env.JWT_SECRET || 'your_jwt_secret_key', 
+        { expiresIn: '15m' }
+      );
+
+      res.status(200).json({ token: newAccessToken });
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi hệ thống khi làm mới token!" });
+  }
+});
+
+// =====================================
+// 8. API: ĐĂNG XUẤT (XÓA REFRESH TOKEN)
+// =====================================
+router.post('/logout', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: "Thiếu Refresh Token để đăng xuất!" });
+    }
+
+    const user = await UserModel.findOne({ refreshTokens: refreshToken });
+    if (user) {
+      user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+      await user.save();
+    }
+
+    res.status(200).json({ message: "Đăng xuất thành công trên hệ thống!" });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi hệ thống khi đăng xuất!" });
+  }
+});
+
 module.exports = router;

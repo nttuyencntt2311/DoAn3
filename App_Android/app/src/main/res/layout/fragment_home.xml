@@ -68,8 +68,7 @@
             </LinearLayout>
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipStreak"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvStreakDays"                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="15 ngày"
                 android:textColor="@color/badge_text"

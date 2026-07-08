@@ -27,18 +27,15 @@ class RegisterActivity : AppCompatActivity() {
             insets
         }
 
-        // Nút lùi về trang đăng nhập
         val tvLogin = findViewById<TextView>(R.id.tvLogin)
         tvLogin.setOnClickListener { finish() }
 
-        // Ánh xạ các UI từ dangky.xml
         val edtName = findViewById<TextInputEditText>(R.id.edtName)
         val edtEmail = findViewById<TextInputEditText>(R.id.edtEmail)
         val edtPassword = findViewById<TextInputEditText>(R.id.edtPassword)
         val edtConfirmPassword = findViewById<TextInputEditText>(R.id.edtConfirmPassword)
         val btnRegister = findViewById<MaterialButton>(R.id.btnRegister)
 
-        // Xử lý nút Đăng ký
         btnRegister.setOnClickListener {
             val name = edtName.text.toString().trim()
             val email = edtEmail.text.toString().trim()
@@ -60,14 +57,13 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // GỌI API ĐĂNG KÝ XUỐNG NODE.JS
             val request = RegisterRequest(name, email, password)
 
-            RetrofitClient.instance.registerUser(request).enqueue(object : Callback<RegisterResponse> {
+            RetrofitClient.getInstance(this).registerUser(request).enqueue(object : Callback<RegisterResponse> {
                 override fun onResponse(call: Call<RegisterResponse>, response: Response<RegisterResponse>) {
                     if (response.isSuccessful) {
                         Toast.makeText(this@RegisterActivity, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_SHORT).show()
-                        finish() // Tự động đóng màn hình Đăng ký để quay lại màn hình Đăng nhập
+                        finish()
                     } else {
                         Toast.makeText(this@RegisterActivity, "Đăng ký thất bại: Email đã tồn tại!", Toast.LENGTH_SHORT).show()
                     }

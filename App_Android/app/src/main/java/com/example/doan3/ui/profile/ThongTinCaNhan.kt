@@ -23,14 +23,12 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
     private lateinit var tvFemale: TextView
 
     private var gioiTinhDuocChon = "Nam"
-    private var currentUserId: String? = null // Biến lưu ID người dùng
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.thongtincanhan)
 
-        // 1. Ánh xạ các UI
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         edtName = findViewById(R.id.edtName)
         edtBirthDate = findViewById(R.id.edtBirthDate)
@@ -42,11 +40,6 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
         val btnSaveTop = findViewById<TextView>(R.id.btnSaveTop)
         val btnSaveBottom = findViewById<MaterialCardView>(R.id.btnSaveBottom)
 
-        // 2. Lấy User ID từ SharedPreferences (Lúc đăng nhập đã lưu)
-        val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
-        currentUserId = sharedPreferences.getString("USER_ID", null)
-
-        // 3. Xử lý nút chọn Giới tính
         btnMale.setOnClickListener {
             gioiTinhDuocChon = "Nam"
             updateGioiTinhUI()
@@ -57,27 +50,20 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
             updateGioiTinhUI()
         }
 
-        // 4. Xử lý nút Lưu (gọi hàm update)
         btnSaveTop.setOnClickListener { saveAction() }
         btnSaveBottom.setOnClickListener { saveAction() }
 
-        // 5. Tự động tải dữ liệu từ DB khi vừa mở màn hình
         loadUserDataFromAPI()
     }
 
     private fun loadUserDataFromAPI() {
-        if (currentUserId == null) return
-
-        RetrofitClient.instance.getProfile(currentUserId!!).enqueue(object : Callback<GetProfileResponse> {
+        RetrofitClient.getInstance(this).getProfile().enqueue(object : Callback<GetProfileResponse> {
             override fun onResponse(call: Call<GetProfileResponse>, response: Response<GetProfileResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val user = response.body()?.user
                     if (user != null) {
-                        // Đổ dữ liệu thật từ DB lên màn hình
                         edtName.setText(user.name)
                         edtBirthDate.setText(user.birthDate)
-
-                        // Chỉnh nút giới tính theo DB
                         gioiTinhDuocChon = if (user.gender.isNotEmpty()) user.gender else "Nam"
                         updateGioiTinhUI()
                     }
@@ -99,20 +85,13 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
             return
         }
 
-        if (currentUserId == null) {
-            Toast.makeText(this, "Lỗi: Không tìm thấy phiên đăng nhập!", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Tạo cục dữ liệu ném lên server
         val request = UpdateProfileRequest(name, gioiTinhDuocChon, birthDate)
 
-        // Gọi API PUT để lưu đè lên DB
-        RetrofitClient.instance.updateProfile(currentUserId!!, request).enqueue(object : Callback<UpdateProfileResponse> {
+        RetrofitClient.getInstance(this).updateProfile(request).enqueue(object : Callback<UpdateProfileResponse> {
             override fun onResponse(call: Call<UpdateProfileResponse>, response: Response<UpdateProfileResponse>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@ThongTinCaNhanActivity, "Đã lưu thông tin thành công!", Toast.LENGTH_SHORT).show()
-                    finish() // Quay về trang trước
+                    finish()
                 } else {
                     Toast.makeText(this@ThongTinCaNhanActivity, "Lưu thất bại, thử lại sau!", Toast.LENGTH_SHORT).show()
                 }

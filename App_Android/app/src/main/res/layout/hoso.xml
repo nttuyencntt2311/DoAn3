@@ -302,6 +302,7 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -335,14 +336,14 @@
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#F1F5F9"
-                            android:layout_centerVertical="true" />
+                            android:layout_centerVertical="true"
+                            android:background="#F1F5F9" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="#E2E8F0"
-                            android:layout_alignParentBottom="true" />
+                            android:layout_alignParentBottom="true"
+                            android:background="#E2E8F0" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -350,39 +351,158 @@
                             android:orientation="horizontal"
                             android:weightSum="7">
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="40dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="40dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="60dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="60dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="35dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="35dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="80dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="80dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="25dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="25dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="110dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#0056B3" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="110dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#0056B3" />
                             </RelativeLayout>
 
-                            <RelativeLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1">
-                                <View android:layout_width="24dp" android:layout_height="120dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#F8FAFC" />
-                                <View android:layout_width="24dp" android:layout_height="20dp" android:layout_alignParentBottom="true" android:layout_centerHorizontal="true" android:background="@drawable/bg_bar_rounded" android:backgroundTint="#9BA8B2" />
+                            <RelativeLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1">
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="120dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#F8FAFC" />
+
+                                <View
+                                    android:layout_width="24dp"
+                                    android:layout_height="20dp"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true"
+                                    android:background="@drawable/bg_bar_rounded"
+                                    android:backgroundTint="#9BA8B2" />
                             </RelativeLayout>
 
                         </LinearLayout>
@@ -391,17 +511,73 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:orientation="horizontal"
-                        android:weightSum="7"
-                        android:layout_marginTop="8dp">
+                        android:weightSum="7">
 
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T2" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T3" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T4" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T5" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T6" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="T7" android:gravity="center" android:textColor="#0056B3" android:textSize="11sp" android:textStyle="bold" />
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="CN" android:gravity="center" android:textColor="#94A3B8" android:textSize="11sp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T2"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T3"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T4"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T5"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T6"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="T7"
+                            android:textColor="#0056B3"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="CN"
+                            android:textColor="#94A3B8"
+                            android:textSize="11sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -568,6 +744,7 @@
                             app:cardBackgroundColor="#F0F9FF"
                             app:cardCornerRadius="22dp"
                             app:cardElevation="0dp">
+
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"

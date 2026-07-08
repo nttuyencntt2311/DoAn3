@@ -5,19 +5,22 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputLayout
 import com.example.doan3.R
-
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class DoiMatKhauActivity : AppCompatActivity() {
 
+    private lateinit var etCurrentPassword: EditText
     private lateinit var etNewPassword: EditText
     private lateinit var etConfirmPassword: EditText
     private lateinit var tilNewPassword: TextInputLayout
@@ -44,24 +47,23 @@ class DoiMatKhauActivity : AppCompatActivity() {
         setContentView(R.layout.doimatkhau)
 
         anhXaGiaoDien()
+        setupPasswordWatcher()
 
-        // 1. Xử lý nút quay lại
+        // Bắt sự kiện quay lại
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
-        // 2. Lắng nghe thay đổi trên ô Mật khẩu mới để cập nhật danh sách điều kiện
-        setupPasswordRequirementsListener()
-
-        // 3. Xử lý nút Cập nhật mật khẩu
-        findViewById<MaterialCardView>(R.id.btnUpdatePassword).setOnClickListener {
+        // Bắt sự kiện Lưu (nếu ID nút lưu của bạn khác btnSavePassword, hãy đổi id chỗ này cho khớp file XML)
+        findViewById<View>(R.id.btnUpdatePassword)?.setOnClickListener {
             handleUpdatePassword()
         }
     }
 
     private fun anhXaGiaoDien() {
-        tilNewPassword = findViewById(R.id.tilNewPassword)
-        tilConfirmPassword = findViewById(R.id.tilConfirmPassword)
+        etCurrentPassword = findViewById(R.id.etCurrentPassword)
         etNewPassword = findViewById(R.id.etNewPassword)
         etConfirmPassword = findViewById(R.id.etConfirmPassword)
+        tilNewPassword = findViewById(R.id.tilNewPassword)
+        tilConfirmPassword = findViewById(R.id.tilConfirmPassword)
 
         icReqMin8 = findViewById(R.id.icReqMin8)
         icReqUpper = findViewById(R.id.icReqUpper)
@@ -74,61 +76,36 @@ class DoiMatKhauActivity : AppCompatActivity() {
         tvReqNumber = findViewById(R.id.tvReqNumber)
     }
 
-    private fun setupPasswordRequirementsListener() {
+    private fun setupPasswordWatcher() {
         etNewPassword.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val password = s.toString()
-                validatePasswordRequirements(password)
+
+                // Logic đổi màu khi đạt điều kiện (Xanh: #10B981, Xám: #64748B)
+                updateRequirementStatus(password.length >= 8, icReqMin8, tvReqMin8)
+                updateRequirementStatus(password.any { it.isUpperCase() }, icReqUpper, tvReqUpper)
+                updateRequirementStatus(password.any { it.isLowerCase() }, icReqLower, tvReqLower)
+                updateRequirementStatus(password.any { it.isDigit() }, icReqNumber, tvReqNumber)
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
-    // Hàm kiểm tra và cập nhật màu sắc danh sách điều kiện
-    private fun validatePasswordRequirements(password: String) {
-        val colorActive = Color.parseColor("#007BFF") // Màu xanh khi thỏa mãn
-        val colorInactive = Color.parseColor("#94A3B8") // Màu xám khi chưa thỏa mãn
-        val colorTextActive = Color.parseColor("#1E293B") // Màu chữ đậm
-        val colorTextInactive = Color.parseColor("#64748B") // Màu chữ nhạt
-
-        // 1. Tối thiểu 8 ký tự
-        updateRequirementStatus(password.length >= 8, icReqMin8, tvReqMin8, colorActive, colorInactive, colorTextActive, colorTextInactive)
-
-        // 2. Ít nhất một chữ cái viết hoa
-        updateRequirementStatus(password.contains("[A-Z]".toRegex()), icReqUpper, tvReqUpper, colorActive, colorInactive, colorTextActive, colorTextInactive)
-
-        // 3. Ít nhất một chữ cái viết thường
-        updateRequirementStatus(password.contains("[a-z]".toRegex()), icReqLower, tvReqLower, colorActive, colorInactive, colorTextActive, colorTextInactive)
-
-        // 4. Ít nhất một chữ số
-        updateRequirementStatus(password.contains("[0-9]".toRegex()), icReqNumber, tvReqNumber, colorActive, colorInactive, colorTextActive, colorTextInactive)
-    }
-
-    // Hàm phụ để cập nhật UI cho từng điều kiện
-    private fun updateRequirementStatus(
-        isMet: Boolean,
-        imageView: ImageView,
-        textView: TextView,
-        colorActive: Int,
-        colorInactive: Int,
-        colorTextActive: Int,
-        colorTextInactive: Int
-    ) {
-        if (isMet) {
-            imageView.imageTintList = ColorStateList.valueOf(colorActive)
-            textView.setTextColor(colorTextActive)
+    private fun updateRequirementStatus(isValid: Boolean, icon: ImageView, text: TextView) {
+        if (isValid) {
+            icon.imageTintList = ColorStateList.valueOf(Color.parseColor("#10B981"))
+            text.setTextColor(Color.parseColor("#10B981"))
         } else {
-            imageView.imageTintList = ColorStateList.valueOf(colorInactive)
-            textView.setTextColor(colorTextInactive)
+            icon.imageTintList = ColorStateList.valueOf(Color.parseColor("#94A3B8"))
+            text.setTextColor(Color.parseColor("#64748B"))
         }
     }
 
     private fun handleUpdatePassword() {
-        val currentPass = findViewById<EditText>(R.id.etCurrentPassword).text.toString()
-        val newPass = etNewPassword.text.toString()
-        val confirmPass = etConfirmPassword.text.toString()
+        val currentPass = etCurrentPassword.text.toString().trim()
+        val newPass = etNewPassword.text.toString().trim()
+        val confirmPass = etConfirmPassword.text.toString().trim()
 
         // Xóa lỗi cũ
         tilNewPassword.error = null
@@ -153,13 +130,22 @@ class DoiMatKhauActivity : AppCompatActivity() {
             return
         }
 
-        // 4. Gọi API cập nhật mật khẩu (Giả lập)
-        // Tại đây bạn sẽ gọi hàm xử lý PHP/Database
-        if (currentPass == "123456Aa") { // Giả lập mật khẩu cũ đúng
-            Toast.makeText(this, "Cập nhật mật khẩu thành công!", Toast.LENGTH_LONG).show()
-            finish() // Đóng trang
-        } else {
-            Toast.makeText(this, "Mật khẩu hiện tại không chính xác", Toast.LENGTH_SHORT).show()
-        }
+        // 4. GỌI API ĐỔI MẬT KHẨU
+        val requestBody = ChangePasswordRequest(currentPass, newPass)
+        RetrofitClient.getInstance(this).changePassword(requestBody)
+            .enqueue(object : Callback<ChangePasswordResponse> {
+                override fun onResponse(call: Call<ChangePasswordResponse>, response: Response<ChangePasswordResponse>) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@DoiMatKhauActivity, "Cập nhật mật khẩu thành công!", Toast.LENGTH_LONG).show()
+                        finish() // Đóng trang đổi mật khẩu
+                    } else {
+                        Toast.makeText(this@DoiMatKhauActivity, "Mật khẩu hiện tại không chính xác!", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ChangePasswordResponse>, t: Throwable) {
+                    Toast.makeText(this@DoiMatKhauActivity, "Lỗi kết nối máy chủ!", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 }

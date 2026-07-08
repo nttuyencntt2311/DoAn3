@@ -21,54 +21,49 @@ class dangnhap : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.dangnhap)
 
-        // Nút chuyển qua trang Đăng Ký
         val tvRegister = findViewById<TextView>(R.id.tvRegister)
         tvRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
 
-        // Ánh xạ UI
         val edtEmailLogin = findViewById<TextInputEditText>(R.id.edtEmailLogin)
         val edtPasswordLogin = findViewById<TextInputEditText>(R.id.edtPasswordLogin)
         val btnLogin = findViewById<MaterialButton>(R.id.btnLogin)
 
-        // Xử lý nút Đăng nhập
         btnLogin.setOnClickListener {
             val email = edtEmailLogin.text.toString().trim()
             val password = edtPasswordLogin.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập Email và Mật khẩu!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // GỌI API ĐĂNG NHẬP XUỐNG NODE.JS
             val request = LoginRequest(email, password)
 
-            RetrofitClient.instance.loginUser(request).enqueue(object : Callback<LoginResponse> {
+            RetrofitClient.getInstance(this).loginUser(request).enqueue(object : Callback<LoginResponse> {
                 override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                     if (response.isSuccessful && response.body() != null) {
                         val loginData = response.body()
                         val token = loginData?.token
                         val userId = loginData?.user?.id
                         val userName = loginData?.user?.name
+                        val refreshToken = loginData?.refreshToken // LẤY THÊM DÒNG NÀY
 
-                        // LƯU TOKEN VÀ THÔNG TIN USER VÀO BỘ NHỚ ĐIỆN THOẠI (SharedPreferences)
                         val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
                         sharedPreferences.edit().apply {
                             putString("JWT_TOKEN", token)
                             putString("USER_ID", userId)
+                            putString("REFRESH_TOKEN", refreshToken) // THÊM DÒNG NÀY ĐỂ LƯU
                             putString("USER_NAME", userName)
                             apply()
                         }
 
                         Toast.makeText(this@dangnhap, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-
-                        // Chuyển hướng thẳng vào trang chủ (MainActivity)
                         val intent = Intent(this@dangnhap, MainActivity::class.java)
                         startActivity(intent)
-                        finish() // Đóng luôn màn hình đăng nhập để khi bấm nút Back không bị quay lại đây
+                        finish()
                     } else {
                         Toast.makeText(this@dangnhap, "Sai email hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
                     }

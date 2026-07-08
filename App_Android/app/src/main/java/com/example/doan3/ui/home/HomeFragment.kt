@@ -29,83 +29,71 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Tự động làm mới dữ liệu từ Firestore mỗi lần user mở tab Trang chủ
-        viewModel.fetchUserData()
+        // Thực hiện quét và nạp dữ liệu từ Backend (MongoDB)
+        viewModel.fetchUserData(requireContext())
 
-        // =============================================================
-        // ĐỔNG BỘ TOÀN BỘ DỮ LIỆU ĐỘNG VÀO CÁC ID CÓ SẴN TRONG XML CỦA BẠN
-        // =============================================================
-
-        // 1. Khung thông tin cá nhân (Avatar giữ nguyên mặc định của bạn)
+        // ====================================================================
+        // ĐỔ DỮ LIỆU VÀO GIAO DIỆN (Đã sửa ID chuẩn theo đúng XML của bạn)
+        // ====================================================================
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             binding.tvUserName.text = name
         }
-
         viewModel.userLevel.observe(viewLifecycleOwner) { level ->
             binding.tvUserLevel.text = level
         }
 
-        viewModel.streakDays.observe(viewLifecycleOwner) { streak ->
-            binding.chipStreak.text = "$streak ngày"
+        // Chip StreakDays trong XML của bạn
+        viewModel.streakDays.observe(viewLifecycleOwner) { days ->
+            binding.tvStreakDays.text = "$days ngày"
         }
 
-        // 2. Khung Nhiệm vụ hàng ngày (cardDailyTask)
+        // ProgressBar và Text % (Sử dụng đúng ID progressBar và tvTaskPercent)
         viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
-            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
             binding.progressBar.progress = percent
+            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
         }
 
         viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
             binding.tvTaskTarget.text = targetText
         }
-
-        // 3. Khung lưới Thống kê (layoutStats)
         viewModel.wordsCount.observe(viewLifecycleOwner) { count ->
-            binding.tvWordsCount.text = String.format("%,d", count)
+            binding.tvWordsCount.text = count.toString()
         }
-
         viewModel.timeLearned.observe(viewLifecycleOwner) { time ->
             binding.tvTimeLearned.text = time
         }
-
-        // 4. Khung Bài học tiếp theo (cardNextLesson) - ĐÃ ĐỒNG BỘ THÔNG MINH
         viewModel.nextLessonName.observe(viewLifecycleOwner) { lessonName ->
             binding.tvLessonName.text = lessonName
         }
-
         viewModel.nextLessonXp.observe(viewLifecycleOwner) { xpText ->
             binding.tvXp.text = xpText
         }
 
-        // =============================================================
-        // CÁC SỰ KIỆN CLICK CHUYỂN MÀN HÌNH (GIỮ NGUYÊN HOÀN TOÀN HÀNH VI CỦA BẠN)
-        // =============================================================
+        // ====================================================================
+        // QUẢN LÝ CÁC NÚT CLICK CHUYỂN MÀN HÌNH
+        // ====================================================================
         binding.btnStartLearning.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.learning.LearningFragment())
-                .addToBackStack(null)
-                .commit()
+                .addToBackStack(null).commit()
         }
 
         binding.btnViewPro.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, RoadmapFragment())
-                .addToBackStack(null)
-                .commit()
+                .addToBackStack(null).commit()
         }
 
         binding.cardLearnedVocab.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, VocabularyFragment())
-                .addToBackStack(null)
-                .commit()
+                .addToBackStack(null).commit()
         }
 
         binding.cardTimeLearned.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
-                .addToBackStack(null)
-                .commit()
+                .addToBackStack(null).commit()
         }
     }
 
