@@ -26,16 +26,16 @@ class TaiKhoanActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.taikkhoan)
 
-        // Ánh xạ UI
+        // Ánh xạ UI (Giữ nguyên toàn bộ ID gốc)
         tvUserFullName = findViewById(R.id.tvUserFullName)
         tvUserEmail = findViewById(R.id.tvUserEmail)
 
-        // 1. Nút quay lại
+        // 1. Nút quay lại (Dạng ImageView)
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
             finish()
         }
 
-        // 1. Nút quay lại (nếu ID này là ImageView thì cứ giữ nguyên ImageView, nếu lỗi thì đổi thành View)
+        // 1. Nút quay lại (Dạng View chung)
         findViewById<View>(R.id.btnBack).setOnClickListener {
             finish()
         }
@@ -57,38 +57,47 @@ class TaiKhoanActivity : AppCompatActivity() {
             startActivity(Intent(this, DieuKhoanActivity::class.java))
         }
 
-        // 5. Nút đăng xuất
+        // 5. Nút đăng xuất (Đã sửa lại luồng xử lý bảo mật bất đồng bộ)
         findViewById<View>(R.id.btnLogout).setOnClickListener {
-            // ... (Đoạn code đăng xuất bên trong bạn giữ nguyên không sửa gì cả)
-
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
 
-            // GỌI API BÁO BACKEND HỦY TOKEN TRƯỚC KHI XÓA TRÊN MÁY
+            // GỌI API BÁO BACKEND HỦY TOKEN TRƯỚC KHI TIẾN HÀNH DỌN DẸP MÁY
             if (refreshToken.isNotEmpty()) {
                 val request = RefreshTokenRequest(refreshToken)
                 RetrofitClient.getInstance(this).logout(request)
-                    .enqueue(object : Callback<LogoutResponse> {
-                        override fun onResponse(
-                            call: Call<LogoutResponse>,
-                            response: Response<LogoutResponse>
-                        ) {
+                    .enqueue(object : Callback<Void> {
+                        override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                            // Sau khi server xử lý xong (hoặc kể cả token hết hạn trước đó), dọn dẹp local và thoát
+                            thucHienDangXuatCucBo()
                         }
 
-                        override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {}
+                        override fun onFailure(call: Call<Void>, t: Throwable) {
+                            // Gặp sự cố mất mạng vẫn cho phép dọn dẹp cục bộ để user thoát ra ngoài
+                            thucHienDangXuatCucBo()
+                        }
                     })
+            } else {
+                // Nếu không tìm thấy token trên thiết bị, thực hiện thoát ngay lập tức
+                thucHienDangXuatCucBo()
             }
-
-            // Dọn dẹp máy và chuyển màn hình (Giữ nguyên code cũ của bạn)
-            sharedPreferences.edit().clear().apply()
-            Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, dangnhap::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
         }
+    }
 
+    /**
+     * Hàm phụ trợ xử lý xóa bộ nhớ đệm SharedPreferences và chuyển màn hình.
+     * Bảo toàn 100% logic chuyển hướng và các Flags xóa lịch sử trang cũ của bạn.
+     */
+    private fun thucHienDangXuatCucBo() {
+        val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().clear().apply()
 
+        Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(this, dangnhap::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     override fun onResume() {

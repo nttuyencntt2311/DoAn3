@@ -16,7 +16,6 @@ data class RegisterRequest(val name: String, val email: String, val password: St
 data class RegisterResponse(val message: String, val error: String?)
 data class LoginRequest(val email: String, val password: String)
 data class UserData(val id: String, val name: String, val email: String)
-// Cập nhật LoginResponse để nhận thêm refreshToken
 data class LoginResponse(val message: String, val token: String?, val refreshToken: String?, val user: UserData?, val error: String?)
 
 // === MODELS THÔNG TIN CÁ NHÂN ===
@@ -34,11 +33,12 @@ data class UserStatsData(
     val level: Int,
     val streakDays: Int,
     val wordsLearned: Int,
-    val timeLearnedMinutes: Int
+    val timeLearnedMinutes: Int,
+    val quizzesCount: Int // ĐÃ BỔ SUNG TRƯỜNG NÀY ĐỂ HIỂN THỊ TRÊN MÀN HÌNH HỒ SƠ
 )
 data class UserStatsResponse(val stats: UserStatsData?, val error: String?)
 
-// === MODELS REFRESH TOKEN / LOGOUT MỚI BỔ SUNG ===
+// === MODELS REFRESH TOKEN / LOGOUT ===
 data class RefreshTokenRequest(val refreshToken: String)
 data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
@@ -49,7 +49,7 @@ data class LearningStatsResponse(
     val totalWords: Int,
     val accuracyPercent: Int,
     val chartData: List<Int>,
-    val memories: List<MemoryItem> // Đón dữ liệu Kỷ niệm từ Backend
+    val memories: List<MemoryItem>
 )
 data class MemoryItem(
     val date: String,
@@ -64,7 +64,7 @@ data class SubmitQuizRequest(
     val totalQuestions: Int,
     val earnedXp: Int,
     val learnedWords: Int,
-    val timeSpentMinutes: Int // Đã đồng bộ trường mới với backend
+    val timeSpentMinutes: Int
 )
 data class SubmitQuizResponse(val message: String)
 
@@ -82,31 +82,30 @@ interface ApiService {
     @PUT("api/auth/update-profile")
     fun updateProfile(@Body request: UpdateProfileRequest): Call<UpdateProfileResponse>
 
-    @GET("api/auth/stats") // Endpoint cũ đáp ứng cho màn hình HOME
+    @GET("api/auth/stats")
     fun getUserStats(): Call<UserStatsResponse>
 
-    @GET("api/stats/learning") // Gọi chính xác đến file statsRoutes mới ở Backend
+    @GET("api/stats/learning")
     fun getLearningStats(): Call<LearningStatsResponse>
-
 
     @PUT("api/auth/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<ChangePasswordResponse>
 
-    // 2 HÀM MỚI THÊM:
     @POST("api/auth/refresh-token")
     fun refreshToken(@Body request: RefreshTokenRequest): Call<RefreshTokenResponse>
 
-    @POST("/api/quiz/submit")
+    // Đã bỏ dấu / ở đầu để tránh lỗi cấu hình Retrofit
+    @POST("api/quiz/submit")
     fun submitQuiz(@Body request: SubmitQuizRequest): Call<SubmitQuizResponse>
 
+    // Đã gộp thành 1 hàm logout duy nhất cho gọn gàng (Dùng RefreshTokenRequest và Void/LogoutResponse tùy thiết lập của bạn)
     @POST("api/auth/logout")
-    fun logout(@Body request: RefreshTokenRequest): Call<LogoutResponse>
+    fun logout(@Body request: RefreshTokenRequest): Call<Void>
 }
 
 // === AUTHENTICATOR (TỰ ĐỘNG GIA HẠN TOKEN KHI BỊ LỖI 401) ===
 class TokenAuthenticator(private val context: Context) : okhttp3.Authenticator {
     override fun authenticate(route: okhttp3.Route?, response: okhttp3.Response): okhttp3.Request? {
-        // Tránh lặp vô hạn nếu refresh token cũng chết
         if (response.responseCount > 2) {
             return null
         }
@@ -121,7 +120,7 @@ class TokenAuthenticator(private val context: Context) : okhttp3.Authenticator {
         val body = okhttp3.RequestBody.create(mediaType, json)
 
         val refreshRequest = okhttp3.Request.Builder()
-            .url(RetrofitClient.BASE_URL + "api/auth/refresh-token") // Đảm bảo đúng đường dẫn
+            .url(RetrofitClient.BASE_URL + "api/auth/refresh-token")
             .post(body)
             .build()
 
@@ -133,10 +132,8 @@ class TokenAuthenticator(private val context: Context) : okhttp3.Authenticator {
                 val jsonObject = org.json.JSONObject(responseBody ?: "")
                 val newAccessToken = jsonObject.getString("token")
 
-                // Lưu Token mới vào điện thoại
                 sharedPreferences.edit().putString("JWT_TOKEN", newAccessToken).apply()
 
-                // Gắn token mới vào request cũ và chạy lại
                 return response.request().newBuilder()
                     .header("Authorization", "Bearer $newAccessToken")
                     .build()
@@ -161,9 +158,9 @@ class TokenAuthenticator(private val context: Context) : okhttp3.Authenticator {
 
 // === RETROFIT CLIENT ===
 object RetrofitClient {
-    const val BASE_URL = "http://10.0.2.2:3000/" // Đổi IP nếu dùng máy thật
+    const val BASE_URL = "http://10.0.2.2:3000/"
 
-    var token: String = "" // Hỗ trợ code cũ
+    var token: String = ""
 
     val instance: ApiService by lazy {
         val interceptor = Interceptor { chain ->
@@ -188,7 +185,6 @@ object RetrofitClient {
             chain.proceed(requestBuilder.build())
         }
 
-        // ĐÃ BỔ SUNG: add authenticator vào Client
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .authenticator(TokenAuthenticator(context))
