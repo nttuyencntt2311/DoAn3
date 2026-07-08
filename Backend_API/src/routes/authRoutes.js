@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/User'); 
+const verifyToken = require('../middleware/authMiddleware'); // Nhúng middleware bảo mật vào đây
 
 const router = express.Router();
 
@@ -61,12 +62,12 @@ router.post('/login', async (req, res) => {
 });
 
 // =====================================
-// 3. API: LẤY THÔNG TIN CÁ NHÂN (GET)
+// 3. API: LẤY THÔNG TIN CÁ NHÂN (GET) - ĐÃ BẢO MẬT
 // =====================================
-router.get('/profile/:id', async (req, res) => {
+router.get('/profile', verifyToken, async (req, res) => {
   try {
-    // Tìm user theo id và loại bỏ cột password không trả về để bảo mật
-    const user = await UserModel.findById(req.params.id).select('-password');
+    // Lấy ID trực tiếp từ Token đã được giải mã ở middleware, tuyệt đối bảo mật
+    const user = await UserModel.findById(req.user.userId).select('-password');
     if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
     
     res.status(200).json({ user });
@@ -76,14 +77,15 @@ router.get('/profile/:id', async (req, res) => {
 });
 
 // =====================================
-// 4. API: CẬP NHẬT THÔNG TIN CÁ NHÂN (PUT)
+// 4. API: CẬP NHẬT THÔNG TIN CÁ NHÂN (PUT) - ĐÃ BẢO MẬT
 // =====================================
-router.put('/profile/:id', async (req, res) => {
+router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { name, gender, birthDate } = req.body;
     
+    // Tìm và cập nhật dựa trên userId bóc tách từ Token
     const updatedUser = await UserModel.findByIdAndUpdate(
-      req.params.id,
+      req.user.userId,
       { name, gender, birthDate },
       { new: true }
     ).select('-password');
@@ -94,6 +96,24 @@ router.put('/profile/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
+
+  
 });
 
+// =====================================
+// 5. API: LẤY CHỈ SỐ GAMIFICATION (HOME/HỒ SƠ)
+// =====================================
+router.get('/stats', verifyToken, async (req, res) => {
+  try {
+    // Tìm user và chỉ lấy các trường cần thiết cho Trang chủ & Hồ sơ
+    const user = await UserModel.findById(req.user.userId)
+      .select('name xp level streakDays wordsLearned timeLearnedMinutes');
+      
+    if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
+    
+    res.status(200).json({ stats: user });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi hệ thống" });
+  }
+});
 module.exports = router;

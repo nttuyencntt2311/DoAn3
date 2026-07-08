@@ -1,13 +1,21 @@
 const express = require('express');
 const HistoryModel = require('../models/History'); // Nhúng mô hình lịch sử vào
+const verifyToken = require('../middleware/authMiddleware'); // Nhúng middleware bảo mật vào đây
 
 const router = express.Router();
 
-// 4.1 API: Nhận điểm bài test TOEIC và lưu vào MongoDB
-router.post('/submit', async (req, res) => {
+// =====================================
+// API: Nhận điểm bài test TOEIC và lưu vào MongoDB - ĐÃ BẢO MẬT
+// =====================================
+router.post('/submit', verifyToken, async (req, res) => {
   try {
-    const { userId, topic, score, totalQuestions } = req.body;
-    if (!userId || score === undefined) {
+    // Chỉ nhận thông tin bài thi từ client, không nhận userId từ body nữa nhằm tránh hack điểm hộ
+    const { topic, score, totalQuestions } = req.body;
+    
+    // Tự động gán userId bằng ID trích xuất từ Token
+    const userId = req.user.userId;
+
+    if (score === undefined) {
       return res.status(400).json({ error: "Thiếu dữ liệu truyền lên!" });
     }
 
