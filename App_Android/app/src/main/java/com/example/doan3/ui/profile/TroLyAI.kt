@@ -8,9 +8,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.R
 import com.google.android.material.card.MaterialCardView
-import com.example.doan3.ui.roadmap.RoadmapFragment
 import com.example.doan3.MainActivity
-import com.example.doan3.ui.vocabulary.WordDetailFragment
+import com.example.doan3.ui.ai.ChatAIActivity
+import com.example.doan3.ui.ai.ChatMessage
+
 
 class TroLyAIActivity : AppCompatActivity() {
 
@@ -27,35 +28,46 @@ class TroLyAIActivity : AppCompatActivity() {
         // Ánh xạ các CardView từ XML
         val cardGiaiThichTuVung = findViewById<MaterialCardView>(R.id.cardGiaiThichTuVung)
         val cardTaoQuiz = findViewById<MaterialCardView>(R.id.cardTaoQuiz)
-        val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard) // Thêm mới cardFlashcard
+        val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard)
         val cardLoTrinhHoc = findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
+        val cardTroChuyenTrucTiep = findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
 
-// 1. Chuyển sang VocabularyFragment trực tiếp
+        // 1. Chuyển sang màn hình Chat AI - Chế độ Giải thích từ vựng
         cardGiaiThichTuVung?.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                // Dùng android.R.id.content để phủ Fragment lên toàn bộ màn hình hiện tại
-                .replace(android.R.id.content, WordDetailFragment())
-                .addToBackStack(null) // Lưu lại lịch sử để bấm nút Back điện thoại quay về được
-                .commit()
+            val intent = Intent(this, ChatAIActivity::class.java)
+            intent.putExtra("CHAT_TYPE", "GIAI_THICH")
+            startActivity(intent)
         }
-        // 2. Tạo Quiz -> Chuyển sang TaoQuizActivity
+
+        // 2. Chuyển sang màn hình Chat AI - Chế độ Tạo bài Quiz học tập
         cardTaoQuiz?.setOnClickListener {
-            startActivity(Intent(this, TaoQuizActivity::class.java))
+            val intent = Intent(this, ChatAIActivity::class.java)
+            intent.putExtra("CHAT_TYPE", "TAO_QUIZ")
+            startActivity(intent)
         }
 
-        // 3. Flashcard -> Chuyển sang KhamPhaActivity (Nơi có logic vuốt thẻ từ vựng)
+        // 3. Mở tính năng Flashcard (hoặc màn hình Khám phá có sẵn của bạn)
         cardFlashcard?.setOnClickListener {
-            startActivity(Intent(this, KhamPhaActivity::class.java))
+            val intent = Intent(this, KhamPhaActivity::class.java)
+            startActivity(intent)
         }
 
-// 3. Chuyển sang RoadmapFragment trực tiếp
+        // 4. Chuyển sang màn hình Chat AI - Chế độ Thiết lập lộ trình học
         cardLoTrinhHoc?.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                .replace(android.R.id.content, RoadmapFragment())
-                .addToBackStack(null)
-                .commit()
+            val intent = Intent(this, ChatAIActivity::class.java)
+            intent.putExtra("CHAT_TYPE", "LO_TRINH")
+            startActivity(intent)
+        }
+        cardTroChuyenTrucTiep?.setOnClickListener {
+            val intent = Intent(this, ChatAIActivity::class.java)
+            // Bạn có thể truyền một loại chat mới, ví dụ: "TRO_CHUYEN"
+            intent.putExtra("CHAT_TYPE", "TRO_CHUYEN")
+            startActivity(intent)
         }
     }
+
+    // ... các khai báo biến RecyclerView, Adapter, EditText, Button ...
+
 
     private fun setupBottomNavigation() {
         val navTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
@@ -99,5 +111,6 @@ class TroLyAIActivity : AppCompatActivity() {
             startActivity(Intent(this, TaiKhoanActivity::class.java))
             overridePendingTransition(0, 0)
         }
+
     }
 }

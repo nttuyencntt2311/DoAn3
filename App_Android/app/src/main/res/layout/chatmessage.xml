@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:id="@+id/layoutAI"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            app:cardBackgroundColor="#EFF6FF"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
+            <ImageView android:layout_width="14dp" android:layout_height="14dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_book" app:tint="#2563EB"/>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvAIMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="40dp"
+            android:background="@drawable/chat_bubble_ai"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:text="Nội dung AI"
+            android:textColor="#334155"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvUserMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/chat_bubble_user"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:text="Nội dung người dùng"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
+            <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@drawable/ic_person"/>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</LinearLayout>

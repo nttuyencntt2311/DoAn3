@@ -91,6 +91,8 @@ data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
 data class LogoutRequest(val refreshToken: String) // Của Tuyến
 
+data class ChatRequest(val message: String)
+data class ChatResponse(val reply: String)
 
 // ==========================================
 //             API INTERFACE
@@ -132,6 +134,9 @@ interface ApiService {
     // --- QUIZ (Từ Tuyến) ---
     @POST("api/quiz/submit")
     fun submitQuiz(@Body request: SubmitQuizRequest): Call<SubmitQuizResponse>
+
+    @POST("api/ai/chat")
+    fun sendChatMessage(@Body request: ChatRequest): Call<ChatResponse>
 
     // --- VOCABULARY & ROADMAP (Từ Văn) ---
     @GET("api/vocabulary")

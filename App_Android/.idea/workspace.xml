@@ -35,6 +35,11 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_input_chat.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_search_bar.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
@@ -80,7 +85,17 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/chatmessage.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
@@ -106,6 +121,11 @@
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_learning.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_roadmap.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
@@ -145,12 +165,22 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/khung_chat_ai.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/taikkhoan.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/thongtincanhan.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/troly_ai.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
@@ -167,21 +197,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_okhttp3_okhttp_3_14_9.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Gradle__com_squareup_okio_okio_1_17_2.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAIActivity.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAdapter.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatMessage.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/bg_input_chat.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/chatmessage.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/khung_chat_ai.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaiKhoan.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaiKhoan.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/Vocabulary.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/Vocabulary.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_vocabulary.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_vocabulary.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/khampha.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/khampha.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/quizRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/quizRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/troly_ai.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/troly_ai.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -217,9 +247,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="resourceFile" />
-        <option value="layoutResourceFile" />
         <option value="Kotlin Class" />
+        <option value="layoutResourceFile" />
+        <option value="resourceFile" />
       </list>
     </option>
   </component>
@@ -276,6 +306,11 @@
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="com.example.doan3.ui.ai" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
       <module name="DoAn3.app" />
@@ -365,12 +400,12 @@
       <map>
         <entry key="com.example.doan3">
           <value>
-            <CheckInfo lastCheckTimestamp="1783524192370" />
+            <CheckInfo lastCheckTimestamp="1783616143894" />
           </value>
         </entry>
         <entry key="com.example.doan3.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1783524192370" />
+            <CheckInfo lastCheckTimestamp="1783616143894" />
           </value>
         </entry>
       </map>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp"
+        android:paddingHorizontal="16dp">
+        <ImageView
+            android:id="@+id/btnBackChat"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="#1E293B"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+        <TextView
+            android:id="@+id/tvChatTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Trợ lý AI Thông thái"
+            android:textColor="#1E293B"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChatMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <EditText
+            android:id="@+id/edtChatInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_chat"
+            android:hint="Nhập câu hỏi của bạn tại đây..."
+            android:padding="12dp"
+            android:textSize="14sp"
+            android:textColor="#1E293B"
+            android:maxLines="3"/>
+
+        <ImageView
+            android:id="@+id/btnSendChat"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/ic_send"
+            android:padding="10dp"
+            android:background="@drawable/bg_circle_blue"
+            app:tint="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>
