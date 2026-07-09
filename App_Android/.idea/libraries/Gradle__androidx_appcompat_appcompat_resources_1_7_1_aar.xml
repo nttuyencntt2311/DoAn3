@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.appcompat:appcompat-resources:1.7.1@aar" external-system-id="GRADLE">
     <CLASSES>
-      <root url="file://$USER_HOME$/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/transformed/appcompat-resources-1.7.1/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/transformed/appcompat-resources-1.7.1/AndroidManifest.xml" />
-      <root url="jar://$USER_HOME$/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/transformed/appcompat-resources-1.7.1/jars/classes.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../LTDD/ltdd/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/workspace/transformed/appcompat-resources-1.7.1/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/../../../LTDD/ltdd/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/workspace/transformed/appcompat-resources-1.7.1/res" />
+      <root url="file://$PROJECT_DIR$/../../../LTDD/ltdd/.gradle/caches/9.1.0/transforms/7cc20d1deaf4a1c2d60f356d4530bf0d/workspace/transformed/appcompat-resources-1.7.1/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/androidx.appcompat/appcompat-resources/1.7.1/cb084bf039d2b49e02cb58e0da0044fed264a4fb/appcompat-resources-1.7.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../LTDD/ltdd/.gradle/caches/modules-2/files-2.1/androidx.appcompat/appcompat-resources/1.7.1/cb084bf039d2b49e02cb58e0da0044fed264a4fb/appcompat-resources-1.7.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

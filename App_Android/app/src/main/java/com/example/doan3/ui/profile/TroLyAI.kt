@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.R
 import com.google.android.material.card.MaterialCardView
 import com.example.doan3.ui.roadmap.RoadmapFragment
-import com.example.doan3.ui.vocabulary.WordDetailFragment
 import com.example.doan3.MainActivity
+import com.example.doan3.ui.vocabulary.WordDetailFragment
 
 class TroLyAIActivity : AppCompatActivity() {
 

@@ -152,6 +152,31 @@
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvEx2Eng"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Example 2 English"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEx2Vi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Ví dụ 2 Tiếng Việt"
+                    android:textColor="#555555"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -276,28 +301,6 @@
                         android:layout_height="match_parent"
                         android:background="#008A27"/>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-                        <TextView
-                            android:id="@+id/tvEx2Eng"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Example 2 English"
-                            android:textColor="#000000"
-                            android:textStyle="bold"
-                            android:textSize="15sp"/>
-                        <TextView
-                            android:id="@+id/tvEx2Vi"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Ví dụ 2 Tiếng Việt"
-                            android:textColor="#555555"
-                            android:textSize="14sp"/>
-                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

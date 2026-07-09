@@ -1,9 +1,12 @@
 package com.example.doan3.ui.profile
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -11,13 +14,33 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.card.MaterialCardView
-import com.example.doan3.R
 import com.example.doan3.MainActivity
+import com.example.doan3.R
+import com.example.doan3.ui.vocabulary.Vocabulary
+import com.google.android.material.card.MaterialCardView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.Locale
 
-class KhamPhaActivity : AppCompatActivity() {
+// Thêm TextToSpeech.OnInitListener vào đây
+class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
-    private var isFront = true // Biến theo dõi mặt trước/sau của thẻ
+    private var isFront = true
+
+    // --- CÁC BIẾN LOGIC DỮ LIỆU ---
+    private var studyList: List<Vocabulary> = emptyList()
+    private var currentIndex = 0
+
+    // Khai báo bộ đọc phát âm
+    private lateinit var tts: TextToSpeech
+
+    // Khai báo views
+    private lateinit var tvWord: TextView
+    private lateinit var tvPronunciation: TextView
+    private lateinit var tvMeaning: TextView
+    private lateinit var cardTuVung: MaterialCardView
+    private lateinit var btnSpeaker: ImageView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,119 +48,191 @@ class KhamPhaActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.khampha)
 
-        // 1. Xử lý tràn viền
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        // Khởi tạo bộ đọc phát âm
+        tts = TextToSpeech(this, this)
+
+        // Ánh xạ View
+        tvWord = findViewById(R.id.tvWord)
+        tvPronunciation = findViewById(R.id.tvPronunciation)
+        tvMeaning = findViewById(R.id.tvMeaning)
+        cardTuVung = findViewById(R.id.cardTuVung)
+        btnSpeaker = findViewById(R.id.btnSpeaker)
+
+        setupWindowInsets()
+        setupBottomNav()
+        setupFlashcardAnimation()
+        setupActionButtons()
+        setupBreathingEffect()
+        setupAudioButton()
+
+        // BẮT ĐẦU: Gọi API lấy dữ liệu học
+        fetchStudyWords()
+    }
+
+    // Thiết lập ngôn ngữ đọc là Tiếng Anh
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            tts.language = Locale.US
         }
+    }
 
-        // 2. Các nút điều hướng Bottom Nav
-
-        // (Tùy chọn) Nút Trang chủ - Thêm dấu ? để nếu XML không có nút này app cũng không bị văng
-        val btnTrangChu = findViewById<LinearLayout?>(R.id.btnTrangChu)
-        btnTrangChu?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            startActivity(intent)
-            overridePendingTransition(0, 0)
+    private fun setupAudioButton() {
+        btnSpeaker.setOnClickListener {
+            if (currentIndex < studyList.size) {
+                val wordToSpeak = studyList[currentIndex].word
+                // Đọc phát âm từ vựng hiện tại
+                tts.speak(wordToSpeak, TextToSpeech.QUEUE_FLUSH, null, "")
+            }
         }
+    }
 
-        // Chuyển sang màn hình Trợ lý AI
-        val btnTroLyAI = findViewById<LinearLayout?>(R.id.btnTroLyAI)
-        btnTroLyAI?.setOnClickListener {
-            val intent = Intent(this, TroLyAIActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-        }
+    private fun fetchStudyWords() {
+        val apiService = RetrofitClient.getInstance(this)
 
-        // Chuyển sang màn hình Hồ sơ
-        val btnHoSo = findViewById<LinearLayout?>(R.id.btnHoSo)
-        btnHoSo?.setOnClickListener {
-            val intent = Intent(this, hoso::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-        }
+        apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
+            override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
+                if (response.isSuccessful) {
+                    val allWords = response.body() ?: emptyList()
+                    studyList = allWords.filter { it.proficiency < 80 }
 
-        // Chuyển sang màn hình Tài khoản
-        val btnTaiKhoan = findViewById<LinearLayout?>(R.id.btnTaiKhoan)
-        btnTaiKhoan?.setOnClickListener {
-            val intent = Intent(this, TaiKhoanActivity::class.java) // Đảm bảo bạn có Activity này nhé
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-        }
-        // 3. Xử lý LẬT THẺ TỪ VỰNG (Click to Flip với hiệu ứng lật)
-        val cardTuVung = findViewById<MaterialCardView>(R.id.cardTuVung)
-        val tvWord = findViewById<TextView>(R.id.tvWord)
-        val tvPronunciation = findViewById<TextView>(R.id.tvPronunciation)
-        val tvMeaning = findViewById<TextView>(R.id.tvMeaning)
-
-        cardTuVung.setOnClickListener {
-            // Hiệu ứng co thẻ lại theo chiều ngang
-            cardTuVung.animate().scaleX(0f).setDuration(150).withEndAction {
-                // Đảo trạng thái mặt thẻ
-                isFront = !isFront
-
-                if (isFront) {
-                    // Hiện mặt trước (Tiếng Anh)
-                    tvWord.visibility = View.VISIBLE
-                    tvPronunciation.visibility = View.VISIBLE
-                    tvMeaning.visibility = View.GONE
-                } else {
-                    // Hiện mặt sau (Tiếng Việt)
-                    tvWord.visibility = View.GONE
-                    tvPronunciation.visibility = View.GONE
-                    tvMeaning.visibility = View.VISIBLE
+                    if (studyList.isNotEmpty()) {
+                        currentIndex = 0
+                        loadWordToUI()
+                    } else {
+                        tvWord.text = "Hoàn thành!"
+                        tvPronunciation.text = ""
+                        tvMeaning.text = "Bạn đã thuộc hết từ vựng."
+                        Toast.makeText(this@KhamPhaActivity, "Không còn từ mới để học hôm nay!", Toast.LENGTH_LONG).show()
+                    }
                 }
+            }
 
-                // Bung thẻ rộng ra lại bình thường
-                cardTuVung.animate().scaleX(1f).setDuration(150).start()
-            }.start()
+            override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
+                Toast.makeText(this@KhamPhaActivity, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun loadWordToUI() {
+        if (currentIndex < studyList.size) {
+            val currentWord = studyList[currentIndex]
+            tvWord.text = currentWord.word
+            tvPronunciation.text = currentWord.pronunciation
+            tvMeaning.text = currentWord.meaning
+            resetCardToFront()
+        } else {
+            tvWord.text = "Xong!"
+            tvPronunciation.text = ""
+            tvMeaning.text = "Bạn đã học xong bài hôm nay."
+            Toast.makeText(this, "Tuyệt vời! Bạn đã hoàn thành phiên học.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun handleScore(scoreType: String) {
+        if (currentIndex >= studyList.size) return
+
+        val currentWord = studyList[currentIndex]
+        var newProficiency = currentWord.proficiency
+
+        when (scoreType) {
+            "AGAIN" -> newProficiency = 0
+            "GOOD" -> newProficiency = (newProficiency + 30).coerceAtMost(90)
+            "EASY" -> newProficiency = 100
         }
 
-        // 4. Ánh xạ và xử lý sự kiện click cho 3 nút mới (Again, Good, Easy)
+        val apiService = RetrofitClient.getInstance(this)
+        val request = mapOf("proficiency" to newProficiency)
+
+        apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<Any> {
+            override fun onResponse(call: Call<Any>, response: Response<Any>) {
+                if (response.isSuccessful) {
+                    // LOGIC MỚI CHO NÚT AGAIN NẰM Ở ĐÂY:
+                    if (scoreType == "AGAIN") {
+                        // Nhét từ hiện tại vào cuối danh sách để nó lặp lại sau cùng
+                        studyList = studyList + currentWord
+                    }
+
+                    currentIndex++
+                    loadWordToUI()
+                } else {
+                    Toast.makeText(this@KhamPhaActivity, "Lỗi server: Code ${response.code()}", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Any>, t: Throwable) {
+                Toast.makeText(this@KhamPhaActivity, "Lỗi mạng", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun setupActionButtons() {
         val btnAgain = findViewById<MaterialCardView>(R.id.btnAgain)
         val btnGood = findViewById<MaterialCardView>(R.id.btnGood)
         val btnEasy = findViewById<MaterialCardView>(R.id.btnEasy)
 
-        btnAgain.setOnClickListener {
-            Toast.makeText(this, "Sẽ lặp lại từ này sớm hơn!", Toast.LENGTH_SHORT).show()
-            resetCardToFront(tvWord, tvPronunciation, tvMeaning)
-            loadNextWord()
-        }
-
-        btnGood.setOnClickListener {
-            Toast.makeText(this, "Đã ghi nhớ ổn định!", Toast.LENGTH_SHORT).show()
-            resetCardToFront(tvWord, tvPronunciation, tvMeaning)
-            loadNextWord()
-        }
-
-        btnEasy.setOnClickListener {
-            Toast.makeText(this, "Từ này quá dễ với bạn!", Toast.LENGTH_SHORT).show()
-            resetCardToFront(tvWord, tvPronunciation, tvMeaning)
-            loadNextWord()
-        }
-
-        // 5. Hiệu ứng nhịp thở cho nút Star hành động
-        val btnHanhDong = findViewById<MaterialCardView>(R.id.btnHanhDongVuot)
-        val nhapNhay = android.animation.ObjectAnimator.ofFloat(btnHanhDong, "alpha", 1f, 0.6f, 1f)
-        nhapNhay.duration = 1500
-        nhapNhay.repeatCount = android.animation.ObjectAnimator.INFINITE
-        nhapNhay.start()
+        btnAgain.setOnClickListener { handleScore("AGAIN") }
+        btnGood.setOnClickListener { handleScore("GOOD") }
+        btnEasy.setOnClickListener { handleScore("EASY") }
     }
 
-    // Hàm bổ trợ để khi chuyển sang từ mới thì thẻ luôn tự động quay về mặt trước (Tiếng Anh)
-    private fun resetCardToFront(tvWord: TextView, tvPronunciation: TextView, tvMeaning: TextView) {
+    private fun setupFlashcardAnimation() {
+        cardTuVung.setOnClickListener {
+            cardTuVung.animate().scaleX(0f).setDuration(150).withEndAction {
+                isFront = !isFront
+                if (isFront) {
+                    tvWord.visibility = View.VISIBLE
+                    tvPronunciation.visibility = View.VISIBLE
+                    tvMeaning.visibility = View.GONE
+                } else {
+                    tvWord.visibility = View.GONE
+                    tvPronunciation.visibility = View.GONE
+                    tvMeaning.visibility = View.VISIBLE
+                }
+                cardTuVung.animate().scaleX(1f).setDuration(150).start()
+            }.start()
+        }
+    }
+
+    private fun resetCardToFront() {
         isFront = true
         tvWord.visibility = View.VISIBLE
         tvPronunciation.visibility = View.VISIBLE
         tvMeaning.visibility = View.GONE
     }
 
-    private fun loadNextWord() {
-        // Logic đổi data từ vựng mới của bạn viết ở đây
+    private fun setupBreathingEffect() {
+        val btnHanhDong = findViewById<MaterialCardView>(R.id.btnHanhDongVuot)
+        if (btnHanhDong != null) {
+            val nhapNhay = ObjectAnimator.ofFloat(btnHanhDong, "alpha", 1f, 0.6f, 1f)
+            nhapNhay.duration = 1500
+            nhapNhay.repeatCount = ObjectAnimator.INFINITE
+            nhapNhay.start()
+        }
+    }
+
+    private fun setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
+
+    private fun setupBottomNav() {
+        findViewById<LinearLayout?>(R.id.btnTrangChu)?.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            })
+            overridePendingTransition(0, 0)
+        }
+    }
+
+    // Tắt bộ đọc khi thoát khỏi màn hình để giải phóng bộ nhớ
+    override fun onDestroy() {
+        if (this::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        super.onDestroy()
     }
 }
