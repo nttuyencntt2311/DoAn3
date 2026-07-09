@@ -16,19 +16,19 @@ import retrofit2.Response
 
 class hoso : AppCompatActivity() {
 
-    // Khai báo các thành phần giao diện hiển thị thông tin & chỉ số
-    private var tvProfileName: View? = null
-    private var tvAccountType: View? = null
-    private var tvHeaderStreak: View? = null
-    private var tvStatLevel: View? = null
-    private var tvStatVocab: View? = null
-    private var tvStatDays: View? = null
-    private var tvStatMinutes: View? = null
+    // CODE CHUẨN ĐI LÀM: Khai báo đúng kiểu dữ liệu TextView cho các ô hiển thị chữ
+    private var tvProfileName: TextView? = null
+    private var tvAccountType: TextView? = null
+    private var tvHeaderStreak: TextView? = null
+    private var tvStatLevel: TextView? = null
+    private var tvStatVocab: TextView? = null
+    private var tvStatDays: TextView? = null
+    private var tvStatMinutes: TextView? = null
 
-    // Khai báo các nút chức năng
+    // Khai báo các nút chức năng (Giữ nguyên View)
     private var btnLogout: View? = null
     private var btnChangePassword: View? = null
-    private var btnHelpCenter: View? = null // Đã thêm khai báo nút Trung tâm trợ giúp
+    private var btnHelpCenter: View? = null
 
     // Khai báo các nút điều hướng Bottom Navigation
     private var navTrangChu: View? = null
@@ -44,9 +44,7 @@ class hoso : AppCompatActivity() {
             enableEdgeToEdge()
             setContentView(R.layout.hoso)
 
-            // ====================================================================
-            // 1. ÁNH XẠ CÁC VIEW TỪ FILE XML
-            // ====================================================================
+            // Ánh xạ View chuẩn kiểu TextView
             tvProfileName = findViewById(R.id.tvProfileName)
             tvAccountType = findViewById(R.id.tvAccountType)
             tvHeaderStreak = findViewById(R.id.tvHeaderStreak)
@@ -57,7 +55,7 @@ class hoso : AppCompatActivity() {
 
             btnLogout = findViewById(R.id.btnLogout)
             btnChangePassword = findViewById(R.id.btnChangePassword)
-            btnHelpCenter = findViewById(R.id.btnHelpCenter) // Ánh xạ ID btnHelpCenter
+            btnHelpCenter = findViewById(R.id.btnHelpCenter)
 
             navTrangChu = findViewById(R.id.btnTrangChu)
             navKhamPha = findViewById(R.id.btnKhamPha)
@@ -65,98 +63,101 @@ class hoso : AppCompatActivity() {
             navHoSo = findViewById(R.id.btnHoSo)
             navTaiKhoan = findViewById(R.id.btnTaiKhoan)
 
-            // ====================================================================
-            // 2. CÀI ĐẶT CÁC LOGIC SỰ KIỆN VÀ TẢI DỮ LIỆU
-            // ====================================================================
             setupBottomNavigation()
             setupUserActions()
             loadUserStats()
 
         } catch (e: Exception) {
-            Toast.makeText(this, "Lỗi khởi tạo giao diện hồ sơ: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Lỗi khởi tạo: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * Xử lý các tương tác của người dùng (Đăng xuất, Đổi mật khẩu, Trợ giúp)
-     */
     private fun setupUserActions() {
-        // Sự kiện chuyển trang Đổi mật khẩu
         btnChangePassword?.setOnClickListener {
             val intent = Intent(this, DoiMatKhauActivity::class.java)
             startActivity(intent)
         }
 
-        // Sự kiện chuyển trang Trung tâm trợ giúp (VỪA ĐƯỢC THÊM)
         btnHelpCenter?.setOnClickListener {
             val intent = Intent(this, HelpCenterActivity::class.java)
             startActivity(intent)
         }
 
-        // Xử lý Đăng xuất tài khoản
         btnLogout?.setOnClickListener {
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-            sharedPreferences.edit().clear().apply()
+            val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
 
-            Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, dangnhap::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            if (refreshToken.isNotEmpty()) {
+                val request = RefreshTokenRequest(refreshToken)
+                // ĐÃ SỬA LỖI: Chuyển đổi Callback từ Void thành LogoutResponse cho đúng khớp với ApiService của Văn
+                RetrofitClient.getInstance(this).logout(request)
+                    .enqueue(object : Callback<LogoutResponse> {
+                        override fun onResponse(call: Call<LogoutResponse>, response: Response<LogoutResponse>) {
+                            thucHienDangXuatCucBo()
+                        }
+                        override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {
+                            thucHienDangXuatCucBo()
+                        }
+                    })
+            } else {
+                thucHienDangXuatCucBo()
+            }
+        }
+
+        tvHeaderStreak?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_STATISTICS", true)
             startActivity(intent)
-            finish()
         }
     }
 
-    /**
-     * Gọi API Backend lấy chỉ số học tập thực tế và cập nhật lên UI
-     */
+    private fun thucHienDangXuatCucBo() {
+        val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().clear().apply()
+
+        Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, dangnhap::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
     private fun loadUserStats() {
         RetrofitClient.getInstance(this).getUserStats().enqueue(object : Callback<UserStatsResponse> {
             override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()?.stats
                     if (stats != null) {
-                        setSafeText(tvProfileName, stats.name)
-                        setSafeText(tvHeaderStreak, stats.streakDays.toString())
-                        setSafeText(tvStatLevel, "${stats.level}")
-                        setSafeText(tvStatVocab, stats.wordsLearned.toString())
-                        setSafeText(tvStatDays, stats.streakDays.toString())
-                        setSafeText(tvStatMinutes, stats.timeLearnedMinutes.toString())
+                        // CODE CHUẨN: Gán dữ liệu trực tiếp bằng thuộc tính .text ngắn gọn, tối ưu hiệu năng
+                        tvProfileName?.text = stats.name
+                        tvHeaderStreak?.text = stats.streakDays.toString()
+                        tvStatLevel?.text = "${stats.level}"
+                        tvStatVocab?.text = stats.wordsLearned.toString()
+                        tvStatDays?.text = stats.streakDays.toString()
+                        tvStatMinutes?.text = "Số phút học trong tuần: ${stats.timeLearnedMinutes.toString()}"
+                        tvAccountType?.text = "Học viên chính thức"
                     }
                 } else {
-                    Toast.makeText(this@hoso, "Không thể tải chỉ số hồ sơ!", Toast.LENGTH_SHORT).show()
                     setLoadingDefaultValues()
                 }
             }
 
             override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
-                Toast.makeText(this@hoso, "Lỗi kết nối máy chủ!", Toast.LENGTH_SHORT).show()
                 setLoadingDefaultValues()
             }
         })
     }
 
-    /**
-     * Hàm gán giá trị giả lập ban đầu khi API lỗi hoặc mất kết nối mạng
-     */
     private fun setLoadingDefaultValues() {
-        setSafeText(tvProfileName, "Học viên mới")
-        setSafeText(tvHeaderStreak, "0")
-        setSafeText(tvStatLevel, "0")
-        setSafeText(tvStatVocab, "0")
-        setSafeText(tvStatDays, "0")
-        setSafeText(tvStatMinutes, "0")
+        tvProfileName?.text = "Học viên mới"
+        tvHeaderStreak?.text = "0"
+        tvStatLevel?.text = "0"
+        tvStatVocab?.text = "0"
+        tvStatDays?.text = "0"
+        tvStatMinutes?.text = "Số phút học trong tuần: 0"
+        tvAccountType?.text = "Tài khoản miễn phí"
     }
 
-    /**
-     * Kiểm tra an toàn trước khi gán dữ liệu chuỗi vào TextView
-     */
-    private fun setSafeText(view: View?, text: String) {
-        (view as? TextView)?.text = text
-    }
-
-    /**
-     * Thiết lập các sự kiện click chuyển màn hình cho thanh Bottom Navigation
-     */
     private fun setupBottomNavigation() {
         navTrangChu?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
@@ -166,24 +167,11 @@ class hoso : AppCompatActivity() {
         }
 
         navKhamPha?.setOnClickListener {
-            try {
-                val intent = Intent(this, KhamPhaActivity::class.java)
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Chưa thiết lập màn hình Khám phá!", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this, "Chưa thiết lập màn hình Khám phá!", Toast.LENGTH_SHORT).show()
         }
 
         navTroLyAI?.setOnClickListener {
-            try {
-                val intent = Intent(this, TroLyAIActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Chưa thiết lập màn hình Trợ lý AI!", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this, "Chưa thiết lập màn hình Trợ lý AI!", Toast.LENGTH_SHORT).show()
         }
 
         navTaiKhoan?.setOnClickListener {

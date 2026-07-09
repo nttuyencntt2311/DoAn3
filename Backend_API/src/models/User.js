@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema({
   streakDays: { type: Number, default: 0 },            // Chuỗi ngày học (Mặc định: 0)
   wordsLearned: { type: Number, default: 0 },          // Số từ vựng đã học (Mặc định: 0)
   timeLearnedMinutes: { type: Number, default: 0 },    // Thời gian học (phút) (Mặc định: 0)
-  
+  quizzesCount: { type: Number, default: 0 }, // <-- BỔ SUNG TRƯỜNG NÀY
+
   refreshTokens: { type: [String], default: [] }, 
   createdAt: { type: Date, default: Date.now }
 });
