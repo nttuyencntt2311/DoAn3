@@ -89,12 +89,13 @@ class hoso : AppCompatActivity() {
 
             if (refreshToken.isNotEmpty()) {
                 val request = RefreshTokenRequest(refreshToken)
+                // ĐÃ SỬA LỖI: Chuyển đổi Callback từ Void thành LogoutResponse cho đúng khớp với ApiService của Văn
                 RetrofitClient.getInstance(this).logout(request)
-                    .enqueue(object : Callback<Void> {
-                        override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    .enqueue(object : Callback<LogoutResponse> {
+                        override fun onResponse(call: Call<LogoutResponse>, response: Response<LogoutResponse>) {
                             thucHienDangXuatCucBo()
                         }
-                        override fun onFailure(call: Call<Void>, t: Throwable) {
+                        override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {
                             thucHienDangXuatCucBo()
                         }
                     })

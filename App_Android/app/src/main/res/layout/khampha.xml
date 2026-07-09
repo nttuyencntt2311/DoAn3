@@ -121,7 +121,7 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <ImageView
-                        android:layout_width="24dp"
+                        android:id="@+id/btnSpeaker"  android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_volume"
                         app:layout_constraintEnd_toEndOf="parent"

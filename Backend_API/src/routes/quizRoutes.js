@@ -24,7 +24,7 @@ router.post('/submit', verifyToken, async (req, res) => {
     });
     await newHistory.save();
 
-    // 2. CỘNG DỒN CHỈ SỐ VÀO BẢNG USER (GAMIFICATION)
+   // 2. CỘNG DỒN CHỈ SỐ VÀO BẢNG USER (GAMIFICATION)
     const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "Không tìm thấy người dùng!" });
@@ -33,52 +33,93 @@ router.post('/submit', verifyToken, async (req, res) => {
     // Cộng dồn điểm kinh nghiệm, số từ vựng, và thời gian học
     user.xp += (earnedXp || 0);
     user.wordsLearned += (learnedWords || 0);
-    user.timeLearnedMinutes += (timeSpentMinutes || 0); 
-    user.quizzesCount += 1; // <-- BỔ SUNG: Tăng số bài quiz học viên đã làm lên 1
-    // Tính toán lại Cấp độ (Level): Cứ 100 XP thì lên 1 cấp
-    user.level = Math.floor(user.xp / 100);
+    user.timeLearnedMinutes += (timeSpentMinutes || 0);
 
-    // --- 3. LOGIC TÍNH STREAK DAYS (CHUỖI NGÀY HỌC) ---
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Đưa về 00:00:00 để so sánh ngày chuẩn xác
+    // =========================================================================
+    // [BỔ SUNG 1]: LOGIC TỰ ĐỘNG TĂNG CẤP ĐỘ (LEVEL UP) DỰA TRÊN XP
+    // =========================================================================
+    // Công thức: Cấp độ = Phần nguyên của (Tổng XP / 100)
+    // Ví dụ: 0 - 99 XP = Level 0 | 100 - 199 XP = Level 1 | 200 - 299 XP = Level 2,...
+    const currentCalculatedLevel = Math.floor(user.xp / 100);
+    
+    let isLevelUp = false; // Biến cờ hiệu để báo về cho Android nếu người dùng lên cấp
+    if (currentCalculatedLevel > user.level) {
+      user.level = currentCalculatedLevel;
+      isLevelUp = true; 
+    }
+
+    // =========================================================================
+    // [BỔ SUNG 2]: TĂNG TỔNG SỐ BÀI QUIZ ĐÃ LÀM (Lịch sử học tập tổng quan)
+    // =========================================================================
+    user.quizzesCount += 1;
+
+
+    // =========================================================================
+    // --- 3. TÍNH TOÁN STREAKDAYS (CHUỖI NGÀY HỌC) CHUẨN MÚI GIỜ VN (GMT+7) ---
+    // =========================================================================
+    
+    // Hàm phụ: Chuyển đổi một mốc thời gian bất kỳ về chuỗi ngày YYYY-MM-DD theo giờ VN
+    const getVNFormatDate = (dateInput) => {
+      const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
+      const formatter = new Intl.DateTimeFormat('en-CA', options); // 'en-CA' xuất ra định dạng YYYY-MM-DD
+      return formatter.format(new Date(dateInput));
+    };
+
+    // Hàm phụ: Tính khoảng cách giữa 2 chuỗi ngày (YYYY-MM-DD) theo đơn vị Ngày
+    const getDaysDiff = (dateStr1, dateStr2) => {
+      const d1 = new Date(dateStr1);
+      const d2 = new Date(dateStr2);
+      const diffTime = d1.getTime() - d2.getTime();
+      return Math.round(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    // Lấy ngày hôm nay theo múi giờ Việt Nam (Định dạng: "YYYY-MM-DD")
+    const todayVNStr = getVNFormatDate(new Date());
 
     // Tìm bài học gần nhất TRƯỚC bài học hiện tại vừa lưu
     const lastHistory = await HistoryModel.findOne({ 
       userId, 
-      _id: { $ne: newHistory._id } // Loại trừ bài vừa tạo ra
+      _id: { $ne: newHistory._id } // Loại trừ bài vừa nộp
     }).sort({ createdAt: -1 });
 
     if (!lastHistory) {
-      // Học viên làm bài lần đầu tiên trong đời
+      // Học viên làm bài lần đầu tiên trong đời -> Khởi tạo streak bằng 1
       user.streakDays = 1;
     } else {
-      const lastQuizDate = new Date(lastHistory.createdAt);
-      lastQuizDate.setHours(0, 0, 0, 0);
+      // Lấy ngày của bài học cũ gần nhất theo múi giờ Việt Nam (Định dạng: "YYYY-MM-DD")
+      const lastQuizDateVNStr = getVNFormatDate(lastHistory.createdAt);
 
-      const diffTime = today.getTime() - lastQuizDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Quy đổi ra số ngày lệch
+      // Tính toán khoảng cách ngày dựa trên chuỗi ngày đã loại bỏ giờ giấc
+      const diffDays = getDaysDiff(todayVNStr, lastQuizDateVNStr);
 
       if (diffDays === 1) {
-        user.streakDays += 1; // Hôm qua có học, hôm nay học tiếp -> Tăng chuỗi ngày
+        user.streakDays += 1; // Hôm qua có học, hôm nay học tiếp -> Tăng chuỗi ngày học
       } else if (diffDays > 1) {
-        user.streakDays = 1;  // Quá 1 ngày không học -> Bị đứt chuỗi, reset về 1
+        user.streakDays = 1;  // Quá 1 ngày không học -> Bị đứt chuỗi, reset về ngày đầu tiên
       }
-      // Lưu ý: Nếu diffDays === 0 (Hôm nay học nhiều bài), streakDays giữ nguyên không đổi
+      // Lưu ý: Nếu diffDays === 0 (Trong cùng một ngày làm nhiều bài), streakDays giữ nguyên
     }
 
+    // Lưu lại thay đổi vào MongoDB
     await user.save();
 
-    // Trả về kết quả thành công kèm các chỉ số mới nhất để Frontend nếu cần có thể cập nhật ngay
+    // Trả về kết quả thành công kèm thông tin cập nhật mới nhất
     res.status(200).json({ 
-        message: "Lưu kết quả thành công!",
-        streakDays: user.streakDays,
+      message: "Nộp kết quả bài quiz thành công!", 
+      isLevelUp: isLevelUp, // Báo cho Android biết có nổ hiệu ứng chúc mừng không
+      updatedStats: {
+        xp: user.xp,
         level: user.level,
-        xp: user.xp
+        streakDays: user.streakDays,
+        wordsLearned: user.wordsLearned,
+        timeLearnedMinutes: user.timeLearnedMinutes,
+        quizzesCount: user.quizzesCount
+      }
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Lỗi hệ thống khi nộp bài!" });
+    console.error("Lỗi nộp bài:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi xử lý nộp bài quiz!" });
   }
 });
 

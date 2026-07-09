@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.card.MaterialCardView
 import com.example.doan3.R
 import retrofit2.Call
 import retrofit2.Callback
@@ -54,31 +52,32 @@ class TaiKhoanActivity : AppCompatActivity() {
 
         // 4. Mở trang Điều khoản & Chính sách
         findViewById<View>(R.id.btnTerms).setOnClickListener {
+            // Lưu ý: Đảm bảo bạn đã tạo file DieuKhoanActivity.kt trong project
             startActivity(Intent(this, DieuKhoanActivity::class.java))
         }
 
-        // 5. Nút đăng xuất (Đã sửa lại luồng xử lý bảo mật bất đồng bộ)
+        // 5. Nút đăng xuất (Đã sửa đổi để gọi API đồng bộ xóa Refresh Token trên Server MongoDB)
         findViewById<View>(R.id.btnLogout).setOnClickListener {
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
 
             // GỌI API BÁO BACKEND HỦY TOKEN TRƯỚC KHI TIẾN HÀNH DỌN DẸP MÁY
             if (refreshToken.isNotEmpty()) {
-                val request = RefreshTokenRequest(refreshToken)
-                RetrofitClient.getInstance(this).logout(request)
+                val request = LogoutRequest(refreshToken)
+                RetrofitClient.getInstance(this).logoutUser(request)
                     .enqueue(object : Callback<Void> {
                         override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                            // Sau khi server xử lý xong (hoặc kể cả token hết hạn trước đó), dọn dẹp local và thoát
+                            // Sau khi server xử lý xong (hoặc kể cả phiên hết hạn trước đó), dọn dẹp local và thoát
                             thucHienDangXuatCucBo()
                         }
 
                         override fun onFailure(call: Call<Void>, t: Throwable) {
-                            // Gặp sự cố mất mạng vẫn cho phép dọn dẹp cục bộ để user thoát ra ngoài
+                            // Gặp sự cố mất mạng vẫn cho phép dọn dẹp cục bộ để user thoát ra ngoài, tránh treo app
                             thucHienDangXuatCucBo()
                         }
                     })
             } else {
-                // Nếu không tìm thấy token trên thiết bị, thực hiện thoát ngay lập tức
+                // Nếu không tìm thấy token trên thiết bị, thực hiện thoát cục bộ ngay lập tức
                 thucHienDangXuatCucBo()
             }
         }
@@ -92,7 +91,7 @@ class TaiKhoanActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit().clear().apply()
 
-        Toast.makeText(this, "Đã đăng xuất tài khoản!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Đã đăng xuất tài khoản an toàn!", Toast.LENGTH_SHORT).show()
 
         val intent = Intent(this, dangnhap::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -102,7 +101,7 @@ class TaiKhoanActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Tự động load lại dữ liệu người dùng khi mở màn hình này
+        // Tự động nạp lại thông tin người dùng mới nhất khi quay lại màn hình này
         loadAccountData()
     }
 
