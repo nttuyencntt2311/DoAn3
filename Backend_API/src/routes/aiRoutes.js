@@ -3,7 +3,24 @@ const router = express.Router();
 const aiController = require('../controllers/aiController');
 const verifyToken = require('../middleware/authMiddleware'); // Bắt buộc đăng nhập mới được chat
 
+// ==========================================
+// 1. TẠO PHÒNG CHAT MỚI
+// Endpoint: POST /api/ai/session
+// ==========================================
+router.post('/session', verifyToken, aiController.createChatSession);
+
+// ==========================================
+// 2. GỬI TIN NHẮN VÀO PHÒNG CHAT
 // Endpoint: POST /api/ai/chat
+// ==========================================
 router.post('/chat', verifyToken, aiController.chatWithAI);
 
+// ==========================================
+// 3. LẤY LỊCH SỬ TIN NHẮN CỦA 1 PHÒNG CHAT CỤ THỂ
+// Endpoint: GET /api/ai/session/:sessionId/messages
+// ==========================================
+router.get('/session/:sessionId/messages', verifyToken, aiController.getChatHistory);
+// Lấy danh sách các phòng chat của 1 User
+// Endpoint: GET /api/ai/sessions/user/:userId
+router.get('/sessions/user/:userId', verifyToken, aiController.getUserChatSessions);
 module.exports = router;

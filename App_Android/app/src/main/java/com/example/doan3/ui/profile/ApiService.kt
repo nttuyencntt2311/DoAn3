@@ -17,6 +17,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import java.util.concurrent.TimeUnit
 
 // === CÁC MODEL TỪ MODULE KHÁC CỦA VĂN ===
 import com.example.doan3.ui.vocabulary.Vocabulary
@@ -91,8 +92,24 @@ data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
 data class LogoutRequest(val refreshToken: String) // Của Tuyến
 
-data class ChatRequest(val message: String)
 data class ChatResponse(val reply: String)
+
+// Cập nhật lại ChatRequest để đính kèm thêm sessionId
+data class ChatRequest(val message: String, val sessionId: String? = null)
+
+// Các model mới cho tính năng Lịch sử
+data class CreateSessionRequest(
+    val userId: String,
+    val chatType: String,
+    val firstMessage: String
+)
+data class CreateSessionResponse(val sessionId: String, val title: String)
+
+data class ChatHistoryResponse(val messages: List<HistoryMessage>)
+data class HistoryMessage(val role: String, val text: String)
+
+data class ChatSessionItem(val _id: String, val title: String, val chatType: String)
+data class UserSessionsResponse(val sessions: List<ChatSessionItem>)
 
 // ==========================================
 //             API INTERFACE
@@ -156,6 +173,16 @@ interface ApiService {
         @Path("id") id: String,
         @Body body: Map<String, Int>
     ): Call<Any>
+
+    @POST("api/ai/session")
+    fun createChatSession(@Body request: CreateSessionRequest): Call<CreateSessionResponse>
+
+    @GET("api/ai/session/{sessionId}/messages")
+    fun getChatHistory(@Path("sessionId") sessionId: String): Call<ChatHistoryResponse>
+
+    // Thêm hàm lấy danh sách
+    @GET("api/ai/sessions/user/{userId}")
+    fun getUserSessions(@Path("userId") userId: String): Call<UserSessionsResponse>
 }
 
 
@@ -228,7 +255,15 @@ object RetrofitClient {
             }
             chain.proceed(requestBuilder.build())
         }
-        val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
+
+        // BƠM THÊM TIMEOUT 60 GIÂY VÀO ĐÂY
+        val client = OkHttpClient.Builder()
+            .addInterceptor(interceptor)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .build()
+
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
@@ -252,10 +287,14 @@ object RetrofitClient {
             chain.proceed(requestBuilder.build())
         }
 
+        // BƠM THÊM TIMEOUT 60 GIÂY VÀO ĐÂY
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
             .authenticator(TokenAuthenticator(context))
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
 
         return Retrofit.Builder()

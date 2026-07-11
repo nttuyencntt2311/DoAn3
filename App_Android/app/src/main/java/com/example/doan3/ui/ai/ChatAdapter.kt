@@ -6,22 +6,24 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.doan3.R
+import io.noties.markwon.Markwon
 
 class ChatAdapter(private val messageList: ArrayList<ChatMessage>) :
     RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
     // Lớp giữ các thành phần giao diện của một dòng tin nhắn
     class ChatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // Hãy kiểm tra và chỉnh sửa lại các ID này cho khớp chính xác với ID bạn đặt trong chatmessage.xml nhé
-        val layoutUser: View = itemView.findViewById(R.id.layoutUser)         // Khung chứa tin nhắn của User
-        val tvUserMessage: TextView = itemView.findViewById(R.id.tvUserMessage) // Chữ tin nhắn của User
+        val layoutUser: View = itemView.findViewById(R.id.layoutUser)
+        val tvUserMessage: TextView = itemView.findViewById(R.id.tvUserMessage)
 
-        val layoutAI: View = itemView.findViewById(R.id.layoutAI)             // Khung chứa tin nhắn của AI
-        val tvAIMessage: TextView = itemView.findViewById(R.id.tvAIMessage)     // Chữ tin nhắn của AI
+        val layoutAI: View = itemView.findViewById(R.id.layoutAI)
+        val tvAIMessage: TextView = itemView.findViewById(R.id.tvAIMessage)
+
+        // 1. Khởi tạo Markwon ở đây, lấy context từ itemView
+        val markwon = Markwon.create(itemView.context)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        // Nạp file giao diện chatmessage.xml bạn vừa tạo vào RecyclerView
         val view = LayoutInflater.from(parent.context).inflate(R.layout.chatmessage, parent, false)
         return ChatViewHolder(view)
     }
@@ -30,21 +32,22 @@ class ChatAdapter(private val messageList: ArrayList<ChatMessage>) :
         val message = messageList[position]
 
         if (message.isUser) {
-            // Nếu là Người dùng gửi: Hiện khung chat của User, ẩn khung chat của AI
+            // Nếu là Người dùng gửi
             holder.layoutUser.visibility = View.VISIBLE
             holder.layoutAI.visibility = View.GONE
             holder.tvUserMessage.text = message.text
         } else {
-            // Nếu là AI gửi: Ẩn khung chat của User, hiện khung chat của AI
+            // Nếu là AI gửi
             holder.layoutUser.visibility = View.GONE
             holder.layoutAI.visibility = View.VISIBLE
-            holder.tvAIMessage.text = message.text
+
+            // 2. Sử dụng Markwon để hiển thị chữ có định dạng Markdown cho AI
+            holder.markwon.setMarkdown(holder.tvAIMessage, message.text)
         }
     }
 
     override fun getItemCount(): Int = messageList.size
 
-    // Hàm tiện ích hỗ trợ thêm tin nhắn mới vào danh sách và tự động cập nhật UI
     fun addMessage(message: ChatMessage) {
         messageList.add(message)
         notifyItemInserted(messageList.size - 1)
