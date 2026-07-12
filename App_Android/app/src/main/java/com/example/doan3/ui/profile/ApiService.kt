@@ -103,7 +103,7 @@ data class CreateSessionRequest(
     val chatType: String,
     val firstMessage: String
 )
-data class CreateSessionResponse(val sessionId: String, val title: String)
+ data class CreateSessionResponse(val sessionId: String, val title: String)
 
 data class ChatHistoryResponse(val messages: List<HistoryMessage>)
 data class HistoryMessage(val role: String, val text: String)

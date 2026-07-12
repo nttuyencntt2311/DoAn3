@@ -5,7 +5,8 @@ const Groq = require("groq-sdk"); // Import thêm thư viện Groq
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-exports.generateChatReply = async (userMessage) => {
+// THÊM THAM SỐ chatHistory VÀO ĐÂY (Mặc định là mảng rỗng nếu không truyền vào)
+exports.generateChatReply = async (userMessage, chatHistory = []) => {
   const systemInstruction = `
 Bạn là một AI Giáo viên tiếng Anh xuất sắc, linh hoạt và thực dụng cho người Việt.
 Nhiệm vụ của bạn là hỗ trợ học viên trực tiếp trên ứng dụng di động.
@@ -29,15 +30,17 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
 - Tuyệt đối KHÔNG chào hỏi rườm rà (Không viết: "Chào bạn", "Tuyệt quá", "Tôi sẽ giúp bạn..."). Đập ngay vào trọng tâm.
 - Không viết những đoạn văn bản dài liền mạch. Bắt buộc ngắt dòng ngắn để tối ưu việc đọc trên màn hình điện thoại nhỏ.
 `;
+
     // ==========================================
-    // TẦNG 1: DÀN TRẬN GOOGLE GEMINI
+    // TẦNG 1: DÀN TRẬN GOOGLE GEMINI (Đã sửa lại tên model chuẩn)
     // ==========================================
-    const modelsToTry = [    
-        "gemini-2.5-flash",    
-        "gemini-2.5-pro",
-        "gemini-flash-latest", 
-        "gemini-3.5-flash"     
-    ];
+   const modelsToTry = [
+"gemini-2.5-flash",
+"gemini-2.5-pro",
+"gemini-flash-latest",
+"gemini-3.5-flash"
+];
+
 
     for (let i = 0; i < modelsToTry.length; i++) {
         const currentModel = modelsToTry[i];
@@ -48,7 +51,19 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
                 systemInstruction: systemInstruction
             });
 
-            const result = await model.generateContent(userMessage);
+            // CHUẨN BỊ LỊCH SỬ CHO GEMINI (Map từ format DB sang format Gemini)
+            const geminiHistory = chatHistory.map(msg => ({
+                role: msg.role === 'ai' ? 'model' : 'user', // Gemini chỉ nhận 'model' hoặc 'user'
+                parts: [{ text: msg.text }]
+            }));
+
+            // Sử dụng startChat thay vì generateContent để duy trì mạch hội thoại
+            const chat = model.startChat({
+                history: geminiHistory
+            });
+
+            // Gửi câu hỏi mới nhất vào phiên chat vừa khởi tạo
+            const result = await chat.sendMessage(userMessage);
             console.log(`✅ Thành công rực rỡ với: ${currentModel}`);
             
             return result.response.text(); // Trả kết quả và thoát hoàn toàn hàm
@@ -67,11 +82,24 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
     console.log("⚠️ TOÀN BỘ SERVER GEMINI ĐÃ SẬP! Kích hoạt máy chủ dự phòng Groq (Llama 3)...");
     
     try {
+        // CHUẨN BỊ MẢNG TIN NHẮN CHO GROQ
+        const groqMessages = [
+            { role: "system", content: systemInstruction }
+        ];
+
+        // Đẩy lịch sử cũ vào mảng (Groq nhận 'assistant' thay vì 'ai' hoặc 'model')
+        chatHistory.forEach(msg => {
+            groqMessages.push({
+                role: msg.role === 'ai' ? 'assistant' : 'user',
+                content: msg.text
+            });
+        });
+
+        // Cuối cùng đẩy câu hỏi mới nhất của User vào
+        groqMessages.push({ role: "user", content: userMessage });
+
         const chatCompletion = await groq.chat.completions.create({
-            messages: [
-                { role: "system", content: systemInstruction },
-                { role: "user", content: userMessage }
-            ],
+            messages: groqMessages,
             model: "llama3-8b-8192", // Model nhẹ, siêu tốc độ của Llama 3
         });
 

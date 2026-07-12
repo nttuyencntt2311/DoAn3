@@ -207,20 +207,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_chat_session.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/layout_bottom_sheet_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAIActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAIActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAdapter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAdapter.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/khung_chat_ai.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/aiRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/aiRoutes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

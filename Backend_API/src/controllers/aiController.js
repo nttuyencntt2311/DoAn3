@@ -22,29 +22,42 @@ exports.createChatSession = async (req, res) => {
     }
 };
 
+
 // ==========================================
-// 2. GỬI TIN NHẮN & LƯU DB (Nâng cấp từ code cũ)
+// 2. GỬI TIN NHẮN & LƯU DB (Đã sửa lỗi Mất Trí Nhớ)
 // ==========================================
 exports.chatWithAI = async (req, res) => {
   try {
-    // Bây giờ nhận thêm sessionId từ Android gửi lên (nếu có)
     const { sessionId, message } = req.body;
     
     if (!message) {
       return res.status(400).json({ error: "Tin nhắn không được để trống!" });
     }
 
-    // GIAI ĐOẠN 1: Nếu Android có gửi ID phòng chat lên -> Lưu tin nhắn của User vào DB
+    // Mảng chứa ngữ cảnh cuộc trò chuyện để nạp cho AI
+    let chatHistory = [];
+
+    // GIAI ĐOẠN 1: Nếu có phòng chat -> Lấy lịch sử cũ TRƯỚC khi lưu tin nhắn mới
     if (sessionId) {
+        // Lấy 10 tin nhắn gần nhất để làm context (Tránh lấy quá nhiều gây tràn Token của AI)
+        // Sắp xếp theo createdAt: -1 để lấy các tin nhắn mới nhất trước
+        const rawHistory = await ChatMessage.find({ sessionId })
+                                            .sort({ createdAt: -1 })
+                                            .limit(10);
+        
+        // Đảo ngược mảng lại để lịch sử có thứ tự thời gian chuẩn: Cũ -> Mới
+        chatHistory = rawHistory.reverse();
+
+        // Sau khi đã lấy lịch sử xong, tiến hành lưu tin nhắn mới của User vào DB
         const userMsg = new ChatMessage({ sessionId, role: 'user', text: message });
         await userMsg.save();
 
-        // Đẩy phòng chat này lên đầu danh sách bằng cách cập nhật thời gian
+        // Đẩy phòng chat này lên đầu danh sách
         await ChatSession.findByIdAndUpdate(sessionId, { updatedAt: new Date() });
     }
 
-    // GIAI ĐOẠN 2: Gọi AI từ service (Vẫn giữ nguyên hàm gọi 2 tầng phòng thủ của bạn)
-    const aiReply = await aiService.generateChatReply(message);
+    // GIAI ĐOẠN 2: Gọi AI từ service (Truyền thêm chatHistory để AI có trí nhớ)
+    const aiReply = await aiService.generateChatReply(message, chatHistory);
 
     // GIAI ĐOẠN 3: Nhận kết quả từ AI -> Lưu vào DB
     if (sessionId) {
@@ -52,7 +65,7 @@ exports.chatWithAI = async (req, res) => {
         await aiMsg.save();
     }
 
-    // Trả kết quả về cho điện thoại
+    // Trả kết quả về cho điện thoại Android hiển thị
     res.status(200).json({ reply: aiReply });
     
   } catch (error) {

@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.doan3.R
 
-// CẬP NHẬT: Import đúng đường dẫn các Model và RetrofitClient của bạn
 import com.example.doan3.ui.profile.ChatRequest
 import com.example.doan3.ui.profile.ChatResponse
 import com.example.doan3.ui.profile.CreateSessionRequest
@@ -30,9 +29,14 @@ import com.example.doan3.ui.profile.ChatSessionItem
 
 class ChatAIActivity : AppCompatActivity() {
 
+    // THÊM BIẾN NÀY: Lưu trữ tạm thời ID phòng chat trên RAM (Tắt app sẽ tự động mất)
+    companion object {
+        var activeSessionId: String? = null
+    }
+
     private lateinit var rvChatMessages: RecyclerView
     private lateinit var edtChatInput: EditText
-    private lateinit var btnSendMessage: View // Layout mới dùng MaterialCardView cho nút gửi
+    private lateinit var btnSendMessage: View
     private lateinit var btnBack: ImageView
     private lateinit var btnHistoryChat: ImageView
     private lateinit var btnNewChat: ImageView
@@ -48,7 +52,7 @@ class ChatAIActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_chat_ai)
 
-        // 1. ÁNH XẠ ID TỪ GIAO DIỆN MỚI
+        // 1. ÁNH XẠ ID
         rvChatMessages = findViewById(R.id.rvChatMessages)
         edtChatInput = findViewById(R.id.edtChatInput)
         btnSendMessage = findViewById(R.id.btnSendMessage)
@@ -58,19 +62,17 @@ class ChatAIActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // 2. NHẬN DỮ LIỆU TỪ INTENT VÀ BỘ NHỚ ĐỆM
+        // 2. NHẬN DỮ LIỆU TỪ INTENT VÀ BỘ NHỚ RAM
         val intentSessionId = intent.getStringExtra("SESSION_ID")
         currentChatType = intent.getStringExtra("CHAT_TYPE") ?: "AI_ASSISTANT"
 
-        val sharedPrefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-
-        // NẾU Intent không truyền ID vào, thử lấy ID của phòng chat gần nhất từ bộ nhớ đệm
         if (intentSessionId != null) {
             currentSessionId = intentSessionId
-            // Lưu đè lại cái ID này thành phòng chat "đang dở"
-            sharedPrefs.edit().putString("LAST_SESSION_ID", currentSessionId).apply()
+            // Lưu đè lại cái ID này thành phòng chat "đang dở" trên RAM
+            activeSessionId = currentSessionId
         } else {
-            currentSessionId = sharedPrefs.getString("LAST_SESSION_ID", null)
+            // Lấy lại ID từ RAM (nếu app vẫn còn đang chạy nền)
+            currentSessionId = activeSessionId
         }
 
         // 3. CÀI ĐẶT RECYCLERVIEW
@@ -82,10 +84,8 @@ class ChatAIActivity : AppCompatActivity() {
 
         // 4. LOGIC KHỞI ĐỘNG
         if (currentSessionId != null) {
-            // Có ID dở dang -> Tải lại lịch sử
             loadChatHistory(currentSessionId!!)
         } else {
-            // Hoàn toàn không có ID -> Mới tinh
             sendWelcomeMessage(currentChatType)
         }
 
@@ -98,8 +98,8 @@ class ChatAIActivity : AppCompatActivity() {
             // Xóa session cũ trên màn hình
             currentSessionId = null
 
-            // QUAN TRỌNG: Xóa ID phòng dở dang trong bộ nhớ đệm
-            sharedPrefs.edit().remove("LAST_SESSION_ID").apply()
+            // QUAN TRỌNG: Xóa ID phòng dở dang trong RAM
+            activeSessionId = null
 
             messageList.clear()
             chatAdapter.notifyDataSetChanged()
@@ -134,14 +134,12 @@ class ChatAIActivity : AppCompatActivity() {
                             return
                         }
 
-                        // Khởi tạo Bảng trượt Bottom Sheet
                         val bottomSheetDialog = BottomSheetDialog(this@ChatAIActivity)
                         val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_history, null)
                         bottomSheetDialog.setContentView(view)
 
                         val container = view.findViewById<LinearLayout>(R.id.llHistoryContainer)
 
-                        // Lặp qua danh sách lịch sử và nhét từng dòng vào giao diện
                         for (session in sessions) {
                             val item = layoutInflater.inflate(R.layout.item_chat_session, null)
                             val tvTitle = item.findViewById<TextView>(R.id.tvSessionTitle)
@@ -149,25 +147,21 @@ class ChatAIActivity : AppCompatActivity() {
                             tvTitle.text = session.title
 
                             item.setOnClickListener {
-                                bottomSheetDialog.dismiss() // Đóng bảng trượt
+                                bottomSheetDialog.dismiss()
 
                                 currentSessionId = session._id
 
-                                // Lưu cache phòng đang nhắn dở
-                                val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-                                prefs.edit().putString("LAST_SESSION_ID", currentSessionId).apply()
+                                // Lưu cache phòng đang nhắn dở vào RAM
+                                activeSessionId = currentSessionId
 
-                                // Xóa màn hình cũ, load tin nhắn mới
                                 messageList.clear()
                                 chatAdapter.notifyDataSetChanged()
                                 loadChatHistory(currentSessionId!!)
                             }
 
-                            // Thêm dòng vừa tạo vào danh sách
                             container.addView(item)
                         }
 
-                        // Hiển thị Bottom Sheet lên màn hình
                         bottomSheetDialog.show()
                     }
                 }
@@ -206,9 +200,8 @@ class ChatAIActivity : AppCompatActivity() {
                     if (response.isSuccessful && response.body() != null) {
                         currentSessionId = response.body()!!.sessionId
 
-                        // QUAN TRỌNG: Lưu ngay cái phòng vừa tạo vào bộ nhớ đệm
-                        val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-                        prefs.edit().putString("LAST_SESSION_ID", currentSessionId).apply()
+                        // QUAN TRỌNG: Lưu ngay cái phòng vừa tạo vào RAM
+                        activeSessionId = currentSessionId
 
                         sendChatToBackend(firstMessage, currentSessionId!!)
                     } else {
