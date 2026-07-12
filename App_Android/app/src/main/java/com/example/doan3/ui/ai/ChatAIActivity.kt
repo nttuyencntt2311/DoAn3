@@ -25,11 +25,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.example.doan3.ui.profile.ChatSessionItem
 
 class ChatAIActivity : AppCompatActivity() {
 
-    // THÊM BIẾN NÀY: Lưu trữ tạm thời ID phòng chat trên RAM (Tắt app sẽ tự động mất)
+    // Biến lưu trữ tạm thời ID phòng chat trên RAM
     companion object {
         var activeSessionId: String? = null
     }
@@ -45,7 +44,6 @@ class ChatAIActivity : AppCompatActivity() {
     private val messageList = ArrayList<ChatMessage>()
 
     private var currentSessionId: String? = null
-    private var currentChatType: String = "AI_ASSISTANT"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,16 +60,13 @@ class ChatAIActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // 2. NHẬN DỮ LIỆU TỪ INTENT VÀ BỘ NHỚ RAM
+        // 2. NHẬN DỮ LIỆU TỪ BỘ NHỚ RAM HOẶC INTENT
         val intentSessionId = intent.getStringExtra("SESSION_ID")
-        currentChatType = intent.getStringExtra("CHAT_TYPE") ?: "AI_ASSISTANT"
 
         if (intentSessionId != null) {
             currentSessionId = intentSessionId
-            // Lưu đè lại cái ID này thành phòng chat "đang dở" trên RAM
             activeSessionId = currentSessionId
         } else {
-            // Lấy lại ID từ RAM (nếu app vẫn còn đang chạy nền)
             currentSessionId = activeSessionId
         }
 
@@ -86,7 +81,7 @@ class ChatAIActivity : AppCompatActivity() {
         if (currentSessionId != null) {
             loadChatHistory(currentSessionId!!)
         } else {
-            sendWelcomeMessage(currentChatType)
+            sendWelcomeMessage()
         }
 
         // 5. CÁC SỰ KIỆN NÚT BẤM
@@ -95,15 +90,11 @@ class ChatAIActivity : AppCompatActivity() {
         }
 
         btnNewChat.setOnClickListener {
-            // Xóa session cũ trên màn hình
             currentSessionId = null
-
-            // QUAN TRỌNG: Xóa ID phòng dở dang trong RAM
             activeSessionId = null
-
             messageList.clear()
             chatAdapter.notifyDataSetChanged()
-            sendWelcomeMessage(currentChatType)
+            sendWelcomeMessage()
             Toast.makeText(this, "Đã bắt đầu đoạn chat mới!", Toast.LENGTH_SHORT).show()
         }
 
@@ -148,20 +139,14 @@ class ChatAIActivity : AppCompatActivity() {
 
                             item.setOnClickListener {
                                 bottomSheetDialog.dismiss()
-
                                 currentSessionId = session._id
-
-                                // Lưu cache phòng đang nhắn dở vào RAM
                                 activeSessionId = currentSessionId
-
                                 messageList.clear()
                                 chatAdapter.notifyDataSetChanged()
                                 loadChatHistory(currentSessionId!!)
                             }
-
                             container.addView(item)
                         }
-
                         bottomSheetDialog.show()
                     }
                 }
@@ -192,17 +177,16 @@ class ChatAIActivity : AppCompatActivity() {
     private fun createSessionAndSendMessage(firstMessage: String) {
         val sharedPrefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         val userId = sharedPrefs.getString("USER_ID", "unknown_user") ?: "unknown_user"
-        val request = CreateSessionRequest(userId, currentChatType, firstMessage)
+
+        // Cố định loại phòng chat là AI_ASSISTANT vì đây là màn hình thuần trò chuyện
+        val request = CreateSessionRequest(userId, "AI_ASSISTANT", firstMessage)
 
         RetrofitClient.getInstance(this).createChatSession(request)
             .enqueue(object : Callback<CreateSessionResponse> {
                 override fun onResponse(call: Call<CreateSessionResponse>, response: Response<CreateSessionResponse>) {
                     if (response.isSuccessful && response.body() != null) {
                         currentSessionId = response.body()!!.sessionId
-
-                        // QUAN TRỌNG: Lưu ngay cái phòng vừa tạo vào RAM
                         activeSessionId = currentSessionId
-
                         sendChatToBackend(firstMessage, currentSessionId!!)
                     } else {
                         Toast.makeText(this@ChatAIActivity, "Lỗi tạo phòng chat!", Toast.LENGTH_SHORT).show()
@@ -255,14 +239,8 @@ class ChatAIActivity : AppCompatActivity() {
             })
     }
 
-    private fun sendWelcomeMessage(type: String) {
-        val welcomeText = when(type) {
-            "GIAI_THICH" -> "Xin chào! Mình là chuyên gia ngôn ngữ AI. Hãy gửi từ vựng hoặc đoạn văn cần mình giải nghĩa nhé! \uD83D\uDCDA"
-            "TAO_QUIZ" -> "Chào bạn! Bạn muốn làm bài test về chủ đề nào hôm nay? \uD83D\uDD25"
-            "LO_TRINH" -> "Chào học viên! Hãy nói cho mình biết mục tiêu TOEIC/IELTS để mình lập lộ trình cá nhân hóa nhé! \uD83C\uDFAF"
-            "TRO_CHUYEN" -> "Chào bạn! Mình có thể trò chuyện và giúp bạn luyện tập tiếng Anh bất cứ lúc nào! \uD83D\uDCAC"
-            else -> "Chào bạn! Tôi có thể giúp gì cho việc học tiếng Anh của bạn hôm nay?"
-        }
+    private fun sendWelcomeMessage() {
+        val welcomeText = "Chào bạn! Mình có thể trò chuyện và giúp bạn luyện tập tiếng Anh bất cứ lúc nào! \uD83D\uDCAC"
         chatAdapter.addMessage(ChatMessage(welcomeText, isUser = false))
     }
 }

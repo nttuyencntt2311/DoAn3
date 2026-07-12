@@ -10,8 +10,6 @@ import com.example.doan3.R
 import com.google.android.material.card.MaterialCardView
 import com.example.doan3.MainActivity
 import com.example.doan3.ui.ai.ChatAIActivity
-import com.example.doan3.ui.ai.ChatMessage
-
 
 class TroLyAIActivity : AppCompatActivity() {
 
@@ -21,53 +19,50 @@ class TroLyAIActivity : AppCompatActivity() {
         setContentView(R.layout.troly_ai)
 
         setupBottomNavigation()
-        setupAICardsNavigation() // Kích hoạt các nút bấm trợ lý AI
+        setupAICardsNavigation()
     }
 
     private fun setupAICardsNavigation() {
-        // Ánh xạ các CardView từ XML
         val cardGiaiThichTuVung = findViewById<MaterialCardView>(R.id.cardGiaiThichTuVung)
         val cardTaoQuiz = findViewById<MaterialCardView>(R.id.cardTaoQuiz)
         val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard)
         val cardLoTrinhHoc = findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
         val cardTroChuyenTrucTiep = findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
 
-        // 1. Chuyển sang màn hình Chat AI - Chế độ Giải thích từ vựng
+        // 1. Chuyển sang màn hình Giải thích từ vựng (Màn hình riêng)
         cardGiaiThichTuVung?.setOnClickListener {
-            val intent = Intent(this, ChatAIActivity::class.java)
-            intent.putExtra("CHAT_TYPE", "GIAI_THICH")
-            startActivity(intent)
+            // Khi nào có Activity riêng, bạn bỏ comment 2 dòng dưới và xóa Toast đi nhé
+            // val intent = Intent(this, GiaiThichTuVungActivity::class.java)
+            // startActivity(intent)
+            Toast.makeText(this, "Đang mở màn hình Giải thích từ vựng...", Toast.LENGTH_SHORT).show()
         }
 
-        // 2. Chuyển sang màn hình Chat AI - Chế độ Tạo bài Quiz học tập
+        // 2. Chuyển sang màn hình Tạo Quiz (Màn hình riêng)
         cardTaoQuiz?.setOnClickListener {
-            val intent = Intent(this, ChatAIActivity::class.java)
-            intent.putExtra("CHAT_TYPE", "TAO_QUIZ")
-            startActivity(intent)
+            // val intent = Intent(this, TaoQuizActivity::class.java)
+            // startActivity(intent)
+            Toast.makeText(this, "Đang mở màn hình Tạo Quiz...", Toast.LENGTH_SHORT).show()
         }
 
-        // 3. Mở tính năng Flashcard (hoặc màn hình Khám phá có sẵn của bạn)
+        // 3. Mở tính năng Flashcard
         cardFlashcard?.setOnClickListener {
             val intent = Intent(this, KhamPhaActivity::class.java)
             startActivity(intent)
         }
 
-        // 4. Chuyển sang màn hình Chat AI - Chế độ Thiết lập lộ trình học
+        // 4. Chuyển sang màn hình Lộ trình học (Màn hình riêng)
         cardLoTrinhHoc?.setOnClickListener {
-            val intent = Intent(this, ChatAIActivity::class.java)
-            intent.putExtra("CHAT_TYPE", "LO_TRINH")
-            startActivity(intent)
+            // val intent = Intent(this, LoTrinhHocActivity::class.java)
+            // startActivity(intent)
+            Toast.makeText(this, "Đang mở màn hình Lộ trình học...", Toast.LENGTH_SHORT).show()
         }
+
+        // 5. DUY NHẤT nút này sẽ mở khung Chat AI của bạn
         cardTroChuyenTrucTiep?.setOnClickListener {
             val intent = Intent(this, ChatAIActivity::class.java)
-            // Bạn có thể truyền một loại chat mới, ví dụ: "TRO_CHUYEN"
-            intent.putExtra("CHAT_TYPE", "TRO_CHUYEN")
             startActivity(intent)
         }
     }
-
-    // ... các khai báo biến RecyclerView, Adapter, EditText, Button ...
-
 
     private fun setupBottomNavigation() {
         val navTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
@@ -76,23 +71,14 @@ class TroLyAIActivity : AppCompatActivity() {
         val navHoSo = findViewById<LinearLayout>(R.id.btnHoSo)
         val navTaiKhoan = findViewById<LinearLayout>(R.id.btnTaiKhoan)
 
-// 2. Các nút điều hướng Bottom Nav
         val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         btnTrangChu.setOnClickListener {
-            // ⚠️ HÃY THAY TÊN 'MainActivity' THÀNH TÊN ACTIVITY TRANG CHỦ THẬT CỦA BẠN
-            // Ví dụ: TrangChuActivity, HomeActivity, hoặc DashboardActivity...
             val intent = Intent(this, MainActivity::class.java)
-
-            // Cờ này giúp kéo màn hình Trang Chủ đã có sẵn dưới Stack lên trước, không tạo mới trùng lặp
             intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-
             startActivity(intent)
-
-            // Tắt hiệu ứng trượt màn hình để giống chuyển tab hơn
             overridePendingTransition(0, 0)
-
-            // 🚫 KHÔNG DÙNG finish() ở đây để giữ lại trạng thái của tab Khám phá khi quay lại
         }
+
         navKhamPha.setOnClickListener {
             startActivity(Intent(this, KhamPhaActivity::class.java))
             overridePendingTransition(0, 0)
@@ -111,6 +97,5 @@ class TroLyAIActivity : AppCompatActivity() {
             startActivity(Intent(this, TaiKhoanActivity::class.java))
             overridePendingTransition(0, 0)
         }
-
     }
 }
