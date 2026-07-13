@@ -54,14 +54,18 @@
                     app:cardElevation="0dp">
 
                     <TextView
+                        android:id="@+id/tvTimer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="00:00"
+                        android:textColor="#0056D2"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:drawableStartCompat="@drawable/ic_timer"
+                        android:drawablePadding="4dp"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="6dp"
-                        android:text="5 🔥"
-                        android:textColor="@color/text_light_blue"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:background="@drawable/bg_tab_active" />
                 </com.google.android.material.card.MaterialCardView>
             </RelativeLayout>
 

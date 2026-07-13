@@ -29,35 +29,34 @@ class TroLyAIActivity : AppCompatActivity() {
         val cardLoTrinhHoc = findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
         val cardTroChuyenTrucTiep = findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
 
-        // 1. Chuyển sang màn hình Giải thích từ vựng (Màn hình riêng)
+        // 1. Gửi tín hiệu mở Vocabulary
         cardGiaiThichTuVung?.setOnClickListener {
-            // Khi nào có Activity riêng, bạn bỏ comment 2 dòng dưới và xóa Toast đi nhé
-            // val intent = Intent(this, GiaiThichTuVungActivity::class.java)
-            // startActivity(intent)
-            Toast.makeText(this, "Đang mở màn hình Giải thích từ vựng...", Toast.LENGTH_SHORT).show()
-        }
-
-        // 2. Chuyển sang màn hình Tạo Quiz (Màn hình riêng)
-        cardTaoQuiz?.setOnClickListener {
-            // val intent = Intent(this, TaoQuizActivity::class.java)
-            // startActivity(intent)
-            Toast.makeText(this, "Đang mở màn hình Tạo Quiz...", Toast.LENGTH_SHORT).show()
-        }
-
-        // 3. Mở tính năng Flashcard
-        cardFlashcard?.setOnClickListener {
-            val intent = Intent(this, KhamPhaActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "VOCABULARY")
             startActivity(intent)
         }
 
-        // 4. Chuyển sang màn hình Lộ trình học (Màn hình riêng)
-        cardLoTrinhHoc?.setOnClickListener {
-            // val intent = Intent(this, LoTrinhHocActivity::class.java)
-            // startActivity(intent)
-            Toast.makeText(this, "Đang mở màn hình Lộ trình học...", Toast.LENGTH_SHORT).show()
+        // 2. Chuyển sang màn hình Tạo Quiz (Activity)
+        cardTaoQuiz?.setOnClickListener {
+            val intent = Intent(this, TaoQuizActivity::class.java)
+            startActivity(intent)
         }
 
-        // 5. DUY NHẤT nút này sẽ mở khung Chat AI của bạn
+        // 3. Gửi tín hiệu mở Learning
+        cardFlashcard?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "LEARNING")
+            startActivity(intent)
+        }
+
+        // 4. Gửi tín hiệu mở Roadmap
+        cardLoTrinhHoc?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "ROADMAP")
+            startActivity(intent)
+        }
+
+        // 5. Chat AI
         cardTroChuyenTrucTiep?.setOnClickListener {
             val intent = Intent(this, ChatAIActivity::class.java)
             startActivity(intent)

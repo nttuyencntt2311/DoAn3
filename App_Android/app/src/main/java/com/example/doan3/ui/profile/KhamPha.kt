@@ -2,10 +2,14 @@ package com.example.doan3.ui.profile
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -23,7 +27,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.Locale
 
-// Thêm TextToSpeech.OnInitListener vào đây
 class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private var isFront = true
@@ -31,8 +34,23 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     // --- CÁC BIẾN LOGIC DỮ LIỆU ---
     private var studyList: List<Vocabulary> = emptyList()
     private var currentIndex = 0
+    private var currentCategory: String = "Tổng hợp"
+    private val BATCH_SIZE = 10
 
-    // Khai báo bộ đọc phát âm
+    // --- MỚI THÊM: CÁC BIẾN ĐẾM THỜI GIAN ---
+    private var secondsElapsed = 0
+    private var isTimerRunning = false
+    private val timerHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            if (isTimerRunning) {
+                secondsElapsed++
+                updateTimerUI()
+                timerHandler.postDelayed(this, 1000) // Lặp lại sau mỗi 1 giây
+            }
+        }
+    }
+
     private lateinit var tts: TextToSpeech
 
     // Khai báo views
@@ -41,6 +59,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var tvMeaning: TextView
     private lateinit var cardTuVung: MaterialCardView
     private lateinit var btnSpeaker: ImageView
+    private lateinit var tagIelts: MaterialCardView
+
+    // Ánh xạ đồng hồ
+    private lateinit var tvTimer: TextView
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +70,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         enableEdgeToEdge()
         setContentView(R.layout.khampha)
 
-        // Khởi tạo bộ đọc phát âm
         tts = TextToSpeech(this, this)
 
         // Ánh xạ View
@@ -57,19 +78,58 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tvMeaning = findViewById(R.id.tvMeaning)
         cardTuVung = findViewById(R.id.cardTuVung)
         btnSpeaker = findViewById(R.id.btnSpeaker)
+        tagIelts = findViewById(R.id.tagIelts)
+        tvTimer = findViewById(R.id.tvTimer)
+
+        val categoryFromIntent = intent.getStringExtra("CATEGORY_NAME")
+        if (categoryFromIntent != null) {
+            currentCategory = categoryFromIntent
+            val tvTag = tagIelts.getChildAt(0) as? TextView
+            tvTag?.text = currentCategory.uppercase()
+        }
 
         setupWindowInsets()
-        setupBottomNav()
+        setupBottomNav() // Gọi hàm cài đặt Bottom Nav (bao gồm việc đổi màu tab)
         setupFlashcardAnimation()
         setupActionButtons()
         setupBreathingEffect()
         setupAudioButton()
 
-        // BẮT ĐẦU: Gọi API lấy dữ liệu học
         fetchStudyWords()
     }
 
-    // Thiết lập ngôn ngữ đọc là Tiếng Anh
+    // ====================================================================
+    // CÁC HÀM XỬ LÝ ĐỒNG HỒ
+    // ====================================================================
+    private fun updateTimerUI() {
+        val minutes = secondsElapsed / 60
+        val seconds = secondsElapsed % 60
+        val timeString = String.format("%02d:%02d", minutes, seconds)
+        tvTimer.text = timeString
+    }
+
+    private fun startTimer() {
+        if (!isTimerRunning) {
+            isTimerRunning = true
+            timerHandler.post(timerRunnable)
+        }
+    }
+
+    private fun stopTimer() {
+        isTimerRunning = false
+        timerHandler.removeCallbacks(timerRunnable)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startTimer()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopTimer()
+    }
+
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             tts.language = Locale.US
@@ -80,7 +140,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         btnSpeaker.setOnClickListener {
             if (currentIndex < studyList.size) {
                 val wordToSpeak = studyList[currentIndex].word
-                // Đọc phát âm từ vựng hiện tại
                 tts.speak(wordToSpeak, TextToSpeech.QUEUE_FLUSH, null, "")
             }
         }
@@ -93,7 +152,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
                 if (response.isSuccessful) {
                     val allWords = response.body() ?: emptyList()
-                    studyList = allWords.filter { it.proficiency < 80 }
+
+                    studyList = allWords
+                        .filter { it.proficiency < 80 && it.category == currentCategory }
+                        .take(BATCH_SIZE)
 
                     if (studyList.isNotEmpty()) {
                         currentIndex = 0
@@ -101,8 +163,8 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     } else {
                         tvWord.text = "Hoàn thành!"
                         tvPronunciation.text = ""
-                        tvMeaning.text = "Bạn đã thuộc hết từ vựng."
-                        Toast.makeText(this@KhamPhaActivity, "Không còn từ mới để học hôm nay!", Toast.LENGTH_LONG).show()
+                        tvMeaning.text = "Bạn đã học hết từ vựng của chủ đề này."
+                        Toast.makeText(this@KhamPhaActivity, "Chủ đề này không còn từ mới!", Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -121,11 +183,38 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tvMeaning.text = currentWord.meaning
             resetCardToFront()
         } else {
-            tvWord.text = "Xong!"
-            tvPronunciation.text = ""
-            tvMeaning.text = "Bạn đã học xong bài hôm nay."
-            Toast.makeText(this, "Tuyệt vời! Bạn đã hoàn thành phiên học.", Toast.LENGTH_LONG).show()
+            showSessionCompleteDialog()
         }
+    }
+
+    private fun showSessionCompleteDialog() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_session_complete)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.setCancelable(false)
+
+        val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
+        tvMessage.text = "Bạn đã hoàn thành $BATCH_SIZE từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
+
+        val btnHocTiep = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnHocTiep)
+        btnHocTiep.setOnClickListener {
+            dialog.dismiss()
+            fetchStudyWords()
+        }
+
+        val btnNghiNgoi = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnNghiNgoi)
+        btnNghiNgoi.setOnClickListener {
+            dialog.dismiss()
+
+            val minutesLearned = secondsElapsed / 60
+            // Ghi chú: Sau này em sẽ gọi API đẩy biến minutesLearned này lên MongoDB tại đây
+
+            finish()
+        }
+
+        dialog.show()
     }
 
     private fun handleScore(scoreType: String) {
@@ -146,12 +235,9 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<Any> {
             override fun onResponse(call: Call<Any>, response: Response<Any>) {
                 if (response.isSuccessful) {
-                    // LOGIC MỚI CHO NÚT AGAIN NẰM Ở ĐÂY:
                     if (scoreType == "AGAIN") {
-                        // Nhét từ hiện tại vào cuối danh sách để nó lặp lại sau cùng
                         studyList = studyList + currentWord
                     }
-
                     currentIndex++
                     loadWordToUI()
                 } else {
@@ -218,6 +304,9 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    // ====================================================================
+    // MỚI: XỬ LÝ CẬP NHẬT MÀU SẮC CHO BOTTOM NAVIGATION
+    // ====================================================================
     private fun setupBottomNav() {
         findViewById<LinearLayout?>(R.id.btnTrangChu)?.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java).apply {
@@ -225,10 +314,40 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             })
             overridePendingTransition(0, 0)
         }
+
+        // Gọi hàm tô màu đúng tab khi Activity được khởi tạo
+        updateActiveTab()
     }
 
-    // Tắt bộ đọc khi thoát khỏi màn hình để giải phóng bộ nhớ
+    private fun updateActiveTab() {
+        val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
+        val btnKhamPha = findViewById<LinearLayout>(R.id.btnKhamPha)
+
+        val activeColor = Color.parseColor("#0056D2")
+        val inactiveColor = Color.parseColor("#777777")
+
+        // 1. Tẩy nền xanh và chuyển nút Trang Chủ thành màu xám
+        btnTrangChu?.let {
+            it.background = null
+            (it.getChildAt(0) as? ImageView)?.setColorFilter(inactiveColor)
+            (it.getChildAt(1) as? TextView)?.setTextColor(inactiveColor)
+        }
+
+        // 2. Bôi nền xanh và chuyển màu icon/text nút Khám Phá
+        btnKhamPha?.let {
+            it.setBackgroundResource(R.drawable.bg_tab_active)
+            (it.getChildAt(0) as? ImageView)?.setColorFilter(activeColor)
+            (it.getChildAt(1) as? TextView)?.setTextColor(activeColor)
+        }
+    }
+
     override fun onDestroy() {
+        stopTimer()
+
+        val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
+        val savedSeconds = sharedPref.getInt("totalSeconds", 0)
+        sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
+
         if (this::tts.isInitialized) {
             tts.stop()
             tts.shutdown()
