@@ -148,18 +148,18 @@ exports.getVocabStats = async (req, res) => {
   }
 };
 
-// 8. Hàm tạo dữ liệu tự động (Seeding)
+// 8. Hàm tạo dữ liệu tự động (Seeding) - PHIÊN BẢN CẬP NHẬT CHỦ ĐỀ
 exports.seedDefaultVocabulary = async (req, res) => {
   try {
     const { roadmapId } = req.body;
-
     if (!roadmapId) {
       return res.status(400).json({ message: "Vui lòng cung cấp roadmapId!" });
     }
 
-    // 1. Dán toàn bộ mảng 100 từ vựng vào đây
-    const wordList = [
-        // --- CHỦ ĐỀ 1: HỢP ĐỒNG & KINH DOANH ---
+    // --- 1. Tách các từ ra từng mảng riêng và tự động gán category ---
+
+    // CHỦ ĐỀ 1: HỢP ĐỒNG & KINH DOANH (100 từ)
+    const topic1 = [
         { word: "contract", meaning: "Hợp đồng", phonetic: "/ˈkɑːn.trækt/" },
         { word: "agreement", meaning: "Thỏa thuận", phonetic: "/əˈɡriː.mənt/" },
         { word: "signature", meaning: "Chữ ký", phonetic: "/ˈsɪɡ.nə.tʃɚ/" },
@@ -180,8 +180,90 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "comply", meaning: "Tuân thủ", phonetic: "/kəmˈplaɪ/" },
         { word: "draft", meaning: "Bản nháp", phonetic: "/dræft/" },
         { word: "valid", meaning: "Có hiệu lực", phonetic: "/ˈvæl.ɪd/" },
+        { word: "accept", meaning: "Chấp nhận", phonetic: "/əkˈsept/" },
+        { word: "acquire", meaning: "Thu mua, giành được", phonetic: "/əˈkwaɪɚ/" },
+        { word: "advantage", meaning: "Lợi thế", phonetic: "/ədˈvæn.t̬ɪdʒ/" },
+        { word: "affiliate", meaning: "Công ty liên kết", phonetic: "/əˈfɪl.i.eɪt/" },
+        { word: "append", meaning: "Đính kèm", phonetic: "/əˈpend/" },
+        { word: "arbitrate", meaning: "Phân xử", phonetic: "/ˈɑːr.bə.treɪt/" },
+        { word: "asset", meaning: "Tài sản", phonetic: "/ˈæs.et/" },
+        { word: "authorize", meaning: "Ủy quyền", phonetic: "/ˈɑː.θɚ.aɪz/" },
+        { word: "bankrupt", meaning: "Phá sản", phonetic: "/ˈbæŋ.krʌpt/" },
+        { word: "bargain", meaning: "Mặc cả, món hời", phonetic: "/ˈbɑːr.ɡɪn/" },
+        { word: "bid", meaning: "Đấu thầu", phonetic: "/bɪd/" },
+        { word: "board", meaning: "Hội đồng quản trị", phonetic: "/bɔːrd/" },
+        { word: "brand", meaning: "Thương hiệu", phonetic: "/brænd/" },
+        { word: "buyout", meaning: "Mua lại công ty", phonetic: "/ˈbaɪ.aʊt/" },
+        { word: "capital", meaning: "Vốn", phonetic: "/ˈkæp.ə.t̬əl/" },
+        { word: "commerce", meaning: "Thương mại", phonetic: "/ˈkɑː.mɝːs/" },
+        { word: "compete", meaning: "Cạnh tranh", phonetic: "/kəmˈpiːt/" },
+        { word: "compromise", meaning: "Thỏa hiệp", phonetic: "/ˈkɑːm.prə.maɪz/" },
+        { word: "consent", meaning: "Sự đồng ý", phonetic: "/kənˈsent/" },
+        { word: "consolidate", meaning: "Hợp nhất", phonetic: "/kənˈsɑː.lə.deɪt/" },
+        { word: "consult", meaning: "Tư vấn", phonetic: "/kənˈsʌlt/" },
+        { word: "contractor", meaning: "Nhà thầu", phonetic: "/ˈkɑːn.træk.tɚ/" },
+        { word: "corporate", meaning: "Thuộc về doanh nghiệp", phonetic: "/ˈkɔːr.pɚ.ət/" },
+        { word: "deal", meaning: "Giao dịch", phonetic: "/diːl/" },
+        { word: "declare", meaning: "Tuyên bố", phonetic: "/dɪˈkler/" },
+        { word: "default", meaning: "Vỡ nợ, mặc định", phonetic: "/dɪˈfɑːlt/" },
+        { word: "defect", meaning: "Khuyết điểm", phonetic: "/ˈdiː.fekt/" },
+        { word: "defend", meaning: "Bảo vệ, bào chữa", phonetic: "/dɪˈfend/" },
+        { word: "demand", meaning: "Nhu cầu", phonetic: "/dɪˈmænd/" },
+        { word: "dispute", meaning: "Tranh chấp", phonetic: "/dɪˈspjuːt/" },
+        { word: "dissolve", meaning: "Giải thể", phonetic: "/dɪˈzɑːlv/" },
+        { word: "endorse", meaning: "Xác nhận, tán thành", phonetic: "/ɪnˈdɔːrs/" },
+        { word: "enterprise", meaning: "Doanh nghiệp", phonetic: "/ˈen.t̬ɚ.praɪz/" },
+        { word: "equity", meaning: "Vốn chủ sở hữu", phonetic: "/ˈek.wə.t̬i/" },
+        { word: "expansion", meaning: "Sự mở rộng", phonetic: "/ɪkˈspæn.ʃən/" },
+        { word: "firm", meaning: "Công ty", phonetic: "/fɝːm/" },
+        { word: "forbid", meaning: "Cấm", phonetic: "/fɚˈbɪd/" },
+        { word: "franchise", meaning: "Nhượng quyền", phonetic: "/ˈfræn.tʃaɪz/" },
+        { word: "fraud", meaning: "Gian lận", phonetic: "/frɑːd/" },
+        { word: "fulfill", meaning: "Hoàn thành, đáp ứng", phonetic: "/fʊlˈfɪl/" },
+        { word: "govern", meaning: "Quản lý, chi phối", phonetic: "/ˈɡʌv.ɚn/" },
+        { word: "hire", meaning: "Thuê mướn", phonetic: "/haɪr/" },
+        { word: "incorporate", meaning: "Sáp nhập, kết hợp", phonetic: "/ɪnˈkɔːr.pɚ.eɪt/" },
+        { word: "infringe", meaning: "Vi phạm, xâm phạm", phonetic: "/ɪnˈfrɪndʒ/" },
+        { word: "joint", meaning: "Chung, liên doanh", phonetic: "/dʒɔɪnt/" },
+        { word: "lease", meaning: "Cho thuê (dài hạn)", phonetic: "/liːs/" },
+        { word: "legal", meaning: "Hợp pháp", phonetic: "/ˈliː.ɡəl/" },
+        { word: "liability", meaning: "Trách nhiệm pháp lý", phonetic: "/ˌlaɪ.əˈbɪl.ə.t̬i/" },
+        { word: "license", meaning: "Giấy phép", phonetic: "/ˈlaɪ.səns/" },
+        { word: "liquidate", meaning: "Thanh lý", phonetic: "/ˈlɪk.wə.deɪt/" },
+        { word: "market", meaning: "Thị trường", phonetic: "/ˈmɑːr.kɪt/" },
+        { word: "merge", meaning: "Sáp nhập", phonetic: "/mɝːdʒ/" },
+        { word: "monopoly", meaning: "Độc quyền", phonetic: "/məˈnɑː.pəl.i/" },
+        { word: "mutual", meaning: "Lẫn nhau, chung", phonetic: "/ˈmjuː.tʃu.əl/" },
+        { word: "nullify", meaning: "Hủy bỏ, vô hiệu hóa", phonetic: "/ˈnʌl.ə.faɪ/" },
+        { word: "offer", meaning: "Đề nghị", phonetic: "/ˈɑː.fɚ/" },
+        { word: "partner", meaning: "Đối tác", phonetic: "/ˈpɑːr.tnɚ/" },
+        { word: "patent", meaning: "Bằng sáng chế", phonetic: "/ˈpæt.ənt/" },
+        { word: "penalty", meaning: "Hình phạt, tiền phạt", phonetic: "/ˈpen.əl.t̬i/" },
+        { word: "profit", meaning: "Lợi nhuận", phonetic: "/ˈprɑː.fɪt/" },
+        { word: "propose", meaning: "Đề xuất", phonetic: "/prəˈpoʊz/" },
+        { word: "quota", meaning: "Hạn ngạch", phonetic: "/ˈkwoʊ.t̬ə/" },
+        { word: "ratify", meaning: "Phê chuẩn", phonetic: "/ˈræt̬.ə.faɪ/" },
+        { word: "renew", meaning: "Gia hạn", phonetic: "/rɪˈnuː/" },
+        { word: "represent", meaning: "Đại diện", phonetic: "/ˌrep.rɪˈzent/" },
+        { word: "resign", meaning: "Từ chức", phonetic: "/rɪˈzaɪn/" },
+        { word: "restrict", meaning: "Hạn chế", phonetic: "/rɪˈstrɪkt/" },
+        { word: "retail", meaning: "Bán lẻ", phonetic: "/ˈriː.teɪl/" },
+        { word: "risk", meaning: "Rủi ro", phonetic: "/rɪsk/" },
+        { word: "sanction", meaning: "Lệnh trừng phạt", phonetic: "/ˈsæŋk.ʃən/" },
+        { word: "settle", meaning: "Giải quyết, dàn xếp", phonetic: "/ˈset̬.əl/" },
+        { word: "share", meaning: "Cổ phần", phonetic: "/ʃer/" },
+        { word: "sponsor", meaning: "Nhà tài trợ", phonetic: "/ˈspɑːn.sɚ/" },
+        { word: "stake", meaning: "Cổ phần, lợi ích", phonetic: "/steɪk/" },
+        { word: "stipulate", meaning: "Quy định (trong HĐ)", phonetic: "/ˈstɪp.jə.leɪt/" },
+        { word: "sue", meaning: "Kiện", phonetic: "/suː/" },
+        { word: "term", meaning: "Điều khoản, kỳ hạn", phonetic: "/tɝːm/" },
+        { word: "trademark", meaning: "Nhãn hiệu", phonetic: "/ˈtreɪd.mɑːrk/" },
+        { word: "violate", meaning: "Vi phạm", phonetic: "/ˈvaɪ.ə.leɪt/" },
+        { word: "venture", meaning: "Dự án kinh doanh", phonetic: "/ˈven.tʃɚ/" }
+    ].map(item => ({ ...item, category: "Hợp đồng & Kinh doanh" }));
 
-        // --- CHỦ ĐỀ 2: MÔI TRƯỜNG VĂN PHÒNG ---
+    // CHỦ ĐỀ 2: MÔI TRƯỜNG VĂN PHÒNG (100 từ)
+    const topic2 = [
         { word: "colleague", meaning: "Đồng nghiệp", phonetic: "/ˈkɑː.liːɡ/" },
         { word: "manager", meaning: "Người quản lý", phonetic: "/ˈmæn.ə.dʒɚ/" },
         { word: "meeting", meaning: "Cuộc họp", phonetic: "/ˈmiː.t̬ɪŋ/" },
@@ -202,8 +284,85 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "assignment", meaning: "Nhiệm vụ", phonetic: "/əˈsaɪn.mənt/" },
         { word: "supervisor", meaning: "Người giám sát", phonetic: "/ˈsuː.pɚ.vaɪ.zɚ/" },
         { word: "presentation", meaning: "Bài thuyết trình", phonetic: "/ˌprez.ənˈteɪ.ʃən/" },
+        { word: "absent", meaning: "Vắng mặt", phonetic: "/ˈæb.sənt/" },
+        { word: "accomplish", meaning: "Hoàn thành", phonetic: "/əˈkɑːm.plɪʃ/" },
+        { word: "administration", meaning: "Sự quản trị", phonetic: "/ədˌmɪn.əˈstreɪ.ʃən/" },
+        { word: "advance", meaning: "Tiến bộ, thăng tiến", phonetic: "/ədˈvæns/" },
+        { word: "applicant", meaning: "Người ứng tuyển", phonetic: "/ˈæp.lə.kənt/" },
+        { word: "appoint", meaning: "Bổ nhiệm", phonetic: "/əˈpɔɪnt/" },
+        { word: "appraise", meaning: "Đánh giá (hiệu suất)", phonetic: "/əˈpreɪz/" },
+        { word: "archive", meaning: "Lưu trữ", phonetic: "/ˈɑːr.kaɪv/" },
+        { word: "attach", meaning: "Đính kèm", phonetic: "/əˈtætʃ/" },
+        { word: "background", meaning: "Kinh nghiệm, lý lịch", phonetic: "/ˈbæk.ɡraʊnd/" },
+        { word: "badge", meaning: "Thẻ nhân viên", phonetic: "/bædʒ/" },
+        { word: "binder", meaning: "Bìa kẹp tài liệu", phonetic: "/ˈbaɪn.dɚ/" },
+        { word: "brief", meaning: "Bản tóm tắt", phonetic: "/briːf/" },
+        { word: "cabinet", meaning: "Tủ đựng tài liệu", phonetic: "/ˈkæb.ən.ət/" },
+        { word: "cafeteria", meaning: "Căn tin", phonetic: "/ˌkæf.əˈtɪr.i.ə/" },
+        { word: "candidate", meaning: "Ứng viên", phonetic: "/ˈkæn.dɪ.dət/" },
+        { word: "career", meaning: "Sự nghiệp", phonetic: "/kəˈrɪr/" },
+        { word: "certificate", meaning: "Chứng chỉ", phonetic: "/sɚˈtɪf.ə.kət/" },
+        { word: "chair", meaning: "Chủ tọa, ghế", phonetic: "/tʃer/" },
+        { word: "commute", meaning: "Đi làm (quãng đường)", phonetic: "/kəˈmjuːt/" },
+        { word: "compensation", meaning: "Lương thưởng, đền bù", phonetic: "/ˌkɑːm.penˈseɪ.ʃən/" },
+        { word: "conference", meaning: "Hội nghị", phonetic: "/ˈkɑːn.fɚ.əns/" },
+        { word: "conflict", meaning: "Xung đột", phonetic: "/ˈkɑːn.flɪkt/" },
+        { word: "coordinate", meaning: "Điều phối", phonetic: "/koʊˈɔːr.dən.eɪt/" },
+        { word: "copy", meaning: "Bản sao", phonetic: "/ˈkɑː.pi/" },
+        { word: "cubicle", meaning: "Không gian làm việc (ô nhỏ)", phonetic: "/ˈkjuː.bɪ.kəl/" },
+        { word: "delegate", meaning: "Giao phó", phonetic: "/ˈdel.ə.ɡət/" },
+        { word: "desk", meaning: "Bàn làm việc", phonetic: "/desk/" },
+        { word: "dismiss", meaning: "Sa thải", phonetic: "/dɪˈsmɪs/" },
+        { word: "drawer", meaning: "Ngăn kéo", phonetic: "/drɔːr/" },
+        { word: "employ", meaning: "Thuê làm", phonetic: "/ɪmˈplɔɪ/" },
+        { word: "enroll", meaning: "Đăng ký", phonetic: "/ɪnˈroʊl/" },
+        { word: "equipment", meaning: "Trang thiết bị", phonetic: "/ɪˈkwɪp.mənt/" },
+        { word: "executive", meaning: "Giám đốc điều hành", phonetic: "/ɪɡˈzek.jə.t̬ɪv/" },
+        { word: "facility", meaning: "Cơ sở vật chất", phonetic: "/fəˈsɪl.ə.t̬i/" },
+        { word: "file", meaning: "Hồ sơ, tệp", phonetic: "/faɪl/" },
+        { word: "fire", meaning: "Sa thải", phonetic: "/faɪr/" },
+        { word: "folder", meaning: "Thư mục", phonetic: "/ˈfoʊl.dɚ/" },
+        { word: "goal", meaning: "Mục tiêu", phonetic: "/ɡoʊl/" },
+        { word: "human", meaning: "Nhân sự", phonetic: "/ˈhjuː.mən/" },
+        { word: "implement", meaning: "Thực hiện", phonetic: "/ˈɪm.plə.ment/" },
+        { word: "instruct", meaning: "Hướng dẫn", phonetic: "/ɪnˈstrʌkt/" },
+        { word: "intern", meaning: "Thực tập sinh", phonetic: "/ˈɪn.tɝːn/" },
+        { word: "interview", meaning: "Phỏng vấn", phonetic: "/ˈɪn.t̬ɚ.vjuː/" },
+        { word: "layout", meaning: "Bố cục", phonetic: "/ˈleɪ.aʊt/" },
+        { word: "leave", meaning: "Nghỉ phép", phonetic: "/liːv/" },
+        { word: "memo", meaning: "Bản ghi nhớ", phonetic: "/ˈmem.oʊ/" },
+        { word: "motivate", meaning: "Động viên", phonetic: "/ˈmoʊ.t̬ə.veɪt/" },
+        { word: "notice", meaning: "Thông báo", phonetic: "/ˈnoʊ.t̬ɪs/" },
+        { word: "objective", meaning: "Mục tiêu", phonetic: "/əbˈdʒek.tɪv/" },
+        { word: "orientation", meaning: "Sự định hướng", phonetic: "/ˌɔːr.i.enˈteɪ.ʃən/" },
+        { word: "paper", meaning: "Giấy tờ", phonetic: "/ˈpeɪ.pɚ/" },
+        { word: "participate", meaning: "Tham gia", phonetic: "/pɑːrˈtɪs.ə.peɪt/" },
+        { word: "pension", meaning: "Lương hưu", phonetic: "/ˈpen.ʃən/" },
+        { word: "perform", meaning: "Thực hiện", phonetic: "/pɚˈfɔːrm/" },
+        { word: "personnel", meaning: "Nhân sự", phonetic: "/ˌpɝː.sənˈnel/" },
+        { word: "plan", meaning: "Kế hoạch", phonetic: "/plæn/" },
+        { word: "printer", meaning: "Máy in", phonetic: "/ˈprɪn.t̬ɚ/" },
+        { word: "probation", meaning: "Thời gian thử việc", phonetic: "/proʊˈbeɪ.ʃən/" },
+        { word: "productivity", meaning: "Năng suất", phonetic: "/ˌproʊ.dʌkˈtɪv.ə.t̬i/" },
+        { word: "project", meaning: "Dự án", phonetic: "/ˈprɑː.dʒekt/" },
+        { word: "qualify", meaning: "Đủ điều kiện", phonetic: "/ˈkwɑː.lə.faɪ/" },
+        { word: "recruit", meaning: "Tuyển dụng", phonetic: "/rɪˈkruːt/" },
+        { word: "report", meaning: "Báo cáo", phonetic: "/rɪˈpɔːrt/" },
+        { word: "retire", meaning: "Nghỉ hưu", phonetic: "/rɪˈtaɪr/" },
+        { word: "salary", meaning: "Tiền lương", phonetic: "/ˈsæl.ɚ.i/" },
+        { word: "shift", meaning: "Ca làm việc", phonetic: "/ʃɪft/" },
+        { word: "skill", meaning: "Kỹ năng", phonetic: "/skɪl/" },
+        { word: "staple", meaning: "Ghim giấy", phonetic: "/ˈsteɪ.pəl/" },
+        { word: "stationery", meaning: "Văn phòng phẩm", phonetic: "/ˈsteɪ.ʃə.ner.i/" },
+        { word: "strike", meaning: "Đình công", phonetic: "/straɪk/" },
+        { word: "task", meaning: "Nhiệm vụ", phonetic: "/tæsk/" },
+        { word: "team", meaning: "Đội ngũ", phonetic: "/tiːm/" },
+        { word: "timecard", meaning: "Thẻ chấm công", phonetic: "/ˈtaɪm.kɑːrd/" },
+        { word: "train", meaning: "Đào tạo", phonetic: "/treɪn/" }
+    ].map(item => ({ ...item, category: "Môi trường văn phòng" }));
 
-        // --- CHỦ ĐỀ 3: HỆ THỐNG THÔNG TIN & CÔNG NGHỆ ---
+    // CHỦ ĐỀ 3: HỆ THỐNG THÔNG TIN & CÔNG NGHỆ (100 từ)
+    const topic3 = [
         { word: "developer", meaning: "Lập trình viên", phonetic: "/dɪˈvel.ə.pɚ/" },
         { word: "database", meaning: "Cơ sở dữ liệu", phonetic: "/ˈdeɪ.t̬ə.beɪs/" },
         { word: "software", meaning: "Phần mềm", phonetic: "/ˈsɑːft.wer/" },
@@ -224,8 +383,88 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "variable", meaning: "Biến số", phonetic: "/ˈver.i.ə.bəl/" },
         { word: "logic", meaning: "Tính logic", phonetic: "/ˈlɑː.dʒɪk/" },
         { word: "algorithm", meaning: "Thuật toán", phonetic: "/ˈæl.ɡə.rɪ.ðəm/" },
+        { word: "account", meaning: "Tài khoản", phonetic: "/əˈkaʊnt/" },
+        { word: "admin", meaning: "Quản trị viên", phonetic: "/ˈæd.mɪn/" },
+        { word: "application", meaning: "Ứng dụng", phonetic: "/ˌæp.ləˈkeɪ.ʃən/" },
+        { word: "array", meaning: "Mảng (lập trình)", phonetic: "/əˈreɪ/" },
+        { word: "backup", meaning: "Sao lưu", phonetic: "/ˈbæk.ʌp/" },
+        { word: "bandwidth", meaning: "Băng thông", phonetic: "/ˈbænd.wɪdθ/" },
+        { word: "binary", meaning: "Hệ nhị phân", phonetic: "/ˈbaɪ.nɚ.i/" },
+        { word: "boot", meaning: "Khởi động máy", phonetic: "/buːt/" },
+        { word: "broadband", meaning: "Băng thông rộng", phonetic: "/ˈbrɑːd.bænd/" },
+        { word: "browser", meaning: "Trình duyệt", phonetic: "/ˈbraʊ.zɚ/" },
+        { word: "bug", meaning: "Lỗi phần mềm", phonetic: "/bʌɡ/" },
+        { word: "byte", meaning: "Byte (đơn vị dữ liệu)", phonetic: "/baɪt/" },
+        { word: "cache", meaning: "Bộ nhớ đệm", phonetic: "/kæʃ/" },
+        { word: "circuit", meaning: "Mạch điện", phonetic: "/ˈsɝː.kɪt/" },
+        { word: "client", meaning: "Máy khách", phonetic: "/ˈklaɪ.ənt/" },
+        { word: "cloud", meaning: "Đám mây (lưu trữ)", phonetic: "/klaʊd/" },
+        { word: "code", meaning: "Mã lệnh", phonetic: "/koʊd/" },
+        { word: "command", meaning: "Câu lệnh", phonetic: "/kəˈmænd/" },
+        { word: "compile", meaning: "Biên dịch", phonetic: "/kəmˈpaɪl/" },
+        { word: "component", meaning: "Thành phần", phonetic: "/kəmˈpoʊ.nənt/" },
+        { word: "connect", meaning: "Kết nối", phonetic: "/kəˈnekt/" },
+        { word: "console", meaning: "Bảng điều khiển", phonetic: "/kənˈsoʊl/" },
+        { word: "crash", meaning: "Sập (hệ thống)", phonetic: "/kræʃ/" },
+        { word: "cursor", meaning: "Con trỏ chuột", phonetic: "/ˈkɝː.sɚ/" },
+        { word: "cyber", meaning: "Không gian mạng", phonetic: "/ˈsaɪ.bɚ/" },
+        { word: "dashboard", meaning: "Bảng điều khiển", phonetic: "/ˈdæʃ.bɔːrd/" },
+        { word: "data", meaning: "Dữ liệu", phonetic: "/ˈdeɪ.t̬ə/" },
+        { word: "debug", meaning: "Gỡ lỗi", phonetic: "/ˌdiːˈbʌɡ/" },
+        { word: "delete", meaning: "Xóa", phonetic: "/dɪˈliːt/" },
+        { word: "deploy", meaning: "Triển khai", phonetic: "/dɪˈplɔɪ/" },
+        { word: "desktop", meaning: "Máy tính để bàn", phonetic: "/ˈdesk.tɑːp/" },
+        { word: "device", meaning: "Thiết bị", phonetic: "/dɪˈvaɪs/" },
+        { word: "digital", meaning: "Kỹ thuật số", phonetic: "/ˈdɪdʒ.ə.t̬əl/" },
+        { word: "directory", meaning: "Thư mục", phonetic: "/dɪˈrek.tɚ.i/" },
+        { word: "domain", meaning: "Tên miền", phonetic: "/doʊˈmeɪn/" },
+        { word: "download", meaning: "Tải xuống", phonetic: "/ˈdaʊn.loʊd/" },
+        { word: "encryption", meaning: "Mã hóa", phonetic: "/ɪnˈkrɪp.ʃən/" },
+        { word: "error", meaning: "Lỗi", phonetic: "/ˈer.ɚ/" },
+        { word: "execute", meaning: "Thực thi", phonetic: "/ˈek.sə.kjuːt/" },
+        { word: "firewall", meaning: "Tường lửa", phonetic: "/ˈfaɪr.wɑːl/" },
+        { word: "format", meaning: "Định dạng", phonetic: "/ˈfɔːr.mæt/" },
+        { word: "framework", meaning: "Khung làm việc", phonetic: "/ˈfreɪm.wɝːk/" },
+        { word: "gateway", meaning: "Cổng giao tiếp", phonetic: "/ˈɡeɪt.weɪ/" },
+        { word: "hacker", meaning: "Tin tặc", phonetic: "/ˈhæk.ɚ/" },
+        { word: "host", meaning: "Máy chủ", phonetic: "/hoʊst/" },
+        { word: "input", meaning: "Đầu vào", phonetic: "/ˈɪn.pʊt/" },
+        { word: "integrate", meaning: "Tích hợp", phonetic: "/ˈɪn.t̬ə.ɡreɪt/" },
+        { word: "internet", meaning: "Mạng internet", phonetic: "/ˈɪn.t̬ɚ.net/" },
+        { word: "ip", meaning: "Giao thức mạng", phonetic: "/ˌaɪˈpiː/" },
+        { word: "keyboard", meaning: "Bàn phím", phonetic: "/ˈkiː.bɔːrd/" },
+        { word: "link", meaning: "Liên kết", phonetic: "/lɪŋk/" },
+        { word: "login", meaning: "Đăng nhập", phonetic: "/ˈlɑːɡ.ɪn/" },
+        { word: "malware", meaning: "Phần mềm độc hại", phonetic: "/ˈmæl.wer/" },
+        { word: "memory", meaning: "Bộ nhớ", phonetic: "/ˈmem.ɚ.i/" },
+        { word: "module", meaning: "Mô-đun", phonetic: "/ˈmɑː.dʒuːl/" },
+        { word: "mouse", meaning: "Chuột máy tính", phonetic: "/maʊs/" },
+        { word: "offline", meaning: "Ngoại tuyến", phonetic: "/ˌɑːfˈlaɪn/" },
+        { word: "online", meaning: "Trực tuyến", phonetic: "/ˌɑːnˈlaɪn/" },
+        { word: "output", meaning: "Đầu ra", phonetic: "/ˈaʊt.pʊt/" },
+        { word: "password", meaning: "Mật khẩu", phonetic: "/ˈpæs.wɝːd/" },
+        { word: "patch", meaning: "Bản vá lỗi", phonetic: "/pætʃ/" },
+        { word: "platform", meaning: "Nền tảng", phonetic: "/ˈplæt.fɔːrm/" },
+        { word: "portal", meaning: "Cổng thông tin", phonetic: "/ˈpɔːr.t̬əl/" },
+        { word: "program", meaning: "Chương trình", phonetic: "/ˈproʊ.ɡræm/" },
+        { word: "protocol", meaning: "Giao thức", phonetic: "/ˈproʊ.t̬ə.kɑːl/" },
+        { word: "query", meaning: "Truy vấn", phonetic: "/ˈkwɪr.i/" },
+        { word: "reboot", meaning: "Khởi động lại", phonetic: "/ˌriːˈbuːt/" },
+        { word: "router", meaning: "Bộ định tuyến", phonetic: "/ˈraʊ.t̬ɚ/" },
+        { word: "script", meaning: "Kịch bản", phonetic: "/skrɪpt/" },
+        { word: "search", meaning: "Tìm kiếm", phonetic: "/sɝːtʃ/" },
+        { word: "source", meaning: "Nguồn", phonetic: "/sɔːrs/" },
+        { word: "spam", meaning: "Thư rác", phonetic: "/spæm/" },
+        { word: "storage", meaning: "Lưu trữ", phonetic: "/ˈstɔːr.ɪdʒ/" },
+        { word: "terminal", meaning: "Dòng lệnh", phonetic: "/ˈtɝː.mə.nəl/" },
+        { word: "upload", meaning: "Tải lên", phonetic: "/ˈʌp.loʊd/" },
+        { word: "virus", meaning: "Vi-rút", phonetic: "/ˈvaɪ.rəs/" },
+        { word: "web", meaning: "Trang web", phonetic: "/web/" },
+        { word: "wireless", meaning: "Không dây", phonetic: "/ˈwaɪr.ləs/" }
+    ].map(item => ({ ...item, category: "Hệ thống thông tin & Công nghệ" }));
 
-        // --- CHỦ ĐỀ 4: KẾ TOÁN & TÀI CHÍNH ---
+    // CHỦ ĐỀ 4: KẾ TOÁN & TÀI CHÍNH (100 từ)
+    const topic4 = [
         { word: "budget", meaning: "Ngân sách", phonetic: "/ˈbʌdʒ.ɪt/" },
         { word: "revenue", meaning: "Doanh thu", phonetic: "/ˈrev.ə.nuː/" },
         { word: "expense", meaning: "Chi phí", phonetic: "/ɪkˈspens/" },
@@ -246,8 +485,78 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "discount", meaning: "Giảm giá", phonetic: "/ˈdɪs.kaʊnt/" },
         { word: "refund", meaning: "Hoàn tiền", phonetic: "/ˈriː.fʌnd/" },
         { word: "receipt", meaning: "Biên lai", phonetic: "/rɪˈsiːt/" },
+        { word: "accrue", meaning: "Tích lũy", phonetic: "/əˈkruː/" },
+        { word: "accumulate", meaning: "Tích lũy, dồn lại", phonetic: "/əˈkjuː.mjə.leɪt/" },
+        { word: "allocate", meaning: "Phân bổ", phonetic: "/ˈæl.ə.keɪt/" },
+        { word: "allowance", meaning: "Trợ cấp", phonetic: "/əˈlaʊ.əns/" },
+        { word: "amortize", meaning: "Khấu hao", phonetic: "/ˈæm.ɚ.taɪz/" },
+        { word: "analyze", meaning: "Phân tích", phonetic: "/ˈæn.əl.aɪz/" },
+        { word: "atm", meaning: "Máy rút tiền", phonetic: "/ˌeɪ.tiːˈem/" },
+        { word: "bank", meaning: "Ngân hàng", phonetic: "/bæŋk/" },
+        { word: "bill", meaning: "Hóa đơn", phonetic: "/bɪl/" },
+        { word: "bond", meaning: "Trái phiếu", phonetic: "/bɑːnd/" },
+        { word: "borrow", meaning: "Vay, mượn", phonetic: "/ˈbɑːr.oʊ/" },
+        { word: "broker", meaning: "Người môi giới", phonetic: "/ˈbroʊ.kɚ/" },
+        { word: "calculate", meaning: "Tính toán", phonetic: "/ˈkæl.kjə.leɪt/" },
+        { word: "cash", meaning: "Tiền mặt", phonetic: "/kæʃ/" },
+        { word: "charge", meaning: "Tính phí", phonetic: "/tʃɑːrdʒ/" },
+        { word: "check", meaning: "Séc (ngân hàng)", phonetic: "/tʃek/" },
+        { word: "clear", meaning: "Thanh toán bù trừ", phonetic: "/klɪr/" },
+        { word: "collateral", meaning: "Tài sản thế chấp", phonetic: "/kəˈlæt̬.ɚ.əl/" },
+        { word: "commission", meaning: "Tiền hoa hồng", phonetic: "/kəˈmɪʃ.ən/" },
+        { word: "commodity", meaning: "Hàng hóa", phonetic: "/kəˈmɑː.də.t̬i/" },
+        { word: "compound", meaning: "Lãi kép", phonetic: "/ˈkɑːm.paʊnd/" },
+        { word: "cost", meaning: "Chi phí", phonetic: "/kɑːst/" },
+        { word: "credit", meaning: "Tín dụng", phonetic: "/ˈkred.ɪt/" },
+        { word: "deduction", meaning: "Sự khấu trừ", phonetic: "/dɪˈdʌk.ʃən/" },
+        { word: "deficit", meaning: "Thâm hụt", phonetic: "/ˈdef.ə.sɪt/" },
+        { word: "deposit", meaning: "Tiền gửi", phonetic: "/dɪˈpɑː.zɪt/" },
+        { word: "depreciate", meaning: "Khấu hao", phonetic: "/dɪˈpriː.ʃi.eɪt/" },
+        { word: "dividend", meaning: "Cổ tức", phonetic: "/ˈdɪv.ə.dend/" },
+        { word: "earn", meaning: "Kiếm tiền", phonetic: "/ɝːn/" },
+        { word: "evade", meaning: "Trốn (thuế)", phonetic: "/ɪˈveɪd/" },
+        { word: "exchange", meaning: "Trao đổi, ngoại đoái", phonetic: "/ɪksˈtʃeɪndʒ/" },
+        { word: "fee", meaning: "Lệ phí", phonetic: "/fiː/" },
+        { word: "finance", meaning: "Tài chính", phonetic: "/ˈfaɪ.næns/" },
+        { word: "forecast", meaning: "Dự báo", phonetic: "/ˈfɔːr.kæst/" },
+        { word: "gross", meaning: "Tổng (chưa trừ thuế)", phonetic: "/ɡroʊs/" },
+        { word: "income", meaning: "Thu nhập", phonetic: "/ˈɪn.kʌm/" },
+        { word: "inflation", meaning: "Lạm phát", phonetic: "/ɪnˈfleɪ.ʃən/" },
+        { word: "inherit", meaning: "Thừa kế", phonetic: "/ɪnˈher.ɪt/" },
+        { word: "insolvent", meaning: "Mất khả năng thanh toán", phonetic: "/ɪnˈsɑːl.vənt/" },
+        { word: "insure", meaning: "Bảo hiểm", phonetic: "/ɪnˈʃʊr/" },
+        { word: "inventory", meaning: "Hàng tồn kho", phonetic: "/ˈɪn.vən.tɔːr.i/" },
+        { word: "ledger", meaning: "Sổ cái", phonetic: "/ˈledʒ.ɚ/" },
+        { word: "lend", meaning: "Cho vay", phonetic: "/lend/" },
+        { word: "liquid", meaning: "Thanh khoản", phonetic: "/ˈlɪk.wɪd/" },
+        { word: "margin", meaning: "Tỷ suất lợi nhuận", phonetic: "/ˈmɑːr.dʒɪn/" },
+        { word: "mortgage", meaning: "Thế chấp", phonetic: "/ˈmɔːr.ɡɪdʒ/" },
+        { word: "net", meaning: "Ròng, thực nhận", phonetic: "/net/" },
+        { word: "owe", meaning: "Nợ", phonetic: "/oʊ/" },
+        { word: "pay", meaning: "Trả tiền", phonetic: "/peɪ/" },
+        { word: "portfolio", meaning: "Danh mục đầu tư", phonetic: "/pɔːrtˈfoʊ.li.oʊ/" },
+        { word: "premium", meaning: "Phí bảo hiểm", phonetic: "/ˈpriː.mi.əm/" },
+        { word: "price", meaning: "Giá cả", phonetic: "/praɪs/" },
+        { word: "principal", meaning: "Tiền gốc", phonetic: "/ˈprɪn.sə.pəl/" },
+        { word: "quote", meaning: "Báo giá", phonetic: "/kwoʊt/" },
+        { word: "rate", meaning: "Tỷ giá", phonetic: "/reɪt/" },
+        { word: "ration", meaning: "Định mức", phonetic: "/ˈræʃ.ən/" },
+        { word: "reconcile", meaning: "Đối chiếu", phonetic: "/ˈrek.ən.saɪl/" },
+        { word: "remit", meaning: "Chuyển tiền", phonetic: "/rɪˈmɪt/" },
+        { word: "reserve", meaning: "Dự trữ", phonetic: "/rɪˈzɝːv/" },
+        { word: "return", meaning: "Tiền lời", phonetic: "/rɪˈtɝːn/" },
+        { word: "save", meaning: "Tiết kiệm", phonetic: "/seɪv/" },
+        { word: "statement", meaning: "Sao kê", phonetic: "/ˈsteɪt.mənt/" },
+        { word: "stock", meaning: "Cổ phiếu", phonetic: "/stɑːk/" },
+        { word: "subsidy", meaning: "Trợ cấp", phonetic: "/ˈsʌb.sə.di/" },
+        { word: "surplus", meaning: "Thặng dư", phonetic: "/ˈsɝː.pləs/" },
+        { word: "transfer", meaning: "Chuyển khoản", phonetic: "/trænsˈfɝː/" },
+        { word: "value", meaning: "Giá trị", phonetic: "/ˈvæl.juː/" },
+        { word: "wage", meaning: "Tiền công", phonetic: "/weɪdʒ/" }
+    ].map(item => ({ ...item, category: "Kế toán & Tài chính" }));
 
-        // --- CHỦ ĐỀ 5: DỊCH VỤ & KHÁCH HÀNG ---
+    // CHỦ ĐỀ 5: DỊCH VỤ & KHÁCH HÀNG (100 từ)
+    const topic5 = [
         { word: "customer", meaning: "Khách hàng", phonetic: "/ˈkʌs.tə.mɚ/" },
         { word: "service", meaning: "Dịch vụ", phonetic: "/ˈsɝː.vɪs/" },
         { word: "feedback", meaning: "Phản hồi", phonetic: "/ˈfiːd.bæk/" },
@@ -257,7 +566,7 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "delivery", meaning: "Giao hàng", phonetic: "/dɪˈlɪv.ɚ.i/" },
         { word: "order", meaning: "Đơn hàng", phonetic: "/ˈɔːr.dɚ/" },
         { word: "loyalty", meaning: "Sự trung thành", phonetic: "/ˈlɔɪ.əl.t̬i/" },
-        { word: "inquiry", meaning: "Yêu cầu cung cấp thông tin", phonetic: "/ˈɪn.kwə.ri/" },
+        { word: "inquiry", meaning: "Yêu cầu thông tin", phonetic: "/ˈɪn.kwə.ri/" },
         { word: "assist", meaning: "Hỗ trợ", phonetic: "/əˈsɪst/" },
         { word: "resolve", meaning: "Giải quyết", phonetic: "/rɪˈzɑːlv/" },
         { word: "policy", meaning: "Chính sách", phonetic: "/ˈpɑː.lə.si/" },
@@ -267,44 +576,102 @@ exports.seedDefaultVocabulary = async (req, res) => {
         { word: "survey", meaning: "Khảo sát", phonetic: "/ˈsɝː.veɪ/" },
         { word: "upgrade", meaning: "Nâng cấp", phonetic: "/ʌpˈɡreɪd/" },
         { word: "apologize", meaning: "Xin lỗi", phonetic: "/əˈpɑː.lə.dʒaɪz/" },
-        { word: "recommend", meaning: "Đề xuất", phonetic: "/ˌrek.əˈmend/" }
-    ];
+        { word: "recommend", meaning: "Đề xuất", phonetic: "/ˌrek.əˈmend/" },
+        { word: "address", meaning: "Giải quyết, địa chỉ", phonetic: "/əˈdres/" },
+        { word: "advise", meaning: "Khuyên bảo", phonetic: "/ədˈvaɪz/" },
+        { word: "afford", meaning: "Đủ khả năng", phonetic: "/əˈfɔːrd/" },
+        { word: "agent", meaning: "Đại lý", phonetic: "/ˈeɪ.dʒənt/" },
+        { word: "answer", meaning: "Trả lời", phonetic: "/ˈæn.sɚ/" },
+        { word: "appeal", meaning: "Sự hấp dẫn", phonetic: "/əˈpiːl/" },
+        { word: "approach", meaning: "Tiếp cận", phonetic: "/əˈproʊtʃ/" },
+        { word: "assure", meaning: "Đảm bảo", phonetic: "/əˈʃʊr/" },
+        { word: "attract", meaning: "Thu hút", phonetic: "/əˈtrækt/" },
+        { word: "base", meaning: "Nền tảng", phonetic: "/beɪs/" },
+        { word: "benefit", meaning: "Lợi ích", phonetic: "/ˈben.ə.fɪt/" },
+        { word: "care", meaning: "Chăm sóc", phonetic: "/ker/" },
+        { word: "cart", meaning: "Giỏ hàng", phonetic: "/kɑːrt/" },
+        { word: "catalog", meaning: "Danh mục", phonetic: "/ˈkæt̬.əl.ɑːɡ/" },
+        { word: "choice", meaning: "Lựa chọn", phonetic: "/tʃɔɪs/" },
+        { word: "claim", meaning: "Khiếu nại", phonetic: "/kleɪm/" },
+        { word: "comfort", meaning: "Sự thoải mái", phonetic: "/ˈkʌm.fɚt/" },
+        { word: "compensate", meaning: "Đền bù", phonetic: "/ˈkɑːm.pen.seɪt/" },
+        { word: "compliment", meaning: "Lời khen", phonetic: "/ˈkɑːm.plə.mənt/" },
+        { word: "confirm", meaning: "Xác nhận", phonetic: "/kənˈfɝːm/" },
+        { word: "consume", meaning: "Tiêu thụ", phonetic: "/kənˈsuːm/" },
+        { word: "contact", meaning: "Liên hệ", phonetic: "/ˈkɑːn.tækt/" },
+        { word: "convince", meaning: "Thuyết phục", phonetic: "/kənˈvɪns/" },
+        { word: "coupon", meaning: "Phiếu giảm giá", phonetic: "/ˈkuː.pɑːn/" },
+        { word: "courtesy", meaning: "Sự lịch sự", phonetic: "/ˈkɝː.t̬ə.si/" },
+        { word: "delay", meaning: "Sự chậm trễ", phonetic: "/dɪˈleɪ/" },
+        { word: "dispatch", meaning: "Gửi đi", phonetic: "/dɪˈspætʃ/" },
+        { word: "display", meaning: "Trưng bày", phonetic: "/dɪˈspleɪ/" },
+        { word: "expect", meaning: "Mong đợi", phonetic: "/ɪkˈspekt/" },
+        { word: "explain", meaning: "Giải thích", phonetic: "/ɪkˈspleɪn/" },
+        { word: "express", meaning: "Chuyển phát nhanh", phonetic: "/ɪkˈspres/" },
+        { word: "extra", meaning: "Thêm, phụ", phonetic: "/ˈek.strə/" },
+        { word: "fault", meaning: "Lỗi", phonetic: "/fɑːlt/" },
+        { word: "feature", meaning: "Tính năng", phonetic: "/ˈfiː.tʃɚ/" },
+        { word: "fix", meaning: "Sửa chữa", phonetic: "/fɪks/" },
+        { word: "free", meaning: "Miễn phí", phonetic: "/friː/" },
+        { word: "greet", meaning: "Chào hỏi", phonetic: "/ɡriːt/" },
+        { word: "guide", meaning: "Hướng dẫn", phonetic: "/ɡaɪd/" },
+        { word: "handle", meaning: "Xử lý", phonetic: "/ˈhæn.dəl/" },
+        { word: "help", meaning: "Giúp đỡ", phonetic: "/help/" },
+        { word: "hotline", meaning: "Đường dây nóng", phonetic: "/ˈhɑːt.laɪn/" },
+        { word: "inform", meaning: "Thông báo", phonetic: "/ɪnˈfɔːrm/" },
+        { word: "interact", meaning: "Tương tác", phonetic: "/ˌɪn.t̬ɚˈækt/" },
+        { word: "issue", meaning: "Vấn đề", phonetic: "/ˈɪʃ.uː/" },
+        { word: "membership", meaning: "Thành viên", phonetic: "/ˈmem.bɚ.ʃɪp/" },
+        { word: "package", meaning: "Gói hàng", phonetic: "/ˈpæk.ɪdʒ/" },
+        { word: "patron", meaning: "Khách quen", phonetic: "/ˈpeɪ.trən/" },
+        { word: "polite", meaning: "Lịch sự", phonetic: "/pəˈlaɪt/" },
+        { word: "preference", meaning: "Sự ưu tiên", phonetic: "/ˈpref.ɚ.əns/" },
+        { word: "promise", meaning: "Lời hứa", phonetic: "/ˈprɑː.mɪs/" },
+        { word: "provide", meaning: "Cung cấp", phonetic: "/prəˈvaɪd/" },
+        { word: "purchase", meaning: "Mua hàng", phonetic: "/ˈpɝː.tʃəs/" },
+        { word: "quality", meaning: "Chất lượng", phonetic: "/ˈkwɑː.lə.t̬i/" },
+        { word: "recall", meaning: "Thu hồi", phonetic: "/rɪˈkɑːl/" },
+        { word: "reception", meaning: "Lễ tân", phonetic: "/rɪˈsep.ʃən/" },
+        { word: "register", meaning: "Đăng ký", phonetic: "/ˈredʒ.ə.stɚ/" },
+        { word: "relation", meaning: "Mối quan hệ", phonetic: "/rɪˈleɪ.ʃən/" },
+        { word: "repair", meaning: "Sửa chữa", phonetic: "/rɪˈper/" },
+        { word: "request", meaning: "Yêu cầu", phonetic: "/rɪˈkwest/" },
+        { word: "return", meaning: "Trả lại", phonetic: "/rɪˈtɝːn/" },
+        { word: "review", meaning: "Đánh giá", phonetic: "/rɪˈvjuː/" },
+        { word: "sample", meaning: "Mẫu thử", phonetic: "/ˈsæm.pəl/" },
+        { word: "solution", meaning: "Giải pháp", phonetic: "/səˈluː.ʃən/" },
+        { word: "support", meaning: "Hỗ trợ", phonetic: "/səˈpɔːrt/" }
+    ].map(item => ({ ...item, category: "Dịch vụ & Khách hàng" }));
 
-    let addedCount = 0;
-    const failedWords = [];
+    // --- 2. Gộp tất cả lại thành 1 mảng lớn ---
+    const wordList = [...topic1, ...topic2, ...topic3, ...topic4, ...topic5];
 
-    // 2. VÒNG LẶP ĐÃ ĐƯỢC CẬP NHẬT GỌN GÀNG TẠI ĐÂY
+    let updatedCount = 0;
+
+    // --- 3. Chạy vòng lặp cập nhật lên MongoDB ---
     for (const item of wordList) {
-      const existingWord = await Vocabulary.findOne({ word: { $regex: new RegExp(`^${item.word}$`, "i") } });
-      if (existingWord) continue;
-
-      try {
-        const newVocab = new Vocabulary({
-          word: item.word,
-          phonetic: item.phonetic,
-          meaning: item.meaning, // Nghĩa tiếng Việt
-          category: "Tổng hợp",
-          proficiency: 0,
-          roadmapId: roadmapId,
-        });
-
-        await newVocab.save();
-        addedCount++;
-      } catch (err) {
-        failedWords.push(item.word);
-      }
+      // Dùng findOneAndUpdate để CẬP NHẬT TỪ CŨ thay vì bỏ qua
+      await Vocabulary.findOneAndUpdate(
+        { word: { $regex: new RegExp(`^${item.word}$`, "i") } },
+        {
+          $set: {
+            meaning: item.meaning,
+            phonetic: item.phonetic,
+            category: item.category, // Cập nhật đúng chủ đề
+            roadmapId: roadmapId
+          },
+          $setOnInsert: { proficiency: 0 } // Nếu là từ mới tinh thì gán điểm = 0
+        },
+        { upsert: true, new: true }
+      );
+      updatedCount++;
     }
 
     res.status(200).json({
-      message: "Đã gieo dữ liệu (Seeding) thành công!",
-      wordsAdded: addedCount,
-      failedWords: failedWords,
+      message: "Đã phân loại Chủ đề thành công!",
+      wordsProcessed: updatedCount
     });
-} catch (err) {
-        // Thêm dòng này để lỡ có lỗi, Terminal sẽ in ra tiếng Việt rõ ràng luôn
-        console.log(`Lỗi không thể lưu từ [${item.word}]: ${err.message}`); 
-        
-        failedWords.push(item.word);
-      }
-  
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
 };

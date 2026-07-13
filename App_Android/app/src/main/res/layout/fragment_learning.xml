@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="#F4F7FB">
 
+    <!-- Phần Toolbar giữ nguyên -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,37 +17,30 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize">
-
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
                 <ImageView
                     android:id="@+id/btnMenu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_launcher_foreground"
-                    app:tint="#0056D2" /> <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="16dp"
-                android:layout_toEndOf="@id/btnMenu"
-                android:text="Bài học"
-                android:textColor="#0056D2"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                    android:src="@drawable/ic_book"
+                    app:tint="#0056D2" />
 
-                <ImageView
-                    android:id="@+id/btnSearch"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_launcher_foreground"
-                    app:tint="#0056D2" /> </RelativeLayout>
+                    android:layout_marginStart="12dp"
+                    android:layout_toEndOf="@id/btnMenu"
+                    android:text="Bài học"
+                    android:textColor="#0056D2"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            </RelativeLayout>
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -61,6 +55,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Thẻ Lời chào giữ nguyên -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -68,13 +63,11 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -82,25 +75,13 @@
                         android:textColor="@android:color/white"
                         android:textSize="18sp"
                         android:textStyle="bold" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Bạn đã hoàn thành 12 bài học trong tuần này. Cố gắng lên!"
+                        android:text="Luyện tập 5 chủ đề cốt lõi mỗi ngày để nâng cao vốn từ vựng."
                         android:textColor="#E0EBFF"
                         android:textSize="14sp" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Chuỗi 5 ngày"
-                        android:textColor="@android:color/white"
-                        app:chipBackgroundColor="#4A8DFF"
-                        app:chipIcon="@drawable/ic_launcher_foreground"
-                        app:chipIconTint="#FFC107"
-                        app:chipStrokeWidth="0dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -108,140 +89,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="CHỦ ĐỀ HỌC TẬP"
+                android:text="CHỌN CHỦ ĐỀ HỌC"
                 android:textColor="#555555"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_circle_light_blue"
-                        android:paddingHorizontal="20dp"
-                        android:paddingVertical="10dp"
-                        android:text="Giao tiếp cơ bản"
-                        android:textColor="@android:color/white"
-                        android:backgroundTint="#0056D2"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_circle_light_blue"
-                        android:paddingHorizontal="20dp"
-                        android:paddingVertical="10dp"
-                        android:text="IELTS Academic"
-                        android:textColor="#555555"
-                        android:backgroundTint="#E5E8EB"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tất cả"
-                    android:textColor="#0056D2"
-                    android:textStyle="bold"
-                    android:paddingBottom="4dp"
-                    android:background="@drawable/bg_bottom_line_blue"/> <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="Đang học"
-                android:textColor="#777777" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:text="Đã hoàn thành"
-                    android:textColor="#777777" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:background="#DDE2E8" />
-
+            <!-- RecyclerView để chứa 5 Chủ đề -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvLessons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"
-                tools:listitem="@layout/item_lesson" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="32dp"
-                app:cardBackgroundColor="#EDF2FA"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#A0BBE8"
-                app:strokeWidth="1dp">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_circle_light_blue"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        app:tint="#0056D2" /> <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Khám phá thêm"
-                    android:textColor="#333333"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="Tìm kiếm hàng trăm bài học từ vựng chuyên sâu khác."
-                        android:textColor="#666666" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Vào kho bài học"
-                        android:textColor="#333333"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        app:strokeColor="#DDDDDD"
-                        app:cornerRadius="20dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_category_card" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

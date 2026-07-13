@@ -1,6 +1,7 @@
 package com.example.doan3.ui.vocabulary
 
 import android.os.Bundle
+import android.speech.tts.TextToSpeech // THÊM IMPORT TTS
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +11,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.doan3.R
 import com.example.doan3.databinding.FragmentVocabularyBinding
 import com.google.android.material.tabs.TabLayout
+import java.util.Locale // THÊM IMPORT LOCALE
 
-class VocabularyFragment : Fragment() {
+// ĐÃ SỬA: Kế thừa thêm TextToSpeech.OnInitListener
+class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var _binding: FragmentVocabularyBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: VocabularyViewModel by viewModels()
     private lateinit var adapter: VocabularyAdapter
+
+    // Biến quản lý bộ đọc phát âm
+    private lateinit var tts: TextToSpeech
 
     // Lưu trữ toàn bộ danh sách gốc từ API
     private var fullVocabularyList: List<Vocabulary> = emptyList()
@@ -37,8 +43,11 @@ class VocabularyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Khởi tạo TextToSpeech
+        tts = TextToSpeech(requireContext(), this)
+
         setupRecyclerView()
-        setupFilterListeners() // Bổ sung: Kích hoạt lắng nghe sự kiện bấm Tab và Chip
+        setupFilterListeners()
         observeViewModel()
 
         // Xử lý nút mũi tên quay lại trang chủ
@@ -47,11 +56,24 @@ class VocabularyFragment : Fragment() {
         }
     }
 
-    private fun setupRecyclerView() {
-        // Cài đặt adapter và định nghĩa việc mở trang chi tiết khi bấm vào dòng
-        adapter = VocabularyAdapter { clickedVocab ->
-            openWordDetailFragment(clickedVocab)
+    // Thiết lập ngôn ngữ đọc là tiếng Anh Mỹ
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            tts.language = Locale.US
         }
+    }
+
+    private fun setupRecyclerView() {
+        // ĐÃ SỬA: Truyền 2 sự kiện vào Adapter (1 cho việc mở chi tiết, 1 cho việc bấm loa)
+        adapter = VocabularyAdapter(
+            onItemClick = { clickedVocab ->
+                openWordDetailFragment(clickedVocab)
+            },
+            onSpeakClick = { wordText ->
+                // Lệnh phát âm từ vựng
+                tts.speak(wordText, TextToSpeech.QUEUE_FLUSH, null, "")
+            }
+        )
         binding.rvVocabulary.layoutManager = LinearLayoutManager(requireContext())
         binding.rvVocabulary.adapter = adapter
     }
@@ -62,15 +84,15 @@ class VocabularyFragment : Fragment() {
 
         requireActivity().supportFragmentManager.beginTransaction()
             .replace((requireView().parent as ViewGroup).id, detailFragment)
-            .addToBackStack(null) // Để có thể bấm Back quay lại được
+            .addToBackStack(null)
             .commit()
     }
 
     private fun observeViewModel() {
         // 1. Lắng nghe danh sách từ vựng
         viewModel.vocabularyList.observe(viewLifecycleOwner) { list ->
-            fullVocabularyList = list // Lưu lại toàn bộ danh sách gốc
-            applyFilters()            // Gọi hàm lọc để hiển thị thay vì đẩy thẳng vào adapter
+            fullVocabularyList = list
+            applyFilters()
         }
 
         // 2. Lắng nghe lỗi
@@ -84,12 +106,12 @@ class VocabularyFragment : Fragment() {
         // 3. LẮNG NGHE THỐNG KÊ VÀ ĐỔ VÀO GIAO DIỆN
         viewModel.vocabStats.observe(viewLifecycleOwner) { stats ->
             stats?.let {
-                // Cập nhật 3 ô số liệu phía trên
                 binding.tvTotalWords.text = it.totalWords.toString()
                 binding.tvMasteryPercent.text = "${it.masteryPercentage}%"
-                binding.tvNewWordsThisWeek.text = it.newWordsThisWeek.toString()
 
-                // Cập nhật số lượng hiển thị trên 3 cái Tab
+                // (Phần tvNewWordsThisWeek nếu em đã xóa bên XML thì nhớ comment hoặc xóa dòng dưới này đi nhé)
+                // binding.tvNewWordsThisWeek.text = it.newWordsThisWeek.toString()
+
                 binding.tabLayout.getTabAt(0)?.text = "Đã thuộc\n(${it.masteredWords})"
                 binding.tabLayout.getTabAt(1)?.text = "Đang học\n(${it.learningWords})"
                 binding.tabLayout.getTabAt(2)?.text = "Từ mới\n(${it.newWords})"
@@ -100,7 +122,6 @@ class VocabularyFragment : Fragment() {
     // --- CÁC HÀM XỬ LÝ LOGIC LỌC DỮ LIỆU ---
 
     private fun setupFilterListeners() {
-        // 1. Xử lý click cho các Chip ngang (Chủ đề)
         binding.tvFilterAll.setOnClickListener {
             currentCategoryFilter = "Tất cả"
             updateChipUI(binding.tvFilterAll)
@@ -117,11 +138,10 @@ class VocabularyFragment : Fragment() {
             applyFilters()
         }
 
-        // 2. Xử lý click cho TabLayout (Trạng thái)
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 currentStatusFilter = tab?.position ?: 0
-                applyFilters() // Lọc lại danh sách khi đổi Tab
+                applyFilters()
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
@@ -129,40 +149,38 @@ class VocabularyFragment : Fragment() {
     }
 
     private fun applyFilters() {
-        // Bắt đầu với toàn bộ danh sách gốc
         var filteredList = fullVocabularyList
 
-        // BƯỚC A: Lọc theo trạng thái (TabLayout) dựa trên độ thông thạo (proficiency)
         filteredList = when (currentStatusFilter) {
-            0 -> filteredList.filter { it.proficiency >= 80 }      // Đã thuộc (>= 80%)
-            1 -> filteredList.filter { it.proficiency in 1..79 }   // Đang học (1% - 79%)
-            2 -> filteredList.filter { it.proficiency == 0 }       // Từ mới (0%)
+            0 -> filteredList.filter { it.proficiency >= 80 }
+            1 -> filteredList.filter { it.proficiency in 1..79 }
+            2 -> filteredList.filter { it.proficiency == 0 }
             else -> filteredList
         }
 
-        // BƯỚC B: Lọc theo chủ đề (Chip ngang)
         if (currentCategoryFilter != "Tất cả") {
-            // Ghi chú: Hiện tại model Vocabulary.kt chưa có trường 'category'.
-            // Khi nào em thiết kế DB có thêm phân loại chủ đề thì em mở comment dòng dưới ra nhé:
             filteredList = filteredList.filter { it.category == currentCategoryFilter }
         }
 
-        // Cuối cùng: Đẩy danh sách đã lọc sạch sẽ vào Adapter để hiển thị
         adapter.updateData(filteredList)
     }
 
     private fun updateChipUI(selectedTextView: android.widget.TextView) {
-        // Đưa tất cả về màu xám (không được chọn)
         binding.tvFilterAll.setBackgroundResource(R.drawable.bg_chip_inactive)
         binding.tvFilterWork.setBackgroundResource(R.drawable.bg_chip_inactive)
         binding.tvFilterTravel.setBackgroundResource(R.drawable.bg_chip_inactive)
 
-        // Tô màu xanh cho cái được chọn
         selectedTextView.setBackgroundResource(R.drawable.bg_chip_active)
     }
 
     override fun onDestroyView() {
+        // Tắt bộ đọc để giải phóng RAM khi rời khỏi Fragment này
+        if (this::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
         super.onDestroyView()
         _binding = null
     }
+
 }

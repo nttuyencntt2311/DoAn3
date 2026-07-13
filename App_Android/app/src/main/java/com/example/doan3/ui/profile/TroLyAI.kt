@@ -8,9 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.R
 import com.google.android.material.card.MaterialCardView
-import com.example.doan3.ui.roadmap.RoadmapFragment
 import com.example.doan3.MainActivity
-import com.example.doan3.ui.vocabulary.WordDetailFragment
+import com.example.doan3.ui.ai.ChatAIActivity
 
 class TroLyAIActivity : AppCompatActivity() {
 
@@ -20,40 +19,47 @@ class TroLyAIActivity : AppCompatActivity() {
         setContentView(R.layout.troly_ai)
 
         setupBottomNavigation()
-        setupAICardsNavigation() // Kích hoạt các nút bấm trợ lý AI
+        setupAICardsNavigation()
     }
 
     private fun setupAICardsNavigation() {
-        // Ánh xạ các CardView từ XML
         val cardGiaiThichTuVung = findViewById<MaterialCardView>(R.id.cardGiaiThichTuVung)
         val cardTaoQuiz = findViewById<MaterialCardView>(R.id.cardTaoQuiz)
-        val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard) // Thêm mới cardFlashcard
+        val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard)
         val cardLoTrinhHoc = findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
+        val cardTroChuyenTrucTiep = findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
 
-// 1. Chuyển sang VocabularyFragment trực tiếp
+        // 1. Gửi tín hiệu mở Vocabulary
         cardGiaiThichTuVung?.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                // Dùng android.R.id.content để phủ Fragment lên toàn bộ màn hình hiện tại
-                .replace(android.R.id.content, WordDetailFragment())
-                .addToBackStack(null) // Lưu lại lịch sử để bấm nút Back điện thoại quay về được
-                .commit()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "VOCABULARY")
+            startActivity(intent)
         }
-        // 2. Tạo Quiz -> Chuyển sang TaoQuizActivity
+
+        // 2. Chuyển sang màn hình Tạo Quiz (Activity)
         cardTaoQuiz?.setOnClickListener {
-            startActivity(Intent(this, TaoQuizActivity::class.java))
+            val intent = Intent(this, TaoQuizActivity::class.java)
+            startActivity(intent)
         }
 
-        // 3. Flashcard -> Chuyển sang KhamPhaActivity (Nơi có logic vuốt thẻ từ vựng)
+        // 3. Gửi tín hiệu mở Learning
         cardFlashcard?.setOnClickListener {
-            startActivity(Intent(this, KhamPhaActivity::class.java))
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "LEARNING")
+            startActivity(intent)
         }
 
-// 3. Chuyển sang RoadmapFragment trực tiếp
+        // 4. Gửi tín hiệu mở Roadmap
         cardLoTrinhHoc?.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                .replace(android.R.id.content, RoadmapFragment())
-                .addToBackStack(null)
-                .commit()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "ROADMAP")
+            startActivity(intent)
+        }
+
+        // 5. Chat AI
+        cardTroChuyenTrucTiep?.setOnClickListener {
+            val intent = Intent(this, ChatAIActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -64,23 +70,14 @@ class TroLyAIActivity : AppCompatActivity() {
         val navHoSo = findViewById<LinearLayout>(R.id.btnHoSo)
         val navTaiKhoan = findViewById<LinearLayout>(R.id.btnTaiKhoan)
 
-// 2. Các nút điều hướng Bottom Nav
         val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         btnTrangChu.setOnClickListener {
-            // ⚠️ HÃY THAY TÊN 'MainActivity' THÀNH TÊN ACTIVITY TRANG CHỦ THẬT CỦA BẠN
-            // Ví dụ: TrangChuActivity, HomeActivity, hoặc DashboardActivity...
             val intent = Intent(this, MainActivity::class.java)
-
-            // Cờ này giúp kéo màn hình Trang Chủ đã có sẵn dưới Stack lên trước, không tạo mới trùng lặp
             intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-
             startActivity(intent)
-
-            // Tắt hiệu ứng trượt màn hình để giống chuyển tab hơn
             overridePendingTransition(0, 0)
-
-            // 🚫 KHÔNG DÙNG finish() ở đây để giữ lại trạng thái của tab Khám phá khi quay lại
         }
+
         navKhamPha.setOnClickListener {
             startActivity(Intent(this, KhamPhaActivity::class.java))
             overridePendingTransition(0, 0)

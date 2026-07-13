@@ -3,14 +3,15 @@ package com.example.doan3.ui.vocabulary
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView // THÊM IMPORT NÀY CHO NÚT LOA
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.doan3.R
 
 class VocabularyAdapter(
-    // Khai báo hành động khi người dùng bấm vào 1 dòng
-    private val onItemClick: (Vocabulary) -> Unit
+    private val onItemClick: (Vocabulary) -> Unit,
+    private val onSpeakClick: (String) -> Unit // Nhận lệnh phát âm từ Fragment
 ) : RecyclerView.Adapter<VocabularyAdapter.VocabularyViewHolder>() {
 
     private var vocabularyList: List<Vocabulary> = listOf()
@@ -26,6 +27,9 @@ class VocabularyAdapter(
         val tvMeaning: TextView = itemView.findViewById(R.id.tvMeaning)
         val tvPercent: TextView = itemView.findViewById(R.id.tvPercent)
         val progressBar: ProgressBar = itemView.findViewById(R.id.progressBar)
+
+        // 1. MỚI THÊM: Ánh xạ nút Loa (Nhớ đảm bảo ID trong file item_vocabulary.xml của em là btnSpeaker nhé)
+        val btnSpeaker: ImageView = itemView.findViewById(R.id.btnSpeaker)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VocabularyViewHolder {
@@ -43,9 +47,14 @@ class VocabularyAdapter(
         holder.tvPercent.text = "${vocab.proficiency}%"
         holder.progressBar.progress = vocab.proficiency
 
-        // BẮT SỰ KIỆN CLICK VÀO TỪ VỰNG
+        // BẮT SỰ KIỆN CLICK VÀO CẢ DÒNG TỪ VỰNG ĐỂ XEM CHI TIẾT
         holder.itemView.setOnClickListener {
             onItemClick(vocab)
+        }
+
+        // 2. MỚI THÊM: BẮT SỰ KIỆN CLICK VÀO NÚT LOA ĐỂ PHÁT ÂM
+        holder.btnSpeaker.setOnClickListener {
+            onSpeakClick(vocab.word)
         }
     }
 

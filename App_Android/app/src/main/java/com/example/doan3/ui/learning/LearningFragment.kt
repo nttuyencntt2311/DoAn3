@@ -1,27 +1,25 @@
 package com.example.doan3.ui.learning
 
-import android.graphics.Color
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.doan3.R
+import com.example.doan3.R // QUAN TRỌNG: Thêm dòng này để gọi được các file icon
 import com.example.doan3.databinding.FragmentLearningBinding
-import com.google.android.material.button.MaterialButton
+import com.example.doan3.databinding.ItemCategoryCardBinding
+import com.example.doan3.ui.profile.KhamPhaActivity
+
+// 1. ĐÃ SỬA: Đổi wordCount thành iconResId để chứa Icon
+data class CategoryTopic(val name: String, val iconResId: Int)
 
 class LearningFragment : Fragment() {
 
     private var _binding: FragmentLearningBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: LearningViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,15 +32,25 @@ class LearningFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Setup RecyclerView
-        val adapter = LessonAdapter()
+        // 2. ĐÃ SỬA: Thay các số 100 bằng đường dẫn đến 5 file Icon
+        val topics = listOf(
+            CategoryTopic("Hợp đồng & Kinh doanh", R.drawable.ic_business),
+            CategoryTopic("Môi trường văn phòng", R.drawable.ic_office),
+            CategoryTopic("Hệ thống thông tin & Công nghệ", R.drawable.ic_computer),
+            CategoryTopic("Kế toán & Tài chính", R.drawable.ic_finance),
+            CategoryTopic("Dịch vụ & Khách hàng", R.drawable.ic_customer)
+        )
+
+        // Khởi tạo Adapter và hứng sự kiện Click
+        val adapter = CategoryAdapter(topics) { selectedCategoryName ->
+            val intent = Intent(requireContext(), KhamPhaActivity::class.java)
+            intent.putExtra("CATEGORY_NAME", selectedCategoryName)
+            startActivity(intent)
+        }
+
+        // Gắn Adapter vào RecyclerView
         binding.rvLessons.layoutManager = LinearLayoutManager(requireContext())
         binding.rvLessons.adapter = adapter
-
-        // Theo dõi dữ liệu từ ViewModel và cập nhật danh sách
-        viewModel.learningList.observe(viewLifecycleOwner) { lessons ->
-            adapter.submitList(lessons)
-        }
     }
 
     override fun onDestroyView() {
@@ -50,78 +58,38 @@ class LearningFragment : Fragment() {
         _binding = null
     }
 
-    // Adapter nội bộ để hiển thị danh sách (Thực tế nên tách ra file riêng)
-    inner class LessonAdapter : RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
+    // ---------------------------------------------------------
+    // Adapter nội bộ để hiển thị danh sách Chủ Đề
+    // ---------------------------------------------------------
+    inner class CategoryAdapter(
+        private val categoryList: List<CategoryTopic>,
+        private val onItemClick: (String) -> Unit
+    ) : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>() {
 
-        private var lessonList = listOf<Lesson>()
+        inner class CategoryViewHolder(val itemBinding: ItemCategoryCardBinding) : RecyclerView.ViewHolder(itemBinding.root) {
+            fun bind(category: CategoryTopic) {
+                // Đổ dữ liệu text
+                itemBinding.tvCategoryName.text = category.name
 
-        fun submitList(list: List<Lesson>) {
-            lessonList = list
-            notifyDataSetChanged()
-        }
+                // 3. ĐÃ SỬA: Lệnh này sẽ lấy Icon nhét vào giao diện
+                itemBinding.imgCategoryIcon.setImageResource(category.iconResId)
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_lesson, parent, false)
-            return LessonViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
-            val lesson = lessonList[position]
-            holder.bind(lesson)
-        }
-
-        override fun getItemCount() = lessonList.size
-
-        inner class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val tvDifficulty: TextView = itemView.findViewById(R.id.tvDifficulty)
-            private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
-            private val tvSubtitle: TextView = itemView.findViewById(R.id.tvSubtitle)
-            private val tvProgressPercent: TextView = itemView.findViewById(R.id.tvProgressPercent)
-            private val progressBar: ProgressBar = itemView.findViewById(R.id.progressBar)
-            private val tvVocabCount: TextView = itemView.findViewById(R.id.tvVocabCount)
-            private val tvExerciseCount: TextView = itemView.findViewById(R.id.tvExerciseCount)
-            private val btnAction: MaterialButton = itemView.findViewById(R.id.btnAction)
-
-            fun bind(lesson: Lesson) {
-                tvTitle.text = lesson.title
-                tvSubtitle.text = "${lesson.category} • Bài ${lesson.lessonNumber}"
-                tvProgressPercent.text = "${lesson.progressPercent}%"
-                progressBar.progress = lesson.progressPercent
-                tvVocabCount.text = "${lesson.vocabCount} từ vựng"
-                tvExerciseCount.text = "${lesson.exerciseCount} bài tập"
-
-                // Cấu hình Badge Độ khó (Màu sắc)
-                tvDifficulty.text = lesson.difficultyLevel
-                when (lesson.difficultyLevel) {
-                    "DỄ" -> {
-                        tvDifficulty.setTextColor(Color.parseColor("#117A65"))
-                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#D1F2EB"))
-                    }
-                    "TRUNG BÌNH" -> {
-                        tvDifficulty.setTextColor(Color.parseColor("#B9770E"))
-                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FDEBD0"))
-                    }
-                    "KHÓ" -> {
-                        tvDifficulty.setTextColor(Color.parseColor("#943126"))
-                        tvDifficulty.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FADBD8"))
-                    }
-                }
-
-                // Cấu hình Nút bấm (Style)
-                btnAction.text = lesson.buttonText
-                if (lesson.isButtonOutlined) {
-                    // Style Outline (Nền trắng, viền xanh)
-                    btnAction.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
-                    btnAction.strokeWidth = 3
-                    btnAction.strokeColor = android.content.res.ColorStateList.valueOf(Color.parseColor("#0056D2"))
-                    btnAction.setTextColor(Color.parseColor("#0056D2"))
-                } else {
-                    // Style Filled (Nền xanh đậm, chữ trắng)
-                    btnAction.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0056D2"))
-                    btnAction.strokeWidth = 0
-                    btnAction.setTextColor(Color.WHITE)
+                // Bắt sự kiện click trên toàn bộ Thẻ (Card)
+                itemBinding.root.setOnClickListener {
+                    onItemClick(category.name)
                 }
             }
         }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
+            val itemBinding = ItemCategoryCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            return CategoryViewHolder(itemBinding)
+        }
+
+        override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
+            holder.bind(categoryList[position])
+        }
+
+        override fun getItemCount(): Int = categoryList.size
     }
 }

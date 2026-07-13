@@ -138,7 +138,7 @@ router.get('/stats', verifyToken, async (req, res) => {
 });
 
 // =====================================
-// 6. API: ĐỔI MẬT KHẨU (MỚI THÊM)
+// 6. API: ĐỔI MẬT KHẨU
 // =====================================
 router.put('/change-password', verifyToken, async (req, res) => {
   try {
@@ -222,6 +222,33 @@ router.post('/logout', async (req, res) => {
     res.status(200).json({ message: "Đăng xuất thành công trên hệ thống!" });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống khi đăng xuất!" });
+  }
+});
+
+// ==========================================
+// 9. API: LƯU TỪ VỰNG VÀO SỔ TAY (Từ code của bạn bè)
+// ==========================================
+router.post("/save-word", async (req, res) => {
+  try {
+    const { userId, wordId } = req.body;
+
+    // Tìm User theo ID và nhét wordId vào mảng savedWords
+    // Lệnh $addToSet giúp kiểm tra nếu từ đó lưu rồi thì không lưu trùng nữa
+    // Chú ý: Đã đổi 'User' thành 'UserModel' để đồng bộ với các phần trên
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { savedWords: wordId } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "Không tìm thấy tài khoản User" });
+    }
+
+    res.status(200).json({ message: "Lưu từ thành công!", user: updatedUser });
+  } catch (error) {
+    console.error("Lỗi hệ thống khi lưu từ:", error);
+    res.status(500).json({ error: "Lỗi server Backend" });
   }
 });
 
