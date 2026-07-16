@@ -14,6 +14,11 @@ import androidx.fragment.app.viewModels
 import com.example.doan3.R
 import com.example.doan3.databinding.FragmentStatisticsBinding
 import com.example.doan3.ui.profile.MemoryItem
+import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.vocabulary.Vocabulary
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class StatisticsFragment : Fragment() {
 
@@ -37,31 +42,61 @@ class StatisticsFragment : Fragment() {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        setupTabs() // Giữ nguyên hàm điều hướng tab của bạn (nếu có)
+        setupTabs()
 
-        // Ra lệnh cho ViewModel gọi API lấy thống kê
+        // Ra lệnh cho ViewModel gọi API lấy thống kê (Chuỗi ngày, tổng giờ, biểu đồ)
         viewModel.fetchRealStatistics(requireContext())
 
         // =========================================================
-        // LẮNG NGHE VÀ KÉO DỮ LIỆU ĐỔ VÀO GIAO DIỆN
+        // 1. KÉO DỮ LIỆU TỪ VỰNG & % THÀNH THẠO (GIỐNG HỆT LEARNING)
+        // =========================================================
+        val apiService = RetrofitClient.getInstance(requireContext())
+        apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
+            override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
+                if (_binding == null || !isAdded) return
+
+                if (response.isSuccessful) {
+                    val allWords = response.body() ?: emptyList()
+
+                    // Tính Tổng số từ
+                    val totalWordsCount = allWords.size
+
+                    // Tính % Thành thạo (Từ có proficiency >= 80)
+                    val masteredCount = allWords.count { it.proficiency >= 80 }
+                    val accuracy = if (totalWordsCount > 0) {
+                        (masteredCount * 100) / totalWordsCount
+                    } else 0
+
+                    // Đổ dữ liệu thẳng vào ID của giao diện XML
+                    binding.tvTotalWords.text = totalWordsCount.toString()
+                    binding.tvAccuracy.text = "${accuracy}%"
+                }
+            }
+
+            override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
+                // Xử lý lỗi nếu cần
+            }
+        })
+
+        // =========================================================
+        // 2. LẮNG NGHE VÀ ĐỔ DỮ LIỆU CÒN LẠI VÀO GIAO DIỆN
         // =========================================================
         viewModel.statsData.observe(viewLifecycleOwner) { stats ->
-
-            // 1. Kéo dữ liệu cho Chuỗi ngày học
+            // Kéo dữ liệu cho Chuỗi ngày học
             binding.tvStreakDays.text = stats.streakDays.toString()
 
-            // 2. Kéo dữ liệu vào bảng MaterialCardView (Tổng giờ, Từ vựng, Chính xác)
-            // Lưu ý: Nối thêm chữ " giờ" và "%" để giống với thiết kế XML của bạn
+            // Kéo dữ liệu Tổng giờ học
             binding.tvTotalTime.text = "${stats.totalHours} giờ"
-            binding.tvTotalWords.text = stats.totalWords.toString()
-            binding.tvAccuracy.text = "${stats.accuracyPercent}%"
 
-            // 3. Kéo mảng dữ liệu (List<Int>) truyền vào hàm vẽ biểu đồ
+            // Kéo mảng dữ liệu (List<Int>) truyền vào hàm vẽ biểu đồ
             drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
         }
-        // LẮNG NGHE DỮ LIỆU KỶ NIỆM TỪ VIEWMODEL
+
+        // =========================================================
+        // 3. LẮNG NGHE DỮ LIỆU KỶ NIỆM TỪ VIEWMODEL
+        // =========================================================
         viewModel.memoriesData.observe(viewLifecycleOwner) { memories ->
-            binding.containerMemories.removeAllViews() // Xóa view cũ tránh trùng lặp
+            binding.containerMemories.removeAllViews()
 
             if (memories.isEmpty()) {
                 val emptyText = TextView(requireContext()).apply {
@@ -73,7 +108,6 @@ class StatisticsFragment : Fragment() {
                 }
                 binding.containerMemories.addView(emptyText)
             } else {
-                // Vẽ từng tấm thẻ Kỷ niệm
                 for (memory in memories) {
                     val cardView = createMemoryCard(memory)
                     binding.containerMemories.addView(cardView)
@@ -81,6 +115,7 @@ class StatisticsFragment : Fragment() {
             }
         }
     }
+
     // Hàm hỗ trợ vẽ thẻ CardView cho mỗi Kỷ niệm
     private fun createMemoryCard(memory: MemoryItem): View {
         val layout = LinearLayout(requireContext()).apply {
@@ -89,9 +124,9 @@ class StatisticsFragment : Fragment() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, (16 * resources.displayMetrics.density).toInt()) // Margin Bottom 16dp
+                setMargins(0, 0, 0, (16 * resources.displayMetrics.density).toInt())
             }
-            setBackgroundResource(R.drawable.bg_bar_rounded) // Tạo sẵn một background bo góc màu trắng trong res/drawable
+            setBackgroundResource(R.drawable.bg_bar_rounded)
             setPadding(40, 40, 40, 40)
             elevation = 4f
         }
@@ -113,7 +148,7 @@ class StatisticsFragment : Fragment() {
         val tvDateAndXp = TextView(requireContext()).apply {
             text = "${memory.date} • +${memory.xp} XP"
             textSize = 12f
-            setTextColor(Color.parseColor("#2563EB")) // Màu xanh nổi bật
+            setTextColor(Color.parseColor("#2563EB"))
             setTypeface(null, Typeface.BOLD_ITALIC)
         }
 
@@ -124,43 +159,36 @@ class StatisticsFragment : Fragment() {
         return layout
     }
 
-    // Hàm thiết lập Tabs (Giữ nguyên phần khung của bạn)
+    // Hàm thiết lập Tabs
     private fun setupTabs() {
-        // 1. KHI NGƯỜI DÙNG BẤM VÀO TAB "THỐNG KÊ"
         binding.tabStatistics.setOnClickListener {
-            // --- TAB THỐNG KÊ (ACTIVE) ---
             binding.tabStatistics.setCardBackgroundColor(Color.WHITE)
             binding.tvTabStatistics.setTextColor(Color.parseColor("#1A1A1A"))
-            binding.tabStatistics.cardElevation = 8f // Bật lại bóng đổ cho tab đang chọn
+            binding.tabStatistics.cardElevation = 8f
 
-            // --- TAB KỶ NIỆM (INACTIVE) ---
             binding.tabMemories.setCardBackgroundColor(Color.TRANSPARENT)
             binding.tvTabMemories.setTextColor(Color.parseColor("#888888"))
-            binding.tabMemories.cardElevation = 0f // Tắt bóng đổ để xóa viền đen mờ mờ
+            binding.tabMemories.cardElevation = 0f
 
-            // Hiển thị phần Thống Kê (thông qua Group), Ẩn phần Kỷ niệm
             binding.groupStatistics.visibility = View.VISIBLE
             binding.layoutMemories.visibility = View.GONE
         }
 
-        // 2. KHI NGƯỜI DÙNG BẤM VÀO TAB "KỶ NIỆM"
         binding.tabMemories.setOnClickListener {
-            // --- TAB KỶ NIỆM (ACTIVE) ---
             binding.tabMemories.setCardBackgroundColor(Color.WHITE)
             binding.tvTabMemories.setTextColor(Color.parseColor("#1A1A1A"))
-            binding.tabMemories.cardElevation = 8f // Bật lại bóng đổ cho tab đang chọn
+            binding.tabMemories.cardElevation = 8f
 
-            // --- TAB THỐNG KÊ (INACTIVE) ---
             binding.tabStatistics.setCardBackgroundColor(Color.TRANSPARENT)
             binding.tvTabStatistics.setTextColor(Color.parseColor("#888888"))
-            binding.tabStatistics.cardElevation = 0f // Tắt bóng đổ để xóa viền đen mờ mờ
+            binding.tabStatistics.cardElevation = 0f
 
-            // Hiển thị phần Kỷ niệm, Ẩn phần Thống Kê (thông qua Group)
             binding.layoutMemories.visibility = View.VISIBLE
             binding.groupStatistics.visibility = View.GONE
         }
     }
-    // Hàm vẽ biểu đồ cột 7 ngày (Giữ nguyên logic code tuyệt vời của bạn)
+
+    // Hàm vẽ biểu đồ cột 7 ngày
     private fun drawChart(data: List<Int>) {
         binding.chartContainer.removeAllViews()
         val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
@@ -174,9 +202,8 @@ class StatisticsFragment : Fragment() {
             }
 
             val barView = View(requireContext()).apply {
-                setBackgroundColor(Color.parseColor("#0056D2")) // Màu xanh chủ đạo
+                setBackgroundColor(Color.parseColor("#0056D2"))
 
-                // Quy đổi chiều cao phần trăm ra pixel hiển thị
                 val heightInPx = ((percent / 100f) * 100 * resources.displayMetrics.density).toInt()
 
                 layoutParams = LinearLayout.LayoutParams(

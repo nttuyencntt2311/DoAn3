@@ -1,5 +1,6 @@
 const axios = require("axios");
 const Vocabulary = require("../models/Vocabulary");
+const { updateStreak } = require('../service/streakService');
 
 // 1. Hàm lấy danh sách tất cả từ vựng (GET)
 exports.getAllVocabularies = async (req, res) => {
@@ -673,5 +674,27 @@ exports.seedDefaultVocabulary = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+// Ví dụ hàm lưu từ vựng (saveWord) trong vocabController.js của bạn:
+exports.saveWord = async (req, res) => {
+  try {
+    const { wordId } = req.body;
+    const userId = req.user.id; // Lấy ID của User đang đăng nhập từ authMiddleware
+
+    // ... (Logic lưu từ vựng vào bảng User hoặc bảng Sổ tay của bạn) ...
+
+    // === TỰ ĐỘNG CẬP NHẬT CHUỖI NGÀY HỌC (STREAK) ===
+    // Mỗi khi người dùng bấm Lưu từ, hệ thống hiểu là họ có hoạt động học tập hôm nay
+    const currentStreak = await updateStreak(userId);
+
+    res.status(200).json({ 
+      message: "Đã lưu từ vựng vào sổ tay thành công!",
+      streakDays: currentStreak // Trả thêm số ngày Streak mới về cho App cập nhật giao diện nếu cần
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server khi lưu từ", error: error.message });
   }
 };

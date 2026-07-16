@@ -200,52 +200,6 @@ interface ApiService {
 // ==========================================
 //             AUTHENTICATOR
 // ==========================================
-class TokenAuthenticator(private val context: Context) : okhttp3.Authenticator {
-    override fun authenticate(route: okhttp3.Route?, response: okhttp3.Response): okhttp3.Request? {
-        val sharedPreferences = context.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-        val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
-
-        if (refreshToken.isEmpty() || response.responseCount() > 2) return null
-
-        val json = """{"refreshToken":"$refreshToken"}"""
-        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
-        val body = json.toRequestBody(mediaType)
-
-        val refreshRequest = okhttp3.Request.Builder()
-            .url(RetrofitClient.BASE_URL + "api/auth/refresh-token")
-            .post(body)
-            .build()
-
-        val client = OkHttpClient()
-        try {
-            val refreshResponse = client.newCall(refreshRequest).execute()
-            if (refreshResponse.isSuccessful) {
-                val responseBody = refreshResponse.body?.string() ?: ""
-                val newAccessToken = JSONObject(responseBody).getString("token")
-
-                sharedPreferences.edit { putString("JWT_TOKEN", newAccessToken) }
-
-                return response.request.newBuilder().header("Authorization", "Bearer $newAccessToken").build()
-            } else {
-                // Đăng xuất nếu Refresh token cũng hết hạn
-                sharedPreferences.edit { clear() }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
-    private fun okhttp3.Response.responseCount(): Int {
-        var result = 1
-        var r = priorResponse
-        while (r != null) {
-            result++
-            r = r.priorResponse
-        }
-        return result
-    }
-}
 
 
 // ==========================================

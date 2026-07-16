@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.MainActivity
 import com.example.doan3.R
+import com.example.doan3.ui.vocabulary.Vocabulary // [ĐÃ THÊM]: Import model Từ vựng
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -122,19 +123,24 @@ class hoso : AppCompatActivity() {
         finish()
     }
 
+    // =========================================================================
+    // [ĐÃ SỬA]: HÀM LẤY DỮ LIỆU ĐỔ VÀO HỒ SƠ (Cập nhật đồng bộ Từ vựng & Chuỗi ngày)
+    // =========================================================================
     private fun loadUserStats() {
-        RetrofitClient.getInstance(this).getUserStats().enqueue(object : Callback<UserStatsResponse> {
+        val apiService = RetrofitClient.getInstance(this)
+
+        // 1. LẤY CHỈ SỐ USER (Để đồng bộ tvStatDays - Chuỗi ngày học)
+        apiService.getUserStats().enqueue(object : Callback<UserStatsResponse> {
             override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()?.stats
                     if (stats != null) {
-                        // CODE CHUẨN: Gán dữ liệu trực tiếp bằng thuộc tính .text ngắn gọn, tối ưu hiệu năng
                         tvProfileName?.text = stats.name
                         tvHeaderStreak?.text = stats.streakDays.toString()
                         tvStatLevel?.text = "${stats.level}"
-                        tvStatVocab?.text = stats.wordsLearned.toString()
+                        // tvStatVocab sẽ được cập nhật ở khối lệnh gọi API số 2 bên dưới
                         tvStatDays?.text = stats.streakDays.toString()
-                        tvStatMinutes?.text = "Số phút học trong tuần: ${stats.timeLearnedMinutes.toString()}"
+                        tvStatMinutes?.text = "Số phút học trong tuần: ${stats.timeLearnedMinutes}"
                         tvAccountType?.text = "Học viên chính thức"
                     }
                 } else {
@@ -144,6 +150,26 @@ class hoso : AppCompatActivity() {
 
             override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
                 setLoadingDefaultValues()
+            }
+        })
+
+        // 2. LẤY DỮ LIỆU TỪ VỰNG (Để đồng bộ tvStatVocab giống hệt màn hình Learning & Statistics)
+        apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
+            override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
+                if (response.isSuccessful) {
+                    val allWords = response.body() ?: emptyList()
+
+                    // Đếm số từ đã thành thạo (Từ có proficiency >= 80)
+                    val masteredCount = allWords.count { it.proficiency >= 80 }
+
+                    // ĐỒNG BỘ SỐ TỪ VỰNG VÀO tvStatVocab
+                    tvStatVocab?.text = masteredCount.toString()
+                }
+            }
+
+            override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
+                // Nếu lỗi mạng, gán tạm bằng 0 hoặc để nguyên
+                tvStatVocab?.text = "0"
             }
         })
     }

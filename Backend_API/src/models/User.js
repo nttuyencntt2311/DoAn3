@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   xp: { type: Number, default: 0 },                    // Điểm kinh nghiệm (Mặc định: 0)
   level: { type: Number, default: 0 },                 // Cấp độ (Mặc định: 0 - Mới nhập môn)
   streakDays: { type: Number, default: 0 },            // Chuỗi ngày học (Mặc định: 0)
+  lastStudyDate: { type: Date, default: null }, // THÊM DÒNG NÀY ĐỂ TÍNH STREAK
   wordsLearned: { type: Number, default: 0 },          // Số từ vựng đã học (Mặc định: 0)
   timeLearnedMinutes: { type: Number, default: 0 },    // Thời gian học (phút) (Mặc định: 0)
   quizzesCount: { type: Number, default: 0 },          // Số bài Quiz đã làm

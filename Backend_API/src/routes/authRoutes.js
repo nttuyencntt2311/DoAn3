@@ -4,7 +4,12 @@ const jwt = require('jsonwebtoken');
 const UserModel = require('../models/User'); 
 const verifyToken = require('../middleware/authMiddleware'); // Nhúng middleware bảo mật vào đây
 
+// === BỔ SUNG: Import hàm cập nhật Streak từ streakService ===
+const { updateStreak } = require('../service/streakService'); 
+
 const router = express.Router();
+
+let refreshTokens = [];
 
 // =====================================
 // 1. API: ĐĂNG KÝ TÀI KHOẢN
@@ -245,7 +250,15 @@ router.post("/save-word", async (req, res) => {
       return res.status(404).json({ error: "Không tìm thấy tài khoản User" });
     }
 
-    res.status(200).json({ message: "Lưu từ thành công!", user: updatedUser });
+    // === BỔ SUNG: TỰ ĐỘNG CẬP NHẬT CHUỖI NGÀY HỌC (STREAK) ===
+    // Khi lưu từ thành công, gọi hàm updateStreak để tăng số ngày học liên tiếp
+    const currentStreak = await updateStreak(userId);
+
+    res.status(200).json({ 
+      message: "Lưu từ thành công!", 
+      user: updatedUser,
+      streakDays: currentStreak // Trả thêm số ngày Streak mới về
+    });
   } catch (error) {
     console.error("Lỗi hệ thống khi lưu từ:", error);
     res.status(500).json({ error: "Lỗi server Backend" });
