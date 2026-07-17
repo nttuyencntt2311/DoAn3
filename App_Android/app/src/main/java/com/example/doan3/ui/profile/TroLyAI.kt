@@ -2,14 +2,17 @@ package com.example.doan3.ui.profile
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.doan3.R
-import com.google.android.material.card.MaterialCardView
 import com.example.doan3.MainActivity
 import com.example.doan3.ui.ai.ChatAIActivity
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.doan3.databinding.DialogCreateRoadmapBinding
 
 class TroLyAIActivity : AppCompatActivity() {
 
@@ -31,8 +34,9 @@ class TroLyAIActivity : AppCompatActivity() {
 
         // 1. Gửi tín hiệu mở Vocabulary
         cardGiaiThichTuVung?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "VOCABULARY")
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("OPEN_FRAGMENT", "VOCABULARY")
+            }
             startActivity(intent)
         }
 
@@ -44,16 +48,15 @@ class TroLyAIActivity : AppCompatActivity() {
 
         // 3. Gửi tín hiệu mở Learning
         cardFlashcard?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "LEARNING")
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("OPEN_FRAGMENT", "LEARNING")
+            }
             startActivity(intent)
         }
 
-        // 4. Gửi tín hiệu mở Roadmap
+        // 4. Mở Form tạo lộ trình (ĐÃ SỬA: Không chuyển trang trực tiếp mà hiện BottomSheet trước)
         cardLoTrinhHoc?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "ROADMAP")
-            startActivity(intent)
+            showRoadmapFormDialog()
         }
 
         // 5. Chat AI
@@ -63,8 +66,55 @@ class TroLyAIActivity : AppCompatActivity() {
         }
     }
 
+    // Hàm hiển thị Form đẹp mắt và xử lý sự kiện đóng gói dữ liệu
+    private fun showRoadmapFormDialog() {
+        val dialog = BottomSheetDialog(this)
+        val dialogBinding = DialogCreateRoadmapBinding.inflate(layoutInflater)
+        dialog.setContentView(dialogBinding.root)
+
+        // Khởi tạo data mẫu cho các Spinner
+        dialogBinding.spinnerGoal.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            arrayOf("Giao tiếp công việc", "Thi IELTS/TOEIC", "Du lịch", "Lấy lại căn bản")
+        )
+        dialogBinding.spinnerLevel.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            arrayOf("Mất gốc", "Cơ bản", "Trung cấp")
+        )
+        dialogBinding.spinnerTime.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            arrayOf("15 phút/ngày", "30 phút/ngày", "1 tiếng/ngày")
+        )
+
+        dialogBinding.btnGenerate.setOnClickListener {
+            val goal = dialogBinding.spinnerGoal.selectedItem.toString()
+            val level = dialogBinding.spinnerLevel.selectedItem.toString()
+            val time = dialogBinding.spinnerTime.selectedItem.toString()
+            val expectation = dialogBinding.edtExpectation.text.toString().trim() // Lấy mong muốn của user
+
+            dialog.dismiss()
+
+            // 🚀 CHUYỂN SANG MAINACTIVITY (Chứa RoadmapFragment) VÀ ĐÓNG GÓI DỮ LIỆU
+            val intent = Intent(this@TroLyAIActivity, MainActivity::class.java).apply {
+                putExtra("OPEN_FRAGMENT", "ROADMAP")
+                putExtra("GENERATE_ROADMAP", true)
+                putExtra("GOAL", goal)
+                putExtra("LEVEL", level)
+                putExtra("TIME", time)
+                putExtra("EXPECTATION", expectation)
+                // Giúp quay lại MainActivity mượt mà không bị tạo trùng màn hình
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            }
+            startActivity(intent)
+        }
+
+        dialog.show()
+    }
+
     private fun setupBottomNavigation() {
-        val navTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         val navKhamPha = findViewById<LinearLayout>(R.id.btnKhamPha)
         val navTroLyAI = findViewById<LinearLayout>(R.id.btnTroLyAI)
         val navHoSo = findViewById<LinearLayout>(R.id.btnHoSo)
@@ -72,8 +122,9 @@ class TroLyAIActivity : AppCompatActivity() {
 
         val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         btnTrangChu.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            }
             startActivity(intent)
             overridePendingTransition(0, 0)
         }

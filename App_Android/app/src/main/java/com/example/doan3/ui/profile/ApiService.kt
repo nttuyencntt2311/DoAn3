@@ -2,6 +2,7 @@ package com.example.doan3.ui.profile
 
 import android.content.Context
 import androidx.core.content.edit
+import com.example.doan3.ui.roadmap.QuizQuestion
 import com.google.gson.annotations.SerializedName
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -23,6 +24,10 @@ import java.util.concurrent.TimeUnit // Của bạn (dùng cho Timeout)
 import com.example.doan3.ui.vocabulary.Vocabulary
 import com.example.doan3.ui.roadmap.UserRoadmapResponse
 import com.example.doan3.ui.vocabulary.VocabStatsResponse
+
+// 🚀 ĐÃ SỬA LỖI Ở ĐÂY: Đổi okhttp3.Response thành retrofit2.Response
+import retrofit2.Response
+import retrofit2.http.Query
 
 // ==========================================
 //                 MODELS
@@ -194,8 +199,30 @@ interface ApiService {
 
     @GET("api/ai/sessions/user/{userId}")
     fun getUserSessions(@Path("userId") userId: String): Call<UserSessionsResponse>
-}
 
+    // =========================================================
+    // 🚀 API DÀNH CHO ROADMAP (CHỈ GIỮ LẠI 2 HÀM SUSPEND NÀY)
+    // =========================================================
+
+    @GET("api/ai/my-roadmap")
+    suspend fun getRoadmapForUser(): Response<UserRoadmapResponse>
+
+    @POST("api/ai/generate-roadmap")
+    suspend fun generateRoadmap(
+        @Body request: com.example.doan3.ui.roadmap.GenerateRoadmapRequest
+    ): Response<UserRoadmapResponse>
+
+    @GET("api/ai/generate-quiz")
+    suspend fun getStepQuiz(
+        @Query("stepTitle") title: String,
+        @Query("stepDesc") desc: String,
+        @Query("questionCount") questionCount: Int // 🚀 THÊM DÒNG NÀY
+    ): retrofit2.Response<List<QuizQuestion>>
+
+    @POST("api/ai/roadmap/complete-step")
+    suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
+
+} // <-- Đóng ngoặc của interface ApiService
 
 // ==========================================
 //             AUTHENTICATOR

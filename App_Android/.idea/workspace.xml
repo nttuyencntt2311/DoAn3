@@ -15,6 +15,11 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_bottom_sheet.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_chip_active.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
@@ -30,12 +35,27 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_circle_green.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_circle_light_blue.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_circle_red.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_input_chat.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_input_field.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
@@ -111,6 +131,11 @@
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/dangnhap.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/dialog_create_roadmap.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
         </config>
@@ -227,13 +252,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TokenAuthenticator.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/bg_bottom_sheet.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/bg_circle_green.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/bg_circle_red.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/bg_input_field.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/dialog_create_roadmap.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/MainActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/statistics/StatisticsFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/statistics/StatisticsFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/vocabController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/vocabController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapModels.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapModels.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapStepAdapter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapStepAdapter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Backend_API/src/models/User.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/models/User.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/authRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/authRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/aiRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/aiRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -269,9 +308,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="resourceFile" />
         <option value="layoutResourceFile" />
         <option value="Kotlin Class" />
+        <option value="resourceFile" />
       </list>
     </option>
   </component>
@@ -422,12 +461,12 @@
       <map>
         <entry key="com.example.doan3">
           <value>
-            <CheckInfo lastCheckTimestamp="1784168939687" />
+            <CheckInfo lastCheckTimestamp="1784265545862" />
           </value>
         </entry>
         <entry key="com.example.doan3.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1784168939655" />
+            <CheckInfo lastCheckTimestamp="1784265545862" />
           </value>
         </entry>
       </map>

@@ -24,3 +24,11 @@ data class UserRoadmapResponse(
     val motivationMessage: String,
     val steps: List<RoadmapStep>
 )
+
+data class GenerateRoadmapRequest(
+    val userId: String,
+    val target: String,
+    val currentLevel: String,
+    val freeTime: String,
+    val expectation: String
+)

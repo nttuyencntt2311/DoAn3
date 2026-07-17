@@ -1,36 +1,86 @@
 package com.example.doan3.ui.roadmap
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import com.example.doan3.ui.profile.RetrofitClient
 import kotlinx.coroutines.launch
 
-class RoadmapViewModel : ViewModel() {
+class RoadmapViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _roadmapData = MutableLiveData<UserRoadmapResponse>()
     val roadmapData: LiveData<UserRoadmapResponse> = _roadmapData
 
+    // QUẢN LÝ TRẠNG THÁI LOADING & LỖI
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    // 🚀 1. LẤY LỘ TRÌNH ĐÃ LƯU CỦA USER TỪ BACKEND
     fun fetchAiRoadmapForUser(userId: String) {
-        // Dùng Coroutine giả lập thời gian tải mạng từ AI (0.5 giây)
+        _isLoading.value = true
         viewModelScope.launch {
-            delay(500)
+            try {
+                val apiService = RetrofitClient.getInstance(getApplication())
 
-            // DỮ LIỆU MẪU (Mock Data) - Sau này thay bằng hàm gọi API AI
-            val mockAiData = UserRoadmapResponse(
-                userId = userId,
-                overallProgressPercent = 35,
-                motivationMessage = "Bạn chỉ còn 25 từ vựng nữa để đạt cột mốc 'Giao tiếp cơ bản'.",
-                steps = listOf(
-                    RoadmapStep("1", "Nền tảng", "50/50 từ vựng cốt lõi", StepStatus.COMPLETED, 50, 50),
-                    RoadmapStep("2", "GIAO TIẾP CƠ BẢN", "Tiến trình bài học", StepStatus.CURRENT, 15, 40),
-                    RoadmapStep("3", "Thành thạo công việc", "Hoàn thành chặng 2 để mở khoá nội dung này.", StepStatus.LOCKED),
-                    RoadmapStep("4", "Chuyên sâu học thuật", "Hoàn thành chặng 3 để mở khoá nội dung này.", StepStatus.LOCKED)
-                )
-            )
+                // 🛠 ĐÃ SỬA LỖI Ở ĐÂY: Không truyền userId vào hàm này nữa vì Backend đã tự lấy từ Token
+                val response = apiService.getRoadmapForUser()
 
-            _roadmapData.value = mockAiData
+                if (response.isSuccessful && response.body() != null) {
+                    _roadmapData.value = response.body()
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Không tìm thấy lộ trình học tập: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Lỗi kết nối máy chủ: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
         }
+    }
+
+    // 🚀 2. GỬI TIÊU CHÍ FORM LÊN ĐỂ AI GENERATE LỘ TRÌNH MỚI
+    fun generateAiRoadmap(
+        userId: String,
+        target: String,
+        currentLevel: String,
+        freeTime: String,
+        expectation: String
+    ) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val apiService = RetrofitClient.getInstance(getApplication())
+                val request = GenerateRoadmapRequest(
+                    userId = userId,
+                    target = target,
+                    currentLevel = currentLevel,
+                    freeTime = freeTime,
+                    expectation = expectation
+                )
+
+                val response = apiService.generateRoadmap(request)
+
+                if (response.isSuccessful && response.body() != null) {
+                    _roadmapData.value = response.body()
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Lỗi hệ thống khi tạo lộ trình: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Không thể tạo lộ trình từ AI: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

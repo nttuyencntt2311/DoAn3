@@ -74,11 +74,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
+    <!-- 🚀 ĐÃ SỬA: Xóa cái TextView " / 20" bị dư sát bên -->
     <TextView
         android:id="@+id/tvQuestionCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Question 8"
+        android:text="Question 1 / 10"
         android:textColor="@color/black"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -86,18 +87,10 @@
         app:layout_constraintTop_toBottomOf="@id/tvCategory" />
 
     <TextView
+        android:id="@+id/tvProgressPercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=" / 20"
-        android:textColor="#64748B"
-        android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@id/tvQuestionCount"
-        app:layout_constraintBottom_toBottomOf="@id/tvQuestionCount" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="40% Complete"
+        android:text="10% Complete"
         android:textColor="#0056D2"
         android:textSize="12sp"
         android:textStyle="bold"
@@ -112,7 +105,7 @@
         app:trackCornerRadius="3dp"
         app:indicatorColor="#0056D2"
         app:trackColor="#E0E4F5"
-        android:progress="40"
+        android:progress="10"
         app:layout_constraintTop_toBottomOf="@id/tvQuestionCount" />
 
     <ScrollView
@@ -122,7 +115,7 @@
         android:layout_marginBottom="16dp"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/progressBar"
-        app:layout_constraintBottom_toTopOf="@+id/layoutHintSkip">
+        app:layout_constraintBottom_toTopOf="@+id/tvExplanation">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -155,37 +148,37 @@
                             android:layout_height="wrap_content"
                             android:paddingHorizontal="8dp"
                             android:paddingVertical="4dp"
-                            android:text="SYNONYM IDENTIFICATION"
+                            android:text="FILL IN THE BLANK"
                             android:textColor="#0056D2"
                             android:textSize="8sp"
                             android:textStyle="bold" />
                     </com.google.android.material.card.MaterialCardView>
 
+                    <!-- 🚀 ĐÃ ẨN: Dòng chữ "Choose the synonym for:" gây nhầm lẫn -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:text="Choose the synonym for:"
-                        android:textColor="@color/black"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:visibility="gone" />
 
+                    <!-- 🚀 ĐÃ ẨN: Biến Keyword làm lộ đáp án (vẫn giữ ID để Activity.kt không bị crash) -->
                     <TextView
+                        android:id="@+id/tvQuestionKeyword"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="AMBIGUOUS"
-                        android:textColor="#0056D2"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:visibility="gone" />
 
+                    <!-- 🚀 ĐÃ SỬA: Biến câu hỏi chứa dấu ___ thành trung tâm (chữ bự, in đậm) -->
                     <TextView
+                        android:id="@+id/tvQuestionSentence"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="&quot;The wording of the agreement was so ambiguous that both parties interpreted it differently.&quot;"
-                        android:textColor="#64748B"
-                        android:textSize="14sp"
-                        android:textStyle="italic" />
+                        android:text="Before boarding the plane, passengers must go through security to have their ___ inspected."
+                        android:textColor="#0F172A"
+                        android:textSize="22sp"
+                        android:lineSpacingExtra="8dp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -274,6 +267,23 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <TextView
+        android:id="@+id/tvExplanation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="#FEF2F2"
+        android:padding="16dp"
+        android:text="Giải thích sẽ hiện ở đây..."
+        android:textColor="#DC2626"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/layoutHintSkip"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
         android:id="@+id/layoutHintSkip"
         android:layout_width="match_parent"
@@ -311,7 +321,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginBottom="20dp"
-        android:text="Nộp Bài &amp; Lưu Kết Quả"
+        android:text="KIỂM TRA"
         android:textSize="16sp"
         android:textStyle="bold"
         app:cornerRadius="12dp"

@@ -12,6 +12,14 @@ import com.example.doan3.databinding.ItemRoadmapStepBinding
 class RoadmapStepAdapter : RecyclerView.Adapter<RoadmapStepAdapter.StepViewHolder>() {
 
     private var stepList = listOf<RoadmapStep>()
+    // 1. Sửa lại khai báo biến và hàm setOnContinueClickListener
+    private var onContinueClickListener: ((RoadmapStep, Int) -> Unit)? = null
+
+    // 🚀 ĐÃ THÊM HÀM NÀY ĐỂ FRAGMENT CÓ THỂ GỌI ĐƯỢC
+    fun setOnContinueClickListener(listener: (RoadmapStep, Int) -> Unit) {
+        this.onContinueClickListener = listener
+    }
+
 
     fun submitList(list: List<RoadmapStep>) {
         stepList = list
@@ -85,7 +93,7 @@ class RoadmapStepAdapter : RecyclerView.Adapter<RoadmapStepAdapter.StepViewHolde
 
                     binding.cardContent.setCardBackgroundColor(Color.WHITE)
                     binding.cardContent.strokeColor = Color.parseColor("#2563EB")
-                    binding.cardContent.strokeWidth = 5 // Dày 2dp x tỷ lệ
+                    binding.cardContent.strokeWidth = 5
 
                     binding.tvStepTitle.setTextColor(Color.parseColor("#2563EB"))
                     binding.tvStepDesc.setTextColor(Color.parseColor("#64748B"))
@@ -99,9 +107,18 @@ class RoadmapStepAdapter : RecyclerView.Adapter<RoadmapStepAdapter.StepViewHolde
                     binding.progressStep.visibility = View.VISIBLE
                     binding.btnContinueLearning.visibility = View.VISIBLE
 
-                    binding.tvProgressText.text = "${step.currentProgress} / ${step.maxProgress} từ"
+                    binding.tvProgressText.text = "${step.currentProgress} /${step.maxProgress} từ"
                     binding.progressStep.max = step.maxProgress
                     binding.progressStep.progress = step.currentProgress
+
+                    // 2. Tính toán số câu hỏi và truyền vào callback
+                    binding.btnContinueLearning.setOnClickListener {
+                        // Tính số lượng câu hỏi: Vị trí 0 -> 5 câu, Vị trí 1 -> 10 câu...
+                        val questionCount = (position + 1) * 5
+
+                        // Truyền cả step và questionCount đi
+                        onContinueClickListener?.invoke(step, questionCount)
+                    }
                 }
 
                 StepStatus.LOCKED -> {

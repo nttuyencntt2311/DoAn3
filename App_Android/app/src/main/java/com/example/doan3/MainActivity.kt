@@ -32,20 +32,18 @@ class MainActivity : AppCompatActivity() {
         // Mặc định ban đầu hiển thị trang HomeFragment và bôi xanh nút Trang chủ
         if (savedInstanceState == null) {
             replaceFragment(HomeFragment())
-            updateBottomNavUI(binding.btnTrangChu) // Mới thêm: Bật màu xanh lúc mới mở app
+            updateBottomNavUI(binding.btnTrangChu)
         }
 
         // 1. Nút Trang chủ
         binding.btnTrangChu.setOnClickListener {
             replaceFragment(HomeFragment())
-            updateBottomNavUI(binding.btnTrangChu) // Mới thêm: Đổi màu khi click
+            updateBottomNavUI(binding.btnTrangChu)
         }
 
         // 2. Nút Khám phá
         binding.btnKhamPha.setOnClickListener {
-            updateBottomNavUI(binding.btnKhamPha) // Mới thêm: Đổi màu khi click
-
-            // Code của bạn bè (Mở Fragment):
+            updateBottomNavUI(binding.btnKhamPha)
             replaceFragment(LearningFragment())
         }
 
@@ -70,6 +68,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // ĐÃ XÓA ĐOẠN CODE LỖI `cardLoTrinhHoc` Ở ĐÂY VÌ NÓ THUỘC VỀ TroLyAIActivity
+
         // Nhận tín hiệu từ màn hình Hồ sơ gửi về
         val openStatistics = intent.getBooleanExtra("OPEN_STATISTICS", false)
         if (openStatistics) {
@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleIntentData(intent) // Không cần dùng ?.let nữa vì intent đã non-null
+        handleIntentData(intent)
     }
 
     // ====================================================================
@@ -105,15 +105,15 @@ class MainActivity : AppCompatActivity() {
             when (openFragment) {
                 "VOCABULARY" -> {
                     replaceFragment(VocabularyFragment())
-                    updateBottomNavUI(binding.btnKhamPha) // Tô xanh nút Khám Phá
+                    updateBottomNavUI(binding.btnKhamPha)
                 }
                 "LEARNING" -> {
                     replaceFragment(LearningFragment())
-                    updateBottomNavUI(binding.btnKhamPha) // Tô xanh nút Khám Phá
+                    updateBottomNavUI(binding.btnKhamPha)
                 }
                 "ROADMAP" -> {
                     replaceFragment(RoadmapFragment())
-                    updateBottomNavUI(binding.btnKhamPha) // Tô xanh nút Khám Phá
+                    updateBottomNavUI(binding.btnKhamPha)
                 }
             }
             // Xóa dữ liệu sau khi mở xong để tránh lỗi khi màn hình xoay

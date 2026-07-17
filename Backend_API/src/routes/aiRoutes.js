@@ -20,7 +20,21 @@ router.post('/chat', verifyToken, aiController.chatWithAI);
 // Endpoint: GET /api/ai/session/:sessionId/messages
 // ==========================================
 router.get('/session/:sessionId/messages', verifyToken, aiController.getChatHistory);
+
+// ==========================================
 // Lấy danh sách các phòng chat của 1 User
 // Endpoint: GET /api/ai/sessions/user/:userId
+// ==========================================
 router.get('/sessions/user/:userId', verifyToken, aiController.getUserChatSessions);
+
+// ==========================================
+// 4. API DÀNH CHO ROADMAP (AI SINH LỘ TRÌNH)
+// ==========================================
+router.post('/generate-roadmap', verifyToken, aiController.generateRoadmap);
+router.get('/my-roadmap', verifyToken, aiController.getMyRoadmap);
+// Sinh câu hỏi trắc nghiệm theo chủ đề chặng học
+router.get('/generate-quiz', verifyToken, aiController.generateStepQuiz);
+// Lệnh export bắt buộc phải nằm ở cuối cùng của file
+router.post('/roadmap/complete-step', verifyToken, aiController.completeStep);
+
 module.exports = router;
