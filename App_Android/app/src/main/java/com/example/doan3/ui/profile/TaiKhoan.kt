@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.example.doan3.MainActivity
 import com.example.doan3.R
 import retrofit2.Call
 import retrofit2.Callback
@@ -81,6 +82,9 @@ class TaiKhoanActivity : AppCompatActivity() {
                 thucHienDangXuatCucBo()
             }
         }
+
+        // --- ĐOẠN MỚI THÊM: Cấu hình thanh điều hướng Bottom Navigation ---
+        setupBottomNavigation()
     }
 
     /**
@@ -125,5 +129,53 @@ class TaiKhoanActivity : AppCompatActivity() {
                 tvUserFullName.text = "Mất kết nối"
             }
         })
+    }
+
+    // ====================================================================
+    // HÀM MỚI BỔ SUNG: Xử lý Bottom Navigation cho màn hình Tài khoản
+    // ====================================================================
+    private fun setupBottomNavigation() {
+// 1. Nút Trang chủ -> Về MainActivity kèm cờ mở HomeFragment
+        findViewById<View>(R.id.btnTrangChu)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "HOME") // <--- CHÌA KHÓA ĐỂ SỬA LỖI HÌNH 1
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        // 2. Nút Khám phá -> Về MainActivity kèm cờ mở LearningFragment
+        findViewById<View>(R.id.btnKhamPha)?.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("OPEN_FRAGMENT", "LEARNING")
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        // 3. Nút Trợ lý AI -> Mở TroLyAIActivity
+        findViewById<View>(R.id.btnTroLyAI)?.setOnClickListener {
+            val intent = Intent(this, TroLyAIActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        // 4. Nút Hồ sơ -> Mở hoso
+        findViewById<View>(R.id.btnHoSo)?.setOnClickListener {
+            val intent = Intent(this, hoso::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+            finish()
+        }
+
+        // 5. Nút Tài khoản -> Không làm gì vì đang ở chính màn hình này
+        findViewById<View>(R.id.btnTaiKhoan)?.setOnClickListener {
+            // Do nothing
+        }
     }
 }

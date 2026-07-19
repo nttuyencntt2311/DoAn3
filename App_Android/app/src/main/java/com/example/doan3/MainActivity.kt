@@ -11,10 +11,8 @@ import androidx.fragment.app.Fragment
 import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
 import com.example.doan3.ui.profile.hoso
-import com.example.doan3.ui.profile.KhamPhaActivity
-import com.example.doan3.ui.profile.TroLyAIActivity
-import com.example.doan3.ui.profile.TaoQuizActivity
 import com.example.doan3.ui.profile.TaiKhoanActivity
+import com.example.doan3.ui.profile.TroLyAIActivity
 import com.example.doan3.ui.learning.LearningFragment
 import com.example.doan3.ui.statistics.StatisticsFragment
 import com.example.doan3.ui.vocabulary.VocabularyFragment
@@ -29,7 +27,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Mặc định ban đầu hiển thị trang HomeFragment và bôi xanh nút Trang chủ
         if (savedInstanceState == null) {
             replaceFragment(HomeFragment())
             updateBottomNavUI(binding.btnTrangChu)
@@ -43,72 +40,62 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Nút Khám phá
         binding.btnKhamPha.setOnClickListener {
-            updateBottomNavUI(binding.btnKhamPha)
             replaceFragment(LearningFragment())
+            updateBottomNavUI(binding.btnKhamPha)
         }
 
-        // 3. Nút Trợ lý AI
+        // 3. Nút Trợ lý AI (KHÔNG GỌI updateBottomNavUI ở đây nữa để tránh kẹt màu)
         binding.btnTroLyAI.setOnClickListener {
-            updateBottomNavUI(binding.btnTroLyAI)
             val intent = Intent(this, TroLyAIActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
-        // 4. Nút Hồ sơ
+        // 4. Nút Hồ sơ (KHÔNG GỌI updateBottomNavUI ở đây nữa)
         binding.btnHoSo.setOnClickListener {
-            updateBottomNavUI(binding.btnHoSo)
             val intent = Intent(this, hoso::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
-        // 5. Nút Tài khoản
+        // 5. Nút Tài khoản (KHÔNG GỌI updateBottomNavUI ở đây nữa)
         binding.btnTaiKhoan.setOnClickListener {
-            updateBottomNavUI(binding.btnTaiKhoan)
             val intent = Intent(this, TaiKhoanActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
-        // ĐÃ XÓA ĐOẠN CODE LỖI `cardLoTrinhHoc` Ở ĐÂY VÌ NÓ THUỘC VỀ TroLyAIActivity
-
-        // Nhận tín hiệu từ màn hình Hồ sơ gửi về
         val openStatistics = intent.getBooleanExtra("OPEN_STATISTICS", false)
         if (openStatistics) {
-            // Tự động chuyển đổi giao diện sang màn hình Thống kê
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, StatisticsFragment())
-                .commit()
-            // Tạm thời nếu mở Thống kê thì bôi xanh nút Hồ sơ
-            updateBottomNavUI(binding.btnHoSo)
+            replaceFragment(StatisticsFragment())
         }
 
-        // ====================================================================
-        // ĐOẠN MỚI THÊM: Đón tín hiệu ngay khi MainActivity vừa khởi tạo
-        // ====================================================================
         handleIntentData(intent)
     }
 
-    // ====================================================================
-    // HÀM MỚI: Xử lý khi MainActivity đang chạy ngầm và được gọi lên lại
-    // ====================================================================
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntentData(intent)
     }
 
-    // ====================================================================
-    // HÀM MỚI: Đọc tín hiệu OPEN_FRAGMENT và mở đúng Fragment
-    // ====================================================================
     private fun handleIntentData(intent: Intent) {
         val openFragment = intent.getStringExtra("OPEN_FRAGMENT")
         if (openFragment != null) {
             when (openFragment) {
-                "VOCABULARY" -> {
-                    replaceFragment(VocabularyFragment())
-                    updateBottomNavUI(binding.btnKhamPha)
+                "HOME" -> { // BỔ SUNG LỆNH NÀY ĐỂ MỞ ĐÚNG TRANG CHỦ
+                    replaceFragment(HomeFragment())
+                    updateBottomNavUI(binding.btnTrangChu)
                 }
                 "LEARNING" -> {
                     replaceFragment(LearningFragment())
+                    updateBottomNavUI(binding.btnKhamPha)
+                }
+                "VOCABULARY" -> {
+                    replaceFragment(VocabularyFragment())
                     updateBottomNavUI(binding.btnKhamPha)
                 }
                 "ROADMAP" -> {
@@ -116,23 +103,19 @@ class MainActivity : AppCompatActivity() {
                     updateBottomNavUI(binding.btnKhamPha)
                 }
             }
-            // Xóa dữ liệu sau khi mở xong để tránh lỗi khi màn hình xoay
             intent.removeExtra("OPEN_FRAGMENT")
         }
     }
 
-    // Hàm hỗ trợ đổi Fragment mượt mà trong Activity
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .commit()
     }
 
-    // ====================================================================
-    // ĐÂY LÀ HÀM MỚI ĐỂ THAY ĐỔI GIAO DIỆN NÚT (TÔ XANH / TẨY XÁM)
-    // ====================================================================
-    private fun updateBottomNavUI(activeTab: LinearLayout) {
-        // Gom 5 nút vào một danh sách
+    // HÀM UPDATE UI ĐÃ ĐƯỢC CHỐNG LỖI KẸT MÀU
+    // HÀM UPDATE UI MỚI NHẤT - CHỐNG DÍNH MÀU TUYỆT ĐỐI
+    fun updateBottomNavUI(activeTab: LinearLayout) {
         val tabs = listOf(
             binding.btnTrangChu,
             binding.btnKhamPha,
@@ -141,26 +124,30 @@ class MainActivity : AppCompatActivity() {
             binding.btnTaiKhoan
         )
 
-        // Định nghĩa mã màu (xanh dương đậm và xám)
         val activeColor = Color.parseColor("#0056D2")
-        val inactiveColor = Color.parseColor("#777777")
+        val inactiveColor = Color.parseColor("#94A3B8")
 
+        // BƯỚC 1: TẨY TRẮNG VÀ TẮT HẾT TẤT CẢ CÁC NÚT (ĐƯA VỀ XÁM)
         for (tab in tabs) {
-            // Lấy view icon (vị trí 0) và view chữ (vị trí 1)
+            tab.setBackgroundResource(0)
+            tab.background = null // Bắt buộc Android xóa sạch nền
+
             val icon = tab.getChildAt(0) as? ImageView
             val text = tab.getChildAt(1) as? TextView
 
-            if (tab == activeTab) {
-                // NẾU LÀ NÚT VỪA ĐƯỢC BẤM:
-                tab.setBackgroundResource(R.drawable.bg_tab_active)
-                icon?.setColorFilter(activeColor)
-                text?.setTextColor(activeColor)
-            } else {
-                // CÁC NÚT CÒN LẠI:
-                tab.background = null
-                icon?.setColorFilter(inactiveColor)
-                text?.setTextColor(inactiveColor)
-            }
+            icon?.clearColorFilter() // Xóa sạch bộ lọc màu cũ bị kẹt
+            icon?.setColorFilter(inactiveColor)
+            text?.setTextColor(inactiveColor)
         }
+
+        // BƯỚC 2: CHỈ BẬT DUY NHẤT NÚT ĐANG ĐƯỢC CHỌN (TÔ XANH)
+        activeTab.setBackgroundResource(R.drawable.bg_tab_active)
+
+        val activeIcon = activeTab.getChildAt(0) as? ImageView
+        val activeText = activeTab.getChildAt(1) as? TextView
+
+        activeIcon?.clearColorFilter()
+        activeIcon?.setColorFilter(activeColor)
+        activeText?.setTextColor(activeColor)
     }
 }

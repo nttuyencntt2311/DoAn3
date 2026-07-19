@@ -85,6 +85,33 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ========================================== -->
+            <!-- BẮT ĐẦU PHẦN THÊM MỚI: TỪ VỰNG CỦA TÔI -->
+            <!-- ========================================== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="TỪ VỰNG CỦA TÔI"
+                android:textColor="#555555"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <!-- RecyclerView mới (ID: rvCustomQuizzes) dạng lướt ngang -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCustomQuizzes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:clipToPadding="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_category_card" />
+            <!-- ========================================== -->
+            <!-- KẾT THÚC PHẦN THÊM MỚI -->
+            <!-- ========================================== -->
+
+            <!-- Phần Chủ đề học cũ giữ nguyên -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -94,7 +121,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <!-- RecyclerView để chứa 5 Chủ đề -->
+            <!-- RecyclerView để chứa 5 Chủ đề (ID cũ giữ nguyên) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvLessons"
                 android:layout_width="match_parent"

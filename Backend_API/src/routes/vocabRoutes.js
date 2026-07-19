@@ -14,5 +14,11 @@ router.delete("/vocabulary/:id", vocabController.deleteVocab);
 
 // 🚀 ĐÂY LÀ ĐƯỜNG DẪN MỚI BỔ SUNG ĐỂ LƯU ĐIỂM TỪ ANDROID:
 router.put("/vocabulary/:id/proficiency", vocabController.updateProficiency);
+router.post("/vocabulary/custom-quiz", vocabController.generateCustomQuiz);
+router.get("/vocabulary/custom-categories", vocabController.getCustomQuizCategories);
+
 
 module.exports = router;
+
+
+

@@ -698,3 +698,70 @@ exports.saveWord = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi lưu từ", error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Đảm bảo bạn đã khai báo API Key của Gemini ở đầu file hoặc trong file .env
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY"); 
+
+// [HÀM 1] API Nhận text, gọi AI tạo Quiz và lưu vào Database
+exports.generateCustomQuiz = async (req, res) => {
+    try {
+        const { content, questionCount = 10 } = req.body;
+        if (!content) return res.status(400).json({ error: "Nội dung không được để trống!" });
+
+        // Tạo tên Category duy nhất (VD: Quiz Tự Tạo - 1713500000)
+        const customCategory = `Quiz Tự Tạo - ${new Date().getTime()}`;
+
+        // Gọi Gemini AI
+        const prompt = `Dựa vào đoạn văn bản sau: "${content}". Hãy tạo ra chính xác ${questionCount} từ vựng quan trọng nhất. 
+        Trả về ĐÚNG định dạng mảng JSON thuần túy (không kèm markdown, không có \`\`\`json):
+        [{"word": "từ tiếng anh", "phonetic": "phiên âm", "meaning": "nghĩa tiếng việt"}]`;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(prompt);
+        let textResult = result.response.text();
+        
+        // Cắt bỏ markdown nếu AI trả về lỗi định dạng
+        textResult = textResult.replace(/```json/g, "").replace(/```/g, "").trim();
+        const quizData = JSON.parse(textResult);
+
+        // Lưu vào Collection Vocabulary có sẵn
+        const Vocabulary = require('../models/Vocabulary'); 
+        const savedVocabs = await Promise.all(quizData.map(async (item) => {
+            const newVocab = new Vocabulary({
+                word: item.word,
+                phonetic: item.phonetic || "",
+                meaning: item.meaning,
+                category: customCategory, // Gắn category tùy chỉnh để dễ dàng lấy ra
+                proficiency: 0
+            });
+            return await newVocab.save();
+        }));
+
+        res.status(200).json({ message: "Tạo Quiz thành công", categoryName: customCategory });
+    } catch (error) {
+        console.error("Lỗi AI:", error);
+        res.status(500).json({ error: "Lỗi hệ thống khi tạo quiz từ AI!" });
+    }
+};
+
+// [HÀM 2] API Lấy danh sách tên các Quiz do người dùng tự tạo
+exports.getCustomQuizCategories = async (req, res) => {
+    try {
+        const Vocabulary = require('../models/Vocabulary');
+        // Tìm các category có chữ "Quiz Tự Tạo"
+        const customCategories = await Vocabulary.distinct("category", { 
+            category: { $regex: "^Quiz Tự Tạo" } 
+        });
+        res.status(200).json({ success: true, categories: customCategories });
+    } catch (error) {
+        res.status(500).json({ error: "Lỗi hệ thống!" });
+    }
+};

@@ -123,6 +123,11 @@ data class HistoryMessage(val role: String, val text: String)
 data class ChatSessionItem(val _id: String, val title: String, val chatType: String)
 data class UserSessionsResponse(val sessions: List<ChatSessionItem>)
 
+// === MỚI THÊM: MODEL CHO TẠO QUIZ BẰNG AI ===
+data class GenerateCustomQuizRequest(val content: String, val questionCount: Int)
+data class GenerateCustomQuizResponse(val message: String, val categoryName: String)
+data class CustomCategoriesResponse(val success: Boolean, val categories: List<String>)
+
 // ==========================================
 //             API INTERFACE
 // ==========================================
@@ -221,6 +226,15 @@ interface ApiService {
 
     @POST("api/ai/roadmap/complete-step")
     suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
+
+    // ... (code cũ giữ nguyên)[cite: 12]
+
+    // MỚI THÊM: API CHO TẠO QUIZ BẰNG AI
+    @POST("api/vocabulary/custom-quiz")
+    fun generateCustomQuiz(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
+
+    @GET("api/vocabulary/custom-categories")
+    fun getCustomQuizCategories(): Call<CustomCategoriesResponse>
 
 } // <-- Đóng ngoặc của interface ApiService
 

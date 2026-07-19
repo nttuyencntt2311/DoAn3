@@ -198,10 +198,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="2dp"
                         android:text="Cung cấp văn bản rõ ràng, có cấu trúc tốt sẽ giúp AI tạo ra các câu hỏi bám sát kiến thức trọng tâm hơn."
                         android:textColor="#475569"
-                        android:textSize="12sp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
