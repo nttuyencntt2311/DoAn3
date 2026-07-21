@@ -355,30 +355,42 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val stepId = intent.getStringExtra("STEP_ID") ?: "1"
         val displayXp = 50 + (score * 10)
 
-        // 🚀 KHI ĐÃ HOÀN THÀNH XÓA TIẾN ĐỘ ĐỂ LẦN SAU VÀO TẠO BÀI MỚI
         clearProgress(currentStepTitle)
 
         AlertDialog.Builder(this)
             .setTitle("Hoàn Thành Bài Học! 🎉")
-            .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$displayXp XP!\nChặng tiếp theo đã được mở khóa!")
+            .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$displayXp XP!")
             .setCancelable(false)
             .setPositiveButton("Tiếp tục lộ trình") { dialog, _ ->
                 dialog.dismiss()
 
+                // BẮT ĐẦU ĐOẠN CODE ĐÃ ĐƯỢC CHỈNH SỬA ĐỂ BẮT LỖI
                 lifecycleScope.launch(Dispatchers.IO) {
                     try {
                         val api = RetrofitClient.getInstance(applicationContext)
-                        api.completeRoadmapStep(mapOf(
+                        val response = api.completeRoadmapStep(mapOf(
                             "stepId" to stepId,
                             "score" to score.toString(),
                             "totalQuestions" to quizList.size.toString()
                         ))
-                    } catch (e: Exception) {
-                        Log.e("IeltsQuiz", "Lỗi gửi kết quả lên server: ${e.message}", e)
-                    }
 
-                    withContext(Dispatchers.Main) { finish() }
+                        withContext(Dispatchers.Main) {
+                            // Ép Android phải kiểm tra xem Backend trả về mã gì
+                            if (response.isSuccessful) {
+                                Toast.makeText(this@IeltsQuizActivity, "🔥 Tiến độ đã lưu! Giữ vững phong độ nhé!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(this@IeltsQuizActivity, "❌ Lỗi Server: Mã ${response.code()}", Toast.LENGTH_LONG).show()
+                            }
+                            finish()
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@IeltsQuizActivity, "❌ Lỗi mạng/Hệ thống: ${e.message}", Toast.LENGTH_LONG).show()
+                            finish()
+                        }
+                    }
                 }
+                // KẾT THÚC ĐOẠN SỬA
             }
             .create()
             .show()

@@ -19,8 +19,7 @@
             android:layout_height="24dp"
             android:layout_centerVertical="true"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_revert"
-            android:rotation="180"
+            android:src="@drawable/ic_arrow_back"
             app:tint="#475569" />
 
         <TextView

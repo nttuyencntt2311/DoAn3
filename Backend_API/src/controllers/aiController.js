@@ -294,46 +294,67 @@ exports.completeStep = async (req, res) => {
             await roadmap.save();
         }
 
-        // CỘNG ĐIỂM (XP) VÀ XỬ LÝ MỤC TIÊU TUẦN CHO USER
+       // CỘNG ĐIỂM (XP), TÍNH CHUỖI NGÀY VÀ XỬ LÝ MỤC TIÊU TUẦN CHO USER
         const scoreEarned = parseInt(score) || 0;
         const xpEarned = 50 + (scoreEarned * 10);
 
         try {
             const user = await User.findById(userId);
             if (user) {
-                // Cộng XP và tính Level
+                // 1. CỘNG XP VÀ TÍNH LEVEL
                 user.xp = (user.xp || 0) + xpEarned;
-                user.level = Math.floor(user.xp / 100) + 1; // 100XP = 1 Level
+                user.level = Math.floor(user.xp / 100) + 1;
 
-                // 🚀 BỔ SUNG: LOGIC KIỂM TRA MỤC TIÊU TUẦN
+                // 2. TÍNH TOÁN CHUỖI NGÀY HỌC (STREAK DAYS) - VỪA BỔ SUNG
+                const getVNFormatDate = (date) => {
+                    const vnTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+                    return vnTime.toISOString().split('T')[0];
+                };
+
+                const todayVNStr = getVNFormatDate(new Date());
+
+                if (!user.lastStudyDate || !user.streakDays || user.streakDays === 0) {
+                    user.streakDays = 1;
+                } else {
+                    const lastStudyVNStr = getVNFormatDate(user.lastStudyDate);
+                    const todayDate = new Date(todayVNStr);
+                    const lastStudyDate = new Date(lastStudyVNStr);
+
+                    const diffTime = todayDate - lastStudyDate;
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 1) {
+                        user.streakDays += 1;
+                    } else if (diffDays > 1 || diffDays < 0) {
+                        user.streakDays = 1;
+                    }
+                }
+                user.lastStudyDate = new Date(); // Cập nhật ngày học chuỗi
+
+                // 3. LOGIC KIỂM TRA MỤC TIÊU TUẦN
                 const now = new Date();
                 const lastDate = user.lastLessonDate || new Date(0);
                 
-                // Kiểm tra xem lastDate và now có cùng chung 1 tuần không (Khoảng cách < 7 ngày)
                 const isSameWeek = (now - lastDate) / (1000 * 60 * 60 * 24) < 7 && now.getDay() >= lastDate.getDay();
 
                 if (!isSameWeek) {
-                    // Nếu đã sang tuần mới -> Reset lại từ đầu
                     user.weeklyLessonsCompleted = 1;
                     user.isWeeklyRewardClaimed = false;
                 } else {
-                    // Nếu vẫn trong tuần -> Cộng dồn (Tối đa kịch kim là 5)
                     if (user.weeklyLessonsCompleted < 5) {
                         user.weeklyLessonsCompleted += 1;
                     }
                 }
-                
-                // Cập nhật lại thời gian làm bài mới nhất
-                user.lastLessonDate = now;
+                user.lastLessonDate = now; // Cập nhật ngày làm bài tuần
                 
                 await user.save();
             }
         } catch (err) {
-            console.log("Lỗi trong lúc cộng XP và xử lý mục tiêu tuần:", err.message);
+            console.log("Lỗi trong lúc cộng XP, Streak và xử lý mục tiêu tuần:", err.message);
         }
 
         res.status(200).json({ 
-            message: "Đã cập nhật chặng học và cộng điểm thành công!", 
+            message: "Đã cập nhật chặng học, cộng điểm và tính chuỗi ngày thành công!", 
             earnedXp: xpEarned 
         });
     } catch (error) {

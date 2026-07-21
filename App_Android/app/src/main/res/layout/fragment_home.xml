@@ -36,11 +36,11 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="16dp"
-                android:src="@drawable/ic_launcher_background"
+                android:src="@drawable/ic_account"
                 app:layout_constraintBottom_toBottomOf="@id/tvAppLogo"
                 app:layout_constraintStart_toEndOf="@id/tvAppLogo"
                 app:layout_constraintTop_toTopOf="@id/tvAppLogo" />
-
+            <!-- Đã sửa tại đây -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -68,15 +68,16 @@
             </LinearLayout>
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/tvStreakDays"                android:layout_width="wrap_content"
+                android:id="@+id/tvStreakDays"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="15 ngày"
                 android:textColor="@color/badge_text"
                 app:chipBackgroundColor="@color/badge_bg"
-                app:chipIcon="@drawable/ic_launcher_foreground"
+                app:chipIcon="@drawable/ic_fire"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
+                app:layout_constraintTop_toTopOf="parent" /> <!-- Đã sửa tại đây -->
+            <!-- Đã sửa tại đây -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardDailyTask"
                 android:layout_width="0dp"
@@ -192,8 +193,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground" />
-                        <TextView
+                            android:src="@drawable/ic_book" /> <!-- Đã sửa tại đây -->                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"
@@ -229,8 +229,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_launcher_foreground" />
-                        <TextView
+                            android:src="@drawable/ic_clock" /> <!-- Đã sửa tại đây -->                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="20dp"

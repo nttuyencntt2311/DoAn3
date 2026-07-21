@@ -20,8 +20,6 @@ data class LearningStats(
     val chartData: List<Int>?
 )
 
-
-
 class StatisticsViewModel : ViewModel() {
 
     private val _statsData = MutableLiveData<LearningStats>()
@@ -38,7 +36,6 @@ class StatisticsViewModel : ViewModel() {
     // =========================================================================
     // HÀM LẤY DỮ LIỆU THỐNG KÊ THẬT TỪ BACKEND (THAY THẾ MOCK DATA CŨ)
     // =========================================================================
-// File: StatisticsViewModel.kt
     fun fetchRealStatistics(context: Context) {
         RetrofitClient.getInstance(context).getLearningStats()
             .enqueue(object : Callback<LearningStatsResponse> {
@@ -46,13 +43,13 @@ class StatisticsViewModel : ViewModel() {
                     if (response.isSuccessful && response.body() != null) {
                         val serverStats = response.body()!!
 
-                        // 1. Cập nhật thống kê chung
+                        // 1. Cập nhật thống kê chung (Đã thêm .stats vào để trỏ đúng cấu trúc JSON)
                         _statsData.value = LearningStats(
-                            streakDays = serverStats.streakDays,
-                            totalHours = serverStats.totalHours,
-                            totalWords = serverStats.totalWords,
-                            accuracyPercent = serverStats.accuracyPercent,
-                            chartData = serverStats.chartData
+                            streakDays = serverStats.stats.streakDays,
+                            totalHours = serverStats.stats.totalHours,
+                            totalWords = serverStats.stats.totalWords,
+                            accuracyPercent = serverStats.stats.accuracyPercent,
+                            chartData = serverStats.stats.chartData
                         )
 
                         // 2. CẬP NHẬT KỶ NIỆM (Lấy dữ liệu xịn từ Server)
@@ -68,6 +65,7 @@ class StatisticsViewModel : ViewModel() {
                 }
             })
     }
+
     // Hàm set giá trị mặc định khi có lỗi mạng
     private fun setEmptyStats() {
         _statsData.value = LearningStats(0, 0, 0, 0, listOf(0, 0, 0, 0, 0, 0, 0))

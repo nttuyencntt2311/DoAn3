@@ -67,12 +67,16 @@ data class UserStatsData(
 data class UserStatsResponse(val stats: UserStatsData?, val error: String?)
 
 data class LearningStatsResponse(
+    val stats: StatsData,
+    val memories: List<MemoryItem>?
+)
+
+data class StatsData(
     val streakDays: Int,
     val totalHours: Int,
     val totalWords: Int,
     val accuracyPercent: Int,
-    val chartData: List<Int>,
-    val memories: List<MemoryItem>
+    val chartData: List<Int>?
 )
 data class MemoryItem(
     val date: String,
@@ -224,10 +228,9 @@ interface ApiService {
         @Query("questionCount") questionCount: Int // 🚀 THÊM DÒNG NÀY
     ): retrofit2.Response<List<QuizQuestion>>
 
+    // Đã xóa chữ "ai" để khớp với Backend
     @POST("api/ai/roadmap/complete-step")
     suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
-
-    // ... (code cũ giữ nguyên)[cite: 12]
 
     // MỚI THÊM: API CHO TẠO QUIZ BẰNG AI
     @POST("api/vocabulary/custom-quiz")
