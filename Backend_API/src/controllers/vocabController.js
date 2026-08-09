@@ -663,7 +663,7 @@ exports.seedDefaultVocabulary = async (req, res) => {
           },
           $setOnInsert: { proficiency: 0 } // Nếu là từ mới tinh thì gán điểm = 0
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' } // <-- Thay bằng dòng này }
       );
       updatedCount++;
     }
