@@ -2,6 +2,7 @@ package com.example.doan3.ui.vocabulary
 
 import android.os.Bundle
 import android.speech.tts.TextToSpeech // THÊM IMPORT TTS
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +32,8 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
     // Biến lưu trạng thái bộ lọc hiện tại
     private var currentCategoryFilter = "Tất cả"
     private var currentStatusFilter = 0 // 0: Đã thuộc, 1: Đang học, 2: Từ mới
+    // Thêm biến này ở dưới các biến currentStatusFilter
+    private var currentSearchQuery = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,6 +51,7 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
 
         setupRecyclerView()
         setupFilterListeners()
+        setupSearchListener() // THÊM DÒNG NÀY ĐỂ BẮT ĐẦU LẮNG NGHE TÌM KIẾM
         observeViewModel()
 
         // Xử lý nút mũi tên quay lại trang chủ
@@ -59,9 +63,22 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
     // Thiết lập ngôn ngữ đọc là tiếng Anh Mỹ
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.language = Locale.US
+            // Cài đặt ngôn ngữ và hứng kết quả trả về
+            val result = tts.setLanguage(Locale.US)
+
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                // Báo lỗi nếu thiết bị không hỗ trợ hoặc chưa tải ngôn ngữ này
+                Log.e("TTS_DEBUG", "Ngôn ngữ không được hỗ trợ hoặc thiết bị thiếu dữ liệu!")
+            } else {
+                // Thành công, TTS đã sẵn sàng hoạt động
+                Log.i("TTS_DEBUG", "Khởi tạo thành công! Sẵn sàng phát âm.")
+            }
+        } else {
+            Log.e("TTS_DEBUG", "Khởi tạo TextToSpeech thất bại!")
         }
     }
+
+
 
     private fun setupRecyclerView() {
         // ĐÃ SỬA: Truyền 2 sự kiện vào Adapter (1 cho việc mở chi tiết, 1 cho việc bấm loa)
@@ -121,6 +138,20 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
 
     // --- CÁC HÀM XỬ LÝ LOGIC LỌC DỮ LIỆU ---
 
+    // HÀM LẮNG NGHE SỰ KIỆN GÕ TỪ KHÓA TÌM KIẾM
+    private fun setupSearchListener() {
+        binding.etSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                currentSearchQuery = s.toString().trim()
+                applyFilters() // Gọi lại hàm lọc mỗi khi người dùng gõ phím
+            }
+
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+    }
+
     private fun setupFilterListeners() {
         binding.tvFilterAll.setOnClickListener {
             currentCategoryFilter = "Tất cả"
@@ -160,6 +191,23 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
 
         if (currentCategoryFilter != "Tất cả") {
             filteredList = filteredList.filter { it.category == currentCategoryFilter }
+        }
+
+        // THÊM MỚI: Lọc theo từ khóa tìm kiếm
+        if (currentSearchQuery.isNotEmpty()) {
+            filteredList = filteredList.filter {
+                // So sánh không phân biệt hoa thường
+                it.word.contains(currentSearchQuery, ignoreCase = true)
+            }
+        }
+
+        // THÊM MỚI: Xử lý hiển thị thông báo "chờ cập nhật dữ liệu"
+        if (filteredList.isEmpty()) {
+            binding.rvVocabulary.visibility = View.GONE
+            binding.tvEmptyMessage.visibility = View.VISIBLE // Hiện thông báo chờ cập nhật
+        } else {
+            binding.rvVocabulary.visibility = View.VISIBLE
+            binding.tvEmptyMessage.visibility = View.GONE // Ẩn thông báo đi
         }
 
         adapter.updateData(filteredList)

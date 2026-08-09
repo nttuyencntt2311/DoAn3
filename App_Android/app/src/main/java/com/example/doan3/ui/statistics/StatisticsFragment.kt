@@ -189,40 +189,64 @@ class StatisticsFragment : Fragment() {
     }
 
     // Hàm vẽ biểu đồ cột 7 ngày
+// HÀM VẼ BIỂU ĐỒ TỐI ƯU CHO DỮ LIỆU PHẦN TRĂM TỪ BACKEND
     private fun drawChart(data: List<Int>) {
         binding.chartContainer.removeAllViews()
         val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
 
+        // Backend đã chốt tối đa là 100%, nên ta dùng mốc này làm chuẩn tính tỷ lệ chiều cao
+        val maxPercent = 100f
+        val maxHeightDp = 120 // Tăng chiều cao tối đa của cột (dp) để biểu đồ trông thoáng hơn
+
         for (i in 0 until 7) {
             val percent = if (i < data.size) data[i] else 0
+
             val columnLayout = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             }
 
-            val barView = View(requireContext()).apply {
-                setBackgroundColor(Color.parseColor("#0056D2"))
+            // 1. Nhãn % hiển thị trên đỉnh cột (Ví dụ: 80%)
+            val valueText = TextView(requireContext()).apply {
+                text = if (percent > 0) "$percent%" else ""
+                textSize = 11f
+                setTextColor(Color.parseColor("#0056D2"))
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+            }
 
-                val heightInPx = ((percent / 100f) * 100 * resources.displayMetrics.density).toInt()
+            // 2. Vẽ thanh biểu đồ màu xanh
+            val barView = View(requireContext()).apply {
+                setBackgroundColor(if (percent > 0) Color.parseColor("#0056D2") else Color.parseColor("#E2E8F0"))
+
+                // Tính toán tỷ lệ phần trăm ra Pixel thực tế trên màn hình
+                val heightInPx = ((percent / maxPercent) * maxHeightDp * resources.displayMetrics.density).toInt()
+
+                // Chiều cao tối thiểu nếu có học là 8dp, nếu không học (0%) là 4dp (hiện vạch xám nhỏ)
+                val minHeightPx = if (percent > 0) (8 * resources.displayMetrics.density).toInt() else (4 * resources.displayMetrics.density).toInt()
 
                 layoutParams = LinearLayout.LayoutParams(
-                    (16 * resources.displayMetrics.density).toInt(),
-                    heightInPx
+                    (16 * resources.displayMetrics.density).toInt(), // Cột rộng 16dp
+                    kotlin.math.max(heightInPx, minHeightPx)
                 ).apply {
+                    topMargin = (4 * resources.displayMetrics.density).toInt()
                     bottomMargin = (8 * resources.displayMetrics.density).toInt()
                 }
             }
 
+            // 3. Nhãn hiển thị thứ trong tuần (T2, T3, ...)
             val dayText = TextView(requireContext()).apply {
                 text = daysOfWeek[i]
                 textSize = 12f
-                setTextColor(Color.parseColor("#888888"))
+                setTextColor(if (percent > 0) Color.parseColor("#1A1A1A") else Color.parseColor("#888888"))
                 gravity = Gravity.CENTER
             }
 
+            columnLayout.addView(valueText)
             columnLayout.addView(barView)
             columnLayout.addView(dayText)
+
             binding.chartContainer.addView(columnLayout)
         }
     }

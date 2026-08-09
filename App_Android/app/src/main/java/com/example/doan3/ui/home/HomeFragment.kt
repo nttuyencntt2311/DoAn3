@@ -52,14 +52,14 @@ class HomeFragment : Fragment() {
         }
 
         // ProgressBar và Text % (Sử dụng đúng ID progressBar và tvTaskPercent)
-        viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
-            binding.progressBar.progress = percent
-            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
-        }
-
-        viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
-            binding.tvTaskTarget.text = targetText
-        }
+//        viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
+//            binding.progressBar.progress = percent
+//            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
+//        }
+//
+//        viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
+//            binding.tvTaskTarget.text = targetText
+//        }
 
         // Lưu ý: wordsCount và timeLearned sẽ được nạp ban đầu từ ViewModel,
         // sau đó sẽ được cập nhật chính xác lại từ hàm syncLearnedWords() bên dưới.
@@ -123,7 +123,7 @@ class HomeFragment : Fragment() {
     }
 
     // ====================================================================
-    // HÀM TỰ ĐỘNG ĐẾM SỐ TỪ VỰNG VÀ THỜI GIAN ĐỂ ĐẨY RA TRANG CHỦ
+    // HÀM TỰ ĐỘNG ĐẾM SỐ TỪ VỰNG, CẬP NHẬT TIẾN ĐỘ & THỜI GIAN
     // ====================================================================
     private fun syncLearnedWords() {
         val context = activity ?: return
@@ -135,24 +135,43 @@ class HomeFragment : Fragment() {
 
                 if (response.isSuccessful) {
                     val allWords = response.body() ?: emptyList()
+
+                    // 1. Đếm tổng số từ đã thuộc (Thành thạo >= 80)
                     val learnedCount = allWords.count { it.proficiency >= 80 }
                     binding.tvWordsCount.text = learnedCount.toString()
 
                     // ====================================================================
-                    // ĐỌC THỜI GIAN THỰC TẾ TỪ BỘ NHỚ MÁY (SharedPreferences)
+                    // 2. [MỚI]: TÍNH TOÁN & CẬP NHẬT NHIỆM VỤ HÀNG NGÀY TRÊN GIAO DIỆN
+                    // ====================================================================
+                    val dailyTarget = 10 // Đặt mục tiêu học 10 từ/ngày
+
+                    // Giả lập logic tính số từ hôm nay dựa trên tổng số từ đã thuộc
+                    // (Bạn có thể thay bằng thuật toán khác nếu Backend có trả về số lượng theo ngày)
+                    val wordsToday = learnedCount % dailyTarget
+
+                    // Tính phần trăm và làm tròn
+                    val percent = if (wordsToday == 0 && learnedCount > 0) 100 else ((wordsToday.toFloat() / dailyTarget) * 100).toInt()
+                    val displayWords = if (wordsToday == 0 && learnedCount > 0) dailyTarget else wordsToday
+
+                    // Đẩy dữ liệu lên XML
+                    binding.progressBar.progress = percent
+                    binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
+                    binding.tvTaskTarget.text = "Mục tiêu hôm nay: $displayWords/$dailyTarget từ mới"
+
+                    // ====================================================================
+                    // 3. ĐỌC THỜI GIAN THỰC TẾ TỪ BỘ NHỚ MÁY (SharedPreferences)
                     // ====================================================================
                     val sharedPref = requireContext().getSharedPreferences("StudyData", android.content.Context.MODE_PRIVATE)
                     val totalSeconds = sharedPref.getInt("totalSeconds", 0)
 
-                    // Chuyển đổi giây thành phút (Ví dụ 130 giây = 2 phút)
+                    // Chuyển đổi giây thành phút
                     val totalMinutes = totalSeconds / 60
-
                     binding.tvTimeLearned.text = "$totalMinutes phút"
                 }
             }
 
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
-                // Có thể thêm log lỗi vào đây nếu cần thiết
+                // Log lỗi hoặc xử lý khi mất mạng
             }
         })
     }

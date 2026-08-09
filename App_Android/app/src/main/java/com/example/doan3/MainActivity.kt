@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             updateBottomNavUI(binding.btnKhamPha)
         }
 
-        // 3. Nút Trợ lý AI (KHÔNG GỌI updateBottomNavUI ở đây nữa để tránh kẹt màu)
+        // 3. Nút Trợ lý AI
         binding.btnTroLyAI.setOnClickListener {
             val intent = Intent(this, TroLyAIActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
 
-        // 4. Nút Hồ sơ (KHÔNG GỌI updateBottomNavUI ở đây nữa)
+        // 4. Nút Hồ sơ
         binding.btnHoSo.setOnClickListener {
             val intent = Intent(this, hoso::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
 
-        // 5. Nút Tài khoản (KHÔNG GỌI updateBottomNavUI ở đây nữa)
+        // 5. Nút Tài khoản
         binding.btnTaiKhoan.setOnClickListener {
             val intent = Intent(this, TaiKhoanActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         val openFragment = intent.getStringExtra("OPEN_FRAGMENT")
         if (openFragment != null) {
             when (openFragment) {
-                "HOME" -> { // BỔ SUNG LỆNH NÀY ĐỂ MỞ ĐÚNG TRANG CHỦ
+                "HOME" -> {
                     replaceFragment(HomeFragment())
                     updateBottomNavUI(binding.btnTrangChu)
                 }
@@ -113,8 +113,7 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    // HÀM UPDATE UI ĐÃ ĐƯỢC CHỐNG LỖI KẸT MÀU
-    // HÀM UPDATE UI MỚI NHẤT - CHỐNG DÍNH MÀU TUYỆT ĐỐI
+    // HÀM UPDATE UI MẠNH NHẤT - ÉP XÓA MÀU KẸT BẰNG PORTER_DUFF VÀ RESOURCE(0)
     fun updateBottomNavUI(activeTab: LinearLayout) {
         val tabs = listOf(
             binding.btnTrangChu,
@@ -129,25 +128,41 @@ class MainActivity : AppCompatActivity() {
 
         // BƯỚC 1: TẨY TRẮNG VÀ TẮT HẾT TẤT CẢ CÁC NÚT (ĐƯA VỀ XÁM)
         for (tab in tabs) {
+            // LƯU LẠI PADDING CŨ ĐỂ KHÔNG BỊ TEO NHỎ VIEW KHI XÓA NỀN
+            val pLeft = tab.paddingLeft
+            val pTop = tab.paddingTop
+            val pRight = tab.paddingRight
+            val pBottom = tab.paddingBottom
+
+            // Dùng số 0 để gỡ bỏ triệt để file XML drawable (Mạnh hơn null)
             tab.setBackgroundResource(0)
-            tab.background = null // Bắt buộc Android xóa sạch nền
+
+            // PHỤC HỒI LẠI KHUNG PADDING NGAY LẬP TỨC
+            tab.setPadding(pLeft, pTop, pRight, pBottom)
 
             val icon = tab.getChildAt(0) as? ImageView
             val text = tab.getChildAt(1) as? TextView
 
-            icon?.clearColorFilter() // Xóa sạch bộ lọc màu cũ bị kẹt
-            icon?.setColorFilter(inactiveColor)
+            // BẮT BUỘC SỬ DỤNG PORTER_DUFF ĐỂ ÉP ĐÈ MÀU XÁM LÊN ĐIỂM ẢNH BỊ KẸT
+            icon?.setColorFilter(inactiveColor, android.graphics.PorterDuff.Mode.SRC_IN)
             text?.setTextColor(inactiveColor)
         }
 
         // BƯỚC 2: CHỈ BẬT DUY NHẤT NÚT ĐANG ĐƯỢC CHỌN (TÔ XANH)
+        val activePLeft = activeTab.paddingLeft
+        val activePTop = activeTab.paddingTop
+        val activePRight = activeTab.paddingRight
+        val activePBottom = activeTab.paddingBottom
+
         activeTab.setBackgroundResource(R.drawable.bg_tab_active)
+
+        // Đảm bảo nút được chọn cũng không bị đổi kích thước
+        activeTab.setPadding(activePLeft, activePTop, activePRight, activePBottom)
 
         val activeIcon = activeTab.getChildAt(0) as? ImageView
         val activeText = activeTab.getChildAt(1) as? TextView
 
-        activeIcon?.clearColorFilter()
-        activeIcon?.setColorFilter(activeColor)
+        activeIcon?.setColorFilter(activeColor, android.graphics.PorterDuff.Mode.SRC_IN)
         activeText?.setTextColor(activeColor)
     }
 }
