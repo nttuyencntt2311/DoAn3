@@ -24,7 +24,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/users", {
+      const response = await fetch("http://localhost:3000/api/users", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         }
@@ -68,7 +68,7 @@ export default function Users() {
         const newStatus = status === "Active" ? "Banned" : "Active";
         
         // Gọi API cập nhật lên Node.js
-        const response = await fetch(`http://localhost:5000/api/users/${id}/status`, {
+        const response = await fetch(`http://localhost:3000/api/users/${id}/status`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

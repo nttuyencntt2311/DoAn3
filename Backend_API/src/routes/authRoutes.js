@@ -1,11 +1,11 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const UserModel = require('../models/User'); 
-const verifyToken = require('../middleware/authMiddleware'); // Nhúng middleware bảo mật vào đây
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const UserModel = require("../models/User");
+const verifyToken = require("../middleware/authMiddleware"); // Nhúng middleware bảo mật vào đây
 
 // === BỔ SUNG: Import hàm cập nhật Streak từ streakService ===
-const { updateStreak } = require('../service/streakService'); 
+const { updateStreak } = require("../service/streakService");
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ let refreshTokens = [];
 // =====================================
 // 1. API: ĐĂNG KÝ TÀI KHOẢN
 // =====================================
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { name, email, password, gender } = req.body;
     if (!name || !email || !password) {
@@ -29,7 +29,12 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new UserModel({ name, email, password: hashedPassword, gender: gender || "Nam" });
+    const newUser = new UserModel({
+      name,
+      email,
+      password: hashedPassword,
+      gender: gender || "Nam",
+    });
     await newUser.save();
 
     res.status(201).json({ message: "Đăng ký tài khoản thành công!" });
@@ -41,11 +46,13 @@ router.post('/register', async (req, res) => {
 // =====================================
 // 2. API: ĐĂNG NHẬP
 // =====================================
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
+      return res
+        .status(400)
+        .json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
     }
 
     const user = await UserModel.findOne({ email });
@@ -60,16 +67,16 @@ router.post('/login', async (req, res) => {
 
     // 1. Tạo Access Token (Thời hạn 15 phút)
     const token = jwt.sign(
-      { userId: user._id }, 
-      process.env.JWT_SECRET || 'your_jwt_secret_key', 
-      { expiresIn: '15m' }
+      { userId: user._id },
+      process.env.JWT_SECRET || "your_jwt_secret_key",
+      { expiresIn: "15m" },
     );
 
     // 2. Tạo Refresh Token (Thời hạn 30 ngày)
     const refreshToken = jwt.sign(
-      { userId: user._id }, 
-      process.env.REFRESH_SECRET || 'your_refresh_secret_key', 
-      { expiresIn: '30d' }
+      { userId: user._id },
+      process.env.REFRESH_SECRET || "your_refresh_secret_key",
+      { expiresIn: "30d" },
     );
 
     // 3. Lưu Refresh Token vào Database
@@ -83,8 +90,8 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (error) {
     res.status(500).json({ error: "Lỗi máy chủ hệ thống" });
@@ -94,10 +101,11 @@ router.post('/login', async (req, res) => {
 // =====================================
 // 3. API: LẤY THÔNG TIN CÁ NHÂN
 // =====================================
-router.get('/profile', verifyToken, async (req, res) => {
+router.get("/profile", verifyToken, async (req, res) => {
   try {
-    const user = await UserModel.findById(req.user.userId).select('-password');
-    if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
+    const user = await UserModel.findById(req.user.userId).select("-password");
+    if (!user)
+      return res.status(404).json({ error: "Không tìm thấy người dùng" });
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
@@ -107,20 +115,23 @@ router.get('/profile', verifyToken, async (req, res) => {
 // =====================================
 // 4. API: CẬP NHẬT THÔNG TIN CÁ NHÂN (PUT) - ĐÃ BẢO MẬT
 // =====================================
-router.put('/profile', verifyToken, async (req, res) => {
+router.put("/profile", verifyToken, async (req, res) => {
   try {
     const { name, gender, birthDate } = req.body;
-    
+
     // Tìm và cập nhật dựa trên userId bóc tách từ Token
     const updatedUser = await UserModel.findByIdAndUpdate(
       req.user.userId,
       { name, gender, birthDate },
-      { new: true }
-    ).select('-password');
-    
-    if (!updatedUser) return res.status(404).json({ error: "Không tìm thấy người dùng" });
-    
-    res.status(200).json({ message: "Cập nhật thành công!", user: updatedUser });
+      { new: true },
+    ).select("-password");
+
+    if (!updatedUser)
+      return res.status(404).json({ error: "Không tìm thấy người dùng" });
+
+    res
+      .status(200)
+      .json({ message: "Cập nhật thành công!", user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
@@ -129,26 +140,42 @@ router.put('/profile', verifyToken, async (req, res) => {
 // =====================================
 // 5. API: LẤY CHỈ SỐ GAMIFICATION (HOME/HỒ SƠ)
 // =====================================
-router.get('/stats', verifyToken, async (req, res) => {
+router.get("/stats", verifyToken, async (req, res) => {
   try {
-    // Tìm user và chỉ lấy các trường cần thiết cho Trang chủ & Hồ sơ
-    const user = await UserModel.findById(req.user.userId)
-      .select('name xp level streakDays wordsLearned timeLearnedMinutes');
-      
-    if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
-    res.status(200).json({ stats: user });
+    const user = await UserModel.findById(req.user.userId);
+    if (!user)
+      return res.status(404).json({ error: "Không tìm thấy người dùng" });
+
+    // 🚀 TỰ ĐỘNG ĐẾM SỐ TỪ ĐÃ THUỘC (Điểm >= 80) TỪ MẢNG TIẾN ĐỘ
+    let calculatedWordsLearned = user.wordsLearned || 0;
+    if (user.vocabProgress && user.vocabProgress.length > 0) {
+      calculatedWordsLearned = user.vocabProgress.filter(
+        (p) => p.proficiency >= 80,
+      ).length;
+    }
+
+    res.status(200).json({
+      stats: {
+        name: user.name,
+        xp: user.xp || 0,
+        level: user.level || 1,
+        streakDays: user.streakDays || 0,
+        wordsLearned: calculatedWordsLearned, // TRẢ VỀ CON SỐ ĐÃ ĐẾM ĐƯỢC
+        timeLearnedMinutes: user.timeLearnedMinutes || 0,
+        quizzesCount: user.quizzesCount || 0,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
 });
-
 // =====================================
 // 6. API: ĐỔI MẬT KHẨU
 // =====================================
-router.put('/change-password', verifyToken, async (req, res) => {
+router.put("/change-password", verifyToken, async (req, res) => {
   try {
     const { currentPass, newPass } = req.body;
-    
+
     // Tìm user đang đăng nhập
     const user = await UserModel.findById(req.user.userId);
     if (!user) {
@@ -158,7 +185,9 @@ router.put('/change-password', verifyToken, async (req, res) => {
     // So sánh mật khẩu hiện tại (nhập vào) với mật khẩu đang lưu (mã hóa)
     const isMatch = await bcrypt.compare(currentPass, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Mật khẩu hiện tại không chính xác!" });
+      return res
+        .status(400)
+        .json({ error: "Mật khẩu hiện tại không chính xác!" });
     }
 
     // Mã hóa mật khẩu mới
@@ -178,7 +207,7 @@ router.put('/change-password', verifyToken, async (req, res) => {
 // =====================================
 // 7. API: LÀM MỚI TOKEN (REFRESH TOKEN)
 // =====================================
-router.post('/refresh-token', async (req, res) => {
+router.post("/refresh-token", async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
@@ -187,22 +216,32 @@ router.post('/refresh-token', async (req, res) => {
 
     const user = await UserModel.findOne({ refreshTokens: refreshToken });
     if (!user) {
-      return res.status(403).json({ error: "Refresh Token không hợp lệ hoặc đã bị đăng xuất!" });
+      return res
+        .status(403)
+        .json({ error: "Refresh Token không hợp lệ hoặc đã bị đăng xuất!" });
     }
 
-    jwt.verify(refreshToken, process.env.REFRESH_SECRET || 'your_refresh_secret_key', (err, decoded) => {
-      if (err) {
-        return res.status(403).json({ error: "Refresh Token đã hết hạn, vui lòng đăng nhập lại!" });
-      }
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET || "your_refresh_secret_key",
+      (err, decoded) => {
+        if (err) {
+          return res
+            .status(403)
+            .json({
+              error: "Refresh Token đã hết hạn, vui lòng đăng nhập lại!",
+            });
+        }
 
-      const newAccessToken = jwt.sign(
-        { userId: user._id }, 
-        process.env.JWT_SECRET || 'your_jwt_secret_key', 
-        { expiresIn: '15m' }
-      );
+        const newAccessToken = jwt.sign(
+          { userId: user._id },
+          process.env.JWT_SECRET || "your_jwt_secret_key",
+          { expiresIn: "30d" },
+        );
 
-      res.status(200).json({ token: newAccessToken });
-    });
+        res.status(200).json({ token: newAccessToken });
+      },
+    );
   } catch (error) {
     res.status(500).json({ error: "Lỗi hệ thống khi làm mới token!" });
   }
@@ -211,16 +250,20 @@ router.post('/refresh-token', async (req, res) => {
 // =====================================
 // 8. API: ĐĂNG XUẤT (XÓA REFRESH TOKEN)
 // =====================================
-router.post('/logout', async (req, res) => {
+router.post("/logout", async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      return res.status(400).json({ error: "Thiếu Refresh Token để đăng xuất!" });
+      return res
+        .status(400)
+        .json({ error: "Thiếu Refresh Token để đăng xuất!" });
     }
 
     const user = await UserModel.findOne({ refreshTokens: refreshToken });
     if (user) {
-      user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+      user.refreshTokens = user.refreshTokens.filter(
+        (token) => token !== refreshToken,
+      );
       await user.save();
     }
 
@@ -243,7 +286,7 @@ router.post("/save-word", async (req, res) => {
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       { $addToSet: { savedWords: wordId } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -254,10 +297,10 @@ router.post("/save-word", async (req, res) => {
     // Khi lưu từ thành công, gọi hàm updateStreak để tăng số ngày học liên tiếp
     const currentStreak = await updateStreak(userId);
 
-    res.status(200).json({ 
-      message: "Lưu từ thành công!", 
+    res.status(200).json({
+      message: "Lưu từ thành công!",
       user: updatedUser,
-      streakDays: currentStreak // Trả thêm số ngày Streak mới về
+      streakDays: currentStreak, // Trả thêm số ngày Streak mới về
     });
   } catch (error) {
     console.error("Lỗi hệ thống khi lưu từ:", error);

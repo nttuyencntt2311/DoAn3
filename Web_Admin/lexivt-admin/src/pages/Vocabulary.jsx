@@ -7,12 +7,12 @@ export default function Vocabulary() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   
-  // Đổi 'level' thành 'category' để khớp với Schema MongoDB
+  // Đổi giá trị mặc định thành chủ đề đầu tiên trong danh sách TOEIC
   const [formData, setFormData] = useState({
     word: "",
     phonetic: "",
     meaning: "",
-    category: "Nền tảng",
+    category: "Hợp đồng & Kinh doanh",
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,7 +24,7 @@ export default function Vocabulary() {
 
   const fetchVocabularies = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/vocabularies", {
+      const response = await fetch("http://localhost:3000/api/vocabularies", {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         }
@@ -38,7 +38,7 @@ export default function Vocabulary() {
     }
   };
 
-  // 3. Logic lọc an toàn (phòng trường hợp dữ liệu bị undefined)
+  // 3. Logic lọc an toàn
   const filteredWords = words.filter((item) => {
     const searchLower = searchTerm.toLowerCase();
     const word = item.word || "";
@@ -54,17 +54,23 @@ export default function Vocabulary() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ word: "", phonetic: "", meaning: "", category: "Nền tảng" });
+    // Cập nhật giá trị mặc định khi mở modal thêm mới
+    setFormData({ 
+      word: "", 
+      phonetic: "", 
+      meaning: "", 
+      category: "Hợp đồng & Kinh doanh" 
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (item) => {
-    setEditingId(item._id); // MongoDB dùng _id
+    setEditingId(item._id); 
     setFormData({
       word: item.word || "",
       phonetic: item.phonetic || "",
       meaning: item.meaning || "",
-      category: item.category || "Nền tảng",
+      category: item.category || "Hợp đồng & Kinh doanh",
     });
     setIsModalOpen(true);
   };
@@ -76,7 +82,7 @@ export default function Vocabulary() {
     );
     if (isConfirm) {
       try {
-        const response = await fetch(`http://localhost:5000/api/vocabularies/${id}`, {
+        const response = await fetch(`http://localhost:3000/api/vocabularies/${id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
@@ -99,8 +105,7 @@ export default function Vocabulary() {
     e.preventDefault();
     try {
       if (editingId) {
-        // Cập nhật (PUT)
-        const response = await fetch(`http://localhost:5000/api/vocabularies/${editingId}`, {
+        const response = await fetch(`http://localhost:3000/api/vocabularies/${editingId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -110,9 +115,7 @@ export default function Vocabulary() {
         });
         
         if (response.ok) {
-          // Lấy dữ liệu mới nhất từ server trả về hoặc update local state
           const updatedWord = await response.json(); 
-          // Cập nhật state nội bộ
           setWords(
             words.map((w) =>
               w._id === editingId ? { ...w, ...formData } : w
@@ -120,8 +123,7 @@ export default function Vocabulary() {
           );
         }
       } else {
-        // Thêm mới (POST)
-        const response = await fetch("http://localhost:5000/api/vocabularies", {
+        const response = await fetch("http://localhost:3000/api/vocabularies", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -132,7 +134,6 @@ export default function Vocabulary() {
         
         if (response.ok) {
           const newWord = await response.json();
-          // Đẩy từ mới lên đầu danh sách
           setWords([newWord, ...words]);
         }
       }
@@ -182,7 +183,7 @@ export default function Vocabulary() {
               <th className="p-4 font-medium">Từ vựng</th>
               <th className="p-4 font-medium">Phiên âm</th>
               <th className="p-4 font-medium">Nghĩa tiếng Việt</th>
-              <th className="p-4 font-medium">Cấp độ</th>
+              <th className="p-4 font-medium">Chủ đề</th>
               <th className="p-4 font-medium text-center">Thao tác</th>
             </tr>
           </thead>
@@ -292,8 +293,9 @@ export default function Vocabulary() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cấp độ (Category)
+                  Chủ đề (Category)
                 </label>
+                {/* Đã cập nhật danh sách 5 chủ đề tại đây */}
                 <select
                   value={formData.category}
                   onChange={(e) =>
@@ -301,9 +303,11 @@ export default function Vocabulary() {
                   }
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
                 >
-                  <option value="Nền tảng">Nền tảng</option>
-                  <option value="Giao tiếp">Giao tiếp</option>
-                  <option value="IELTS">IELTS</option>
+                  <option value="Hợp đồng & Kinh doanh">Hợp đồng & Kinh doanh</option>
+                  <option value="Môi trường văn phòng">Môi trường văn phòng</option>
+                  <option value="Hệ thống thông tin & Công nghệ">Hệ thống thông tin & Công nghệ</option>
+                  <option value="Kế toán & Tài chính">Kế toán & Tài chính</option>
+                  <option value="Dịch vụ & Khách hàng">Dịch vụ & Khách hàng</option>
                 </select>
               </div>
 

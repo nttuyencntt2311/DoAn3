@@ -128,6 +128,14 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     override fun onPause() {
         super.onPause()
         stopTimer()
+
+        // 🚀 ĐOẠN LƯU THỜI GIAN Ở ĐÂY ĐỂ ĐẢM BẢO LƯU TRƯỚC KHI VỀ TRANG CHỦ (Từ code của bạn kia)
+        val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
+        val savedSeconds = sharedPref.getInt("totalSeconds", 0)
+        sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
+
+        // Reset lại biến đếm giây cho lần học sau
+        secondsElapsed = 0
     }
 
     override fun onInit(status: Int) {
@@ -187,68 +195,100 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    // 🚀 ĐÃ BỌC LỖI TRY-CATCH VÀ CHỈNH SỬA ÉP KIỂU VIEW (Từ code bạn kia kết hợp gốc của bạn)
     private fun showSessionCompleteDialog() {
-        val dialog = Dialog(this)
-        dialog.setContentView(R.layout.dialog_session_complete)
+        try {
+            val dialog = Dialog(this)
+            dialog.setContentView(R.layout.dialog_session_complete)
 
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        dialog.setCancelable(false)
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            dialog.setCancelable(false)
 
-        val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
-        tvMessage.text = "Bạn đã hoàn thành $BATCH_SIZE từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
+            val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
+            tvMessage?.text = "Bạn đã hoàn thành $BATCH_SIZE từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
 
-        val btnHocTiep = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnHocTiep)
-        btnHocTiep.setOnClickListener {
-            dialog.dismiss()
-            fetchStudyWords()
-        }
+            // Dùng generic View thay vì MaterialButton để tránh lỗi cast exception
+            val btnHocTiep = dialog.findViewById<View>(R.id.btnHocTiep)
+            btnHocTiep?.setOnClickListener {
+                dialog.dismiss()
+                fetchStudyWords()
+            }
 
-        val btnNghiNgoi = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnNghiNgoi)
-        btnNghiNgoi.setOnClickListener {
-            dialog.dismiss()
+            val btnNghiNgoi = dialog.findViewById<View>(R.id.btnNghiNgoi)
+            btnNghiNgoi?.setOnClickListener {
+                dialog.dismiss()
 
-            val minutesLearned = secondsElapsed / 60
-            // Ghi chú: Sau này em sẽ gọi API đẩy biến minutesLearned này lên MongoDB tại đây
+                val minutesLearned = secondsElapsed / 60
+                // Ghi chú: Sau này em sẽ gọi API đẩy biến minutesLearned này lên MongoDB tại đây (Ghi chú gốc của bạn)
+                // TODO: Gọi API đẩy minutesLearned lên server
 
+                finish()
+            }
+
+            dialog.show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Hoàn thành bài học!", Toast.LENGTH_SHORT).show()
             finish()
         }
-
-        dialog.show()
     }
 
+    // 🚀 ĐÃ SỬA LỖI, BỌC TRY-CATCH VÀ SỬ DỤNG CLASS API MỚI (Từ code bạn kia)
     private fun handleScore(scoreType: String) {
-        if (currentIndex >= studyList.size) return
+        try {
+            if (currentIndex >= studyList.size) return
 
-        val currentWord = studyList[currentIndex]
-        var newProficiency = currentWord.proficiency
+            val currentWord = studyList[currentIndex]
+            var newProficiency = currentWord.proficiency
 
-        when (scoreType) {
-            "AGAIN" -> newProficiency = 0
-            "GOOD" -> newProficiency = (newProficiency + 30).coerceAtMost(90)
-            "EASY" -> newProficiency = 100
-        }
+            when (scoreType) {
+                "AGAIN" -> newProficiency = 0
+                "GOOD" -> newProficiency = (newProficiency + 30).coerceAtMost(90)
+                "EASY" -> newProficiency = 100
+            }
 
-        val apiService = RetrofitClient.getInstance(this)
-        val request = mapOf("proficiency" to newProficiency)
+            val apiService = RetrofitClient.getInstance(this)
 
-        apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<Any> {
-            override fun onResponse(call: Call<Any>, response: Response<Any>) {
-                if (response.isSuccessful) {
-                    if (scoreType == "AGAIN") {
-                        studyList = studyList + currentWord
+            // Lấy userId từ SharedPreferences
+            val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
+            val currentUserId = sharedPreferences.getString("USER_ID", "") ?: ""
+
+            if (currentUserId.isEmpty()) {
+                Toast.makeText(this, "Lỗi: Không tìm thấy ID người dùng!", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // 1. Tạo request bằng Data Class (Triệt tiêu hoàn toàn lỗi Wildcard so với kiểu Map gốc)
+            /* Code gốc của bạn:
+               val request = mapOf("proficiency" to newProficiency)
+            */
+            val request = ProficiencyRequest(
+                proficiency = newProficiency,
+                userId = currentUserId
+            )
+
+            // 2. Cập nhật Callback thành ProficiencyResponse
+            apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<ProficiencyResponse> {
+                override fun onResponse(call: Call<ProficiencyResponse>, response: Response<ProficiencyResponse>) {
+                    if (response.isSuccessful) {
+                        if (scoreType == "AGAIN") {
+                            studyList = studyList + currentWord
+                        }
+                        currentIndex++
+                        loadWordToUI()
+                    } else {
+                        Toast.makeText(this@KhamPhaActivity, "Lỗi server: Code ${response.code()}", Toast.LENGTH_LONG).show()
                     }
-                    currentIndex++
-                    loadWordToUI()
-                } else {
-                    Toast.makeText(this@KhamPhaActivity, "Lỗi server: Code ${response.code()}", Toast.LENGTH_LONG).show()
                 }
-            }
 
-            override fun onFailure(call: Call<Any>, t: Throwable) {
-                Toast.makeText(this@KhamPhaActivity, "Lỗi mạng", Toast.LENGTH_SHORT).show()
-            }
-        })
+                override fun onFailure(call: Call<ProficiencyResponse>, t: Throwable) {
+                    Toast.makeText(this@KhamPhaActivity, "Lỗi mạng: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            })
+        } catch (e: Exception) {
+            Toast.makeText(this, "Lỗi code Android: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+        }
     }
 
     private fun setupActionButtons() {
@@ -342,12 +382,13 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     override fun onDestroy() {
+        // (Phần lưu thời gian gốc của bạn đã được dời lên onPause để đảm bảo an toàn như code của bạn kia)
+        /* Gốc:
         stopTimer()
-
         val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
         val savedSeconds = sharedPref.getInt("totalSeconds", 0)
         sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
-
+        */
         if (this::tts.isInitialized) {
             tts.stop()
             tts.shutdown()

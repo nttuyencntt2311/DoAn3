@@ -11,8 +11,9 @@ const connectDB = require('./config/db.js'); // Kéo file kết nối database v
 const authRoutes = require('./routes/authRoutes.js');   // Quản lý Đăng ký, Đăng nhập, Đăng xuất, Refresh Token
 const quizRoutes = require('./routes/quizRoutes.js');   // Quản lý Nộp điểm Quiz/Bài tập
 const vocabRoutes = require('./routes/vocabRoutes.js'); // Quản lý Từ vựng
-const statsRoutes = require('./routes/statsRoutes.js'); // Quản lý Thống kê học tập
+const statsRoutes = require('./routes/statsRoutes.js'); // Quản lý Thống kê học tập & Dashboard
 const aiRoutes = require('./routes/aiRoutes.js');       // Quản lý Chat AI & Khởi tạo lộ trình (Roadmap)
+const userRoutes = require('./routes/userRoutes.js');   // Quản lý người dùng (Bổ sung từ code của bạn)
 
 // (Tuỳ chọn) Nếu bạn tách riêng API Lộ trình ra file roadmapRoutes.js thì bỏ dấu // ở dòng dưới
 // const roadmapRoutes = require('./routes/roadmapRoutes.js');
@@ -47,6 +48,9 @@ app.use('/api', vocabRoutes);
 
 // Android gọi /api/ai/chat hoặc /api/ai/generate-roadmap -> Chuyển vào aiRoutes.js
 app.use('/api/ai', aiRoutes);
+
+// Quản lý người dùng (Bổ sung từ code của bạn)
+app.use('/api/users', userRoutes);
 
 // (Tuỳ chọn) Kích hoạt nếu bạn dùng file roadmapRoutes.js riêng:
 // app.use('/api', roadmapRoutes); 

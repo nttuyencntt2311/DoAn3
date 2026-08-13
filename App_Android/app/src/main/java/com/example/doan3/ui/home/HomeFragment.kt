@@ -12,6 +12,7 @@ import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.ui.roadmap.RoadmapFragment
 import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.vocabulary.Vocabulary
+import com.example.doan3.ui.profile.UserStatsResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -42,6 +43,7 @@ class HomeFragment : Fragment() {
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             binding.tvUserName.text = name
         }
+
         viewModel.userLevel.observe(viewLifecycleOwner) { level ->
             binding.tvUserLevel.text = level
         }
@@ -52,14 +54,14 @@ class HomeFragment : Fragment() {
         }
 
         // ProgressBar và Text % (Sử dụng đúng ID progressBar và tvTaskPercent)
-//        viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
-//            binding.progressBar.progress = percent
-//            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
-//        }
-//
-//        viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
-//            binding.tvTaskTarget.text = targetText
-//        }
+        viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
+            binding.progressBar.progress = percent
+            binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
+        }
+
+        viewModel.taskTargetText.observe(viewLifecycleOwner) { targetText ->
+            binding.tvTaskTarget.text = targetText
+        }
 
         // Lưu ý: wordsCount và timeLearned sẽ được nạp ban đầu từ ViewModel,
         // sau đó sẽ được cập nhật chính xác lại từ hàm syncLearnedWords() bên dưới.
@@ -115,8 +117,10 @@ class HomeFragment : Fragment() {
     // ====================================================================
     override fun onResume() {
         super.onResume()
+
         // 1. Thực hiện quét và nạp dữ liệu từ Backend (MongoDB)
-        viewModel.fetchUserData(requireContext())
+        // TẠM THỜI TẮT DÒNG NÀY ĐỂ NÓ KHÔNG GHI ĐÈ SỐ 0 LÊN GIAO DIỆN NỮA
+        // viewModel.fetchUserData(requireContext())
 
         // 2. Kích hoạt hàm đồng bộ từ vựng ngay lập tức
         syncLearnedWords()
@@ -129,6 +133,41 @@ class HomeFragment : Fragment() {
         val context = activity ?: return
         val apiService = RetrofitClient.getInstance(context)
 
+        // --------------------------------------------------------------------
+        // LOGIC 1: LẤY THỐNG KÊ TỪ BACKEND (getUserStats)
+        // --------------------------------------------------------------------
+        android.util.Log.d("HomeFragment", "Đang gọi API getUserStats...")
+
+        apiService.getUserStats().enqueue(object : Callback<UserStatsResponse> {
+            override fun onResponse(call: Call<UserStatsResponse>, response: Response<UserStatsResponse>) {
+                if (_binding == null || !isAdded) return
+
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()?.stats
+
+                    val learnedCount = stats?.wordsLearned ?: 0
+                    android.util.Log.d("HomeFragment", "API Thành công! Số từ đã học: $learnedCount")
+
+                    binding.tvWordsCount.text = learnedCount.toString()
+
+                    val sharedPref = requireContext().getSharedPreferences("StudyData", android.content.Context.MODE_PRIVATE)
+                    val totalSeconds = sharedPref.getInt("totalSeconds", 0)
+                    val totalMinutes = totalSeconds / 60
+
+                    binding.tvTimeLearned.text = "$totalMinutes phút"
+                } else {
+                    android.util.Log.e("HomeFragment", "API Lỗi: Code ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
+                android.util.Log.e("HomeFragment", "API Thất bại: ${t.message}")
+            }
+        })
+
+        // --------------------------------------------------------------------
+        // LOGIC 2: ĐẾM SỐ TỪ VỰNG, CẬP NHẬT TIẾN ĐỘ & THỜI GIAN (getAllVocabularies)
+        // --------------------------------------------------------------------
         apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
                 if (_binding == null || !isAdded) return

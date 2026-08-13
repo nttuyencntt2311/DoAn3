@@ -28,6 +28,15 @@ const userSchema = new mongoose.Schema({
   // - Mặc định ban đầu khi tạo tài khoản sẽ là mảng rỗng [].
   savedWords: { type: [String], default: [] }, 
 
+  // 🚀 MỚI BỔ SUNG: MẢNG LƯU TIẾN ĐỘ ĐỂ MONGODB KHÔNG CHẶN DỮ LIỆU TỪ FLASCARD
+  vocabProgress: [
+    {
+      wordId: { type: String },
+      word: { type: String },
+      proficiency: { type: Number, default: 0 },
+    },
+  ],
+
   refreshTokens: { type: [String], default: [] }, 
   createdAt: { type: Date, default: Date.now }
 });

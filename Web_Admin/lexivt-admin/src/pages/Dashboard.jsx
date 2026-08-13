@@ -16,12 +16,12 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Thay URL này bằng endpoint Backend thực tế của em
-      const response = await fetch("http://localhost:5000/api/dashboard", {
+      // Thay URL này bằng endpoint Backend thực tế 
+    const response = await fetch("http://localhost:3000/api/stats/dashboard", {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
+            "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         }
-      });
+    });
       
       if (response.ok) {
         const data = await response.json();

@@ -43,13 +43,14 @@ class StatisticsViewModel : ViewModel() {
                     if (response.isSuccessful && response.body() != null) {
                         val serverStats = response.body()!!
 
-                        // 1. Cập nhật thống kê chung (Đã thêm .stats vào để trỏ đúng cấu trúc JSON)
+                        // 1. Cập nhật thống kê chung
+                        // SỬA LỖI: Thêm `?.` và `?: 0` để xử lý an toàn tránh NullPointerException
                         _statsData.value = LearningStats(
-                            streakDays = serverStats.stats.streakDays,
-                            totalHours = serverStats.stats.totalHours,
-                            totalWords = serverStats.stats.totalWords,
-                            accuracyPercent = serverStats.stats.accuracyPercent,
-                            chartData = serverStats.stats.chartData
+                            streakDays = serverStats.stats?.streakDays ?: 0,
+                            totalHours = serverStats.stats?.totalHours ?: 0,
+                            totalWords = serverStats.stats?.totalWords ?: 0,
+                            accuracyPercent = serverStats.stats?.accuracyPercent ?: 0,
+                            chartData = serverStats.stats?.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0)
                         )
 
                         // 2. CẬP NHẬT KỶ NIỆM (Lấy dữ liệu xịn từ Server)

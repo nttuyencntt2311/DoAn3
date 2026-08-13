@@ -18,14 +18,12 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
-import java.util.concurrent.TimeUnit // Của bạn (dùng cho Timeout)
+import java.util.concurrent.TimeUnit
 
-// === CÁC MODEL TỪ MODULE KHÁC CỦA VĂN ===
+// === CÁC MODEL TỪ MODULE KHÁC ===
 import com.example.doan3.ui.vocabulary.Vocabulary
 import com.example.doan3.ui.roadmap.UserRoadmapResponse
 import com.example.doan3.ui.vocabulary.VocabStatsResponse
-
-// 🚀 ĐÃ SỬA LỖI Ở ĐÂY: Đổi okhttp3.Response thành retrofit2.Response
 import retrofit2.Response
 import retrofit2.http.Query
 
@@ -42,7 +40,7 @@ data class LoginResponse(val message: String, val token: String?, val refreshTok
 
 // === MODELS THÔNG TIN CÁ NHÂN ===
 data class ProfileData(
-    @SerializedName("_id") val id: String, // Giữ chuẩn của Văn
+    @SerializedName("_id") val id: String,
     val name: String,
     val email: String,
     val gender: String,
@@ -62,13 +60,22 @@ data class UserStatsData(
     val streakDays: Int,
     val wordsLearned: Int,
     val timeLearnedMinutes: Int,
-    val quizzesCount: Int // Của Tuyến
+    val quizzesCount: Int
 )
 data class UserStatsResponse(val stats: UserStatsData?, val error: String?)
 
+// ĐÃ KẾT HỢP: Bao gồm cả cấu trúc lồng nhau (của bạn) và cấu trúc phẳng (của bạn bạn)
 data class LearningStatsResponse(
-    val stats: StatsData,
-    val memories: List<MemoryItem>?
+    // Cấu trúc của bạn
+    val stats: StatsData? = null,
+
+    // Cấu trúc của bạn bạn
+    val streakDays: Int? = null,
+    val totalHours: Int? = null,
+    val totalWords: Int? = null,
+    val accuracyPercent: Int? = null,
+    val chartData: List<Int>? = null,
+    val memories: List<MemoryItem>? = null
 )
 
 data class StatsData(
@@ -78,6 +85,7 @@ data class StatsData(
     val accuracyPercent: Int,
     val chartData: List<Int>?
 )
+
 data class MemoryItem(
     val date: String,
     val title: String,
@@ -95,7 +103,7 @@ data class SubmitQuizRequest(
 )
 data class SubmitQuizResponse(val message: String)
 
-// === MỚI THÊM: MODEL ĐỂ LƯU TỪ VỰNG YÊU THÍCH (Từ bạn của bạn) ===
+// === MODEL ĐỂ LƯU TỪ VỰNG YÊU THÍCH ===
 data class SaveWordRequest(
     val userId: String,
     val wordId: String
@@ -105,15 +113,12 @@ data class SaveWordRequest(
 data class RefreshTokenRequest(val refreshToken: String)
 data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
-data class LogoutRequest(val refreshToken: String) // Của Tuyến
+data class LogoutRequest(val refreshToken: String)
 
-// === MODELS TÍNH NĂNG AI / LỊCH SỬ CHAT (Từ bạn) ===
+// === MODELS TÍNH NĂNG AI / LỊCH SỬ CHAT ===
 data class ChatResponse(val reply: String)
-
-// Cập nhật lại ChatRequest để đính kèm thêm sessionId
 data class ChatRequest(val message: String, val sessionId: String? = null)
 
-// Các model mới cho tính năng Lịch sử
 data class CreateSessionRequest(
     val userId: String,
     val chatType: String,
@@ -127,10 +132,14 @@ data class HistoryMessage(val role: String, val text: String)
 data class ChatSessionItem(val _id: String, val title: String, val chatType: String)
 data class UserSessionsResponse(val sessions: List<ChatSessionItem>)
 
-// === MỚI THÊM: MODEL CHO TẠO QUIZ BẰNG AI ===
+// === MODEL CHO TẠO QUIZ BẰNG AI ===
 data class GenerateCustomQuizRequest(val content: String, val questionCount: Int)
 data class GenerateCustomQuizResponse(val message: String, val categoryName: String)
 data class CustomCategoriesResponse(val success: Boolean, val categories: List<String>)
+
+// === MODEL CẬP NHẬT ĐIỂM (Từ bạn bạn) ===
+data class ProficiencyRequest(val proficiency: Int, val userId: String)
+data class ProficiencyResponse(val message: String, val wordsLearned: Int, val xp: Int)
 
 // ==========================================
 //             API INTERFACE
@@ -169,34 +178,47 @@ interface ApiService {
     @POST("api/auth/logout")
     fun logoutUser(@Body request: LogoutRequest): Call<Void> // Của Tuyến
 
-    // MỚI THÊM: API LƯU TỪ VỰNG VÀO SỔ TAY (Từ bạn của bạn)
     @POST("api/auth/save-word")
     fun saveWord(@Body request: SaveWordRequest): Call<Any>
 
-    // --- QUIZ (Từ Tuyến) ---
+    // --- QUIZ ---
     @POST("api/quiz/submit")
     fun submitQuiz(@Body request: SubmitQuizRequest): Call<SubmitQuizResponse>
 
-    // --- VOCABULARY & ROADMAP (Từ Văn) ---
-    @GET("api/vocabulary")
+    // --- VOCABULARY & ROADMAP (KẾT HỢP ENDPOINT CŨ VÀ MỚI ĐỂ KHÔNG BỊ LỖI MODULE) ---
+
+    // Của bạn bạn (Đã đổi thành số nhiều vocabularies)
+    @GET("api/vocabularies")
     fun getAllVocabularies(): Call<List<Vocabulary>>
 
-    @GET("api/vocabulary/{word}")
+    // Của bạn (Số ít vocabulary - Đổi tên hàm thành Old để tránh trùng tên)
+    @GET("api/vocabulary")
+    fun getAllVocabulariesOld(): Call<List<Vocabulary>>
+
+    @GET("api/vocabularies/{word}")
     fun getVocabularyByWord(@Path("word") word: String): Call<Vocabulary>
 
     @GET("api/roadmap/{userId}")
     fun getRoadmap(@Path("userId") userId: String): Call<UserRoadmapResponse>
 
-    @GET("api/vocabulary/stats")
+    @GET("api/vocabularies/stats")
     fun getVocabStats(): Call<VocabStatsResponse>
 
-    @PUT("api/vocabulary/{id}/proficiency")
+    // Hàm cập nhật điểm theo code mới (Data Class) của bạn bạn
+    @PUT("api/vocabularies/{id}/proficiency")
     fun updateProficiency(
+        @Path("id") id: String,
+        @Body request: ProficiencyRequest
+    ): Call<ProficiencyResponse>
+
+    // Hàm cập nhật điểm theo code cũ (Map) của bạn
+    @PUT("api/vocabulary/{id}/proficiency")
+    fun updateProficiencyOld(
         @Path("id") id: String,
         @Body body: Map<String, Int>
     ): Call<Any>
 
-    // --- AI / CHAT (Từ bạn) ---
+    // --- AI / CHAT ---
     @POST("api/ai/chat")
     fun sendChatMessage(@Body request: ChatRequest): Call<ChatResponse>
 
@@ -209,10 +231,7 @@ interface ApiService {
     @GET("api/ai/sessions/user/{userId}")
     fun getUserSessions(@Path("userId") userId: String): Call<UserSessionsResponse>
 
-    // =========================================================
-    // 🚀 API DÀNH CHO ROADMAP (CHỈ GIỮ LẠI 2 HÀM SUSPEND NÀY)
-    // =========================================================
-
+    // --- ROADMAP (SUSPEND) ---
     @GET("api/ai/my-roadmap")
     suspend fun getRoadmapForUser(): Response<UserRoadmapResponse>
 
@@ -225,37 +244,38 @@ interface ApiService {
     suspend fun getStepQuiz(
         @Query("stepTitle") title: String,
         @Query("stepDesc") desc: String,
-        @Query("questionCount") questionCount: Int // 🚀 THÊM DÒNG NÀY
+        @Query("questionCount") questionCount: Int
     ): retrofit2.Response<List<QuizQuestion>>
 
-    // Đã xóa chữ "ai" để khớp với Backend
     @POST("api/ai/roadmap/complete-step")
     suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
 
-    // MỚI THÊM: API CHO TẠO QUIZ BẰNG AI
-    @POST("api/vocabulary/custom-quiz")
+    // --- CUSTOM QUIZ ---
+    // Của bạn bạn
+    @POST("api/vocabularies/custom-quiz")
     fun generateCustomQuiz(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
 
-    @GET("api/vocabulary/custom-categories")
+    @GET("api/vocabularies/custom-categories")
     fun getCustomQuizCategories(): Call<CustomCategoriesResponse>
 
-} // <-- Đóng ngoặc của interface ApiService
+    // Của bạn
+    @POST("api/vocabulary/custom-quiz")
+    fun generateCustomQuizOld(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
 
-// ==========================================
-//             AUTHENTICATOR
-// ==========================================
-
+    @GET("api/vocabulary/custom-categories")
+    fun getCustomQuizCategoriesOld(): Call<CustomCategoriesResponse>
+}
 
 // ==========================================
 //             RETROFIT CLIENT
 // ==========================================
 object RetrofitClient {
+    // 🚀 Đã lấy cổng 5000 theo cấu hình backend mới nhất của bạn bạn
     const val BASE_URL = "http://10.0.2.2:3000/"
 
-    // Biến token toàn cục của Tuyến (dùng cho instance không qua Context)
+    // Biến token toàn cục
     var token: String = ""
 
-    // Instance của Tuyến (Dùng khi không truyền Context)
     val instance: ApiService by lazy {
         val interceptor = Interceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
@@ -265,7 +285,6 @@ object RetrofitClient {
             chain.proceed(requestBuilder.build())
         }
 
-        // BƠM THÊM TIMEOUT 60 GIÂY VÀO ĐÂY
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .connectTimeout(60, TimeUnit.SECONDS)
@@ -281,26 +300,37 @@ object RetrofitClient {
             .create(ApiService::class.java)
     }
 
-    // Instance của Văn và Tuyến kết hợp (Dùng Context, có Authenticator & Logging)
+    // 🚀 DÙNG SINGLETON ĐỂ KHÔNG BỊ RÒ RỈ BỘ NHỚ VÀ MẤT TOKEN (Từ bạn bạn)
+    @Volatile
+    private var contextInstance: ApiService? = null
+
     fun getInstance(context: Context): ApiService {
+        return contextInstance ?: synchronized(this) {
+            contextInstance ?: buildContextRetrofit(context).also { contextInstance = it }
+        }
+    }
+
+    private fun buildContextRetrofit(context: Context): ApiService {
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
 
         val authInterceptor = Interceptor { chain ->
-            val sharedPreferences = context.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            // Luôn lấy token mới nhất từ bộ nhớ máy
+            val sharedPreferences = context.applicationContext.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val dynamicToken = sharedPreferences.getString("JWT_TOKEN", "")
-            val requestBuilder = chain.request().newBuilder()
 
+            val requestBuilder = chain.request().newBuilder()
             if (!dynamicToken.isNullOrEmpty()) {
                 requestBuilder.addHeader("Authorization", "Bearer $dynamicToken")
             }
             chain.proceed(requestBuilder.build())
         }
 
-        // BƠM THÊM TIMEOUT 60 GIÂY VÀO ĐÂY
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
-            .authenticator(TokenAuthenticator(context))
+            // 🚀 ĐÃ TẠM TẮT TOKEN_AUTHENTICATOR ĐỂ TRÁNH LỖI CHẶN REQUEST NGẦM (Theo code của bạn bạn)
+            // Nếu bạn muốn dùng lại logic của bạn, chỉ cần bỏ comment dòng dưới đây.
+            // .authenticator(TokenAuthenticator(context))
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)

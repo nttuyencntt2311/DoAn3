@@ -2,6 +2,8 @@ package com.example.doan3.ui.profile
 
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import okhttp3.Authenticator
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -14,37 +16,37 @@ import org.json.JSONObject
 class TokenAuthenticator(private val context: Context) : Authenticator {
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        // 1. Tránh vòng lặp vô hạn: Nếu đã thử làm mới token 2-3 lần mà vẫn lỗi 401 thì dừng
+        android.util.Log.e("DEBUG_AUTH", "BỊ LỖI 401, TOKEN AUTHENTICATOR ĐANG CHẠY!")
+
         if (responseCount(response) >= 3) {
             return null
         }
 
-        // 2. Lấy Refresh Token từ SharedPreferences
         val sharedPreferences = context.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "")
 
         if (refreshToken.isNullOrEmpty()) {
-            return null // Không có Refresh Token -> Chấp nhận lỗi 401
+            android.util.Log.e("DEBUG_AUTH", "KHÔNG CÓ REFRESH TOKEN -> ĐÁ VỀ LOGIN!")
+            logoutUser(sharedPreferences)
+            return null
         }
 
-        // 3. Tự động gọi API Refresh Token ĐỒNG BỘ (Synchronous)
         val newAccessToken = fetchNewToken(refreshToken)
 
         return if (newAccessToken != null) {
-            // 4a. Nếu lấy được Token mới thành công -> Lưu đè vào SharedPreferences
+            android.util.Log.d("DEBUG_AUTH", "LẤY TOKEN MỚI THÀNH CÔNG!")
             sharedPreferences.edit().putString("JWT_TOKEN", newAccessToken).apply()
+            RetrofitClient.token = newAccessToken
 
-            // 4b. Tạo lại Request cũ nhưng thay bằng Token mới, sau đó gửi đi
             response.request.newBuilder()
                 .header("Authorization", "Bearer $newAccessToken")
                 .build()
         } else {
-            // 5. Nếu Refresh Token cũng đã hết hạn/lỗi -> Bắt buộc đăng xuất
+            android.util.Log.e("DEBUG_AUTH", "LẤY TOKEN MỚI THẤT BẠI -> ĐÁ VỀ LOGIN!")
             logoutUser(sharedPreferences)
             null
         }
     }
-
     // Hàm gọi API trực tiếp bằng OkHttp (để tránh vòng lặp khởi tạo Retrofit)
     private fun fetchNewToken(refreshToken: String): String? {
         try {
@@ -56,9 +58,9 @@ class TokenAuthenticator(private val context: Context) : Authenticator {
             }.toString()
             val body = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-            // LƯU Ý QUAN TRỌNG: Hãy sửa biến baseUrl dưới đây bằng đúng BASE_URL
-            // mà bạn đang khai báo trong file ApiService.kt
-            val baseUrl = "http://10.0.2.2:3000" // <-- SỬA LẠI ĐỊA CHỈ NÀY CHO ĐÚNG MÁY BẠN
+            // LƯU Ý QUAN TRỌNG: Code của bạn dùng 3000, code bạn bạn dùng 5000.
+            // Ở đây giữ số 5000 (đã sửa để gọi đúng tới Backend) từ code bạn bạn.
+            val baseUrl = "http://10.0.2.2:3000"
 
             val request = Request.Builder()
                 .url("$baseUrl/api/auth/refresh-token")
@@ -95,12 +97,19 @@ class TokenAuthenticator(private val context: Context) : Authenticator {
 
     // Hàm xử lý khi Refresh Token hết hạn: Xóa dữ liệu và đá về màn hình Đăng nhập
     private fun logoutUser(sharedPreferences: android.content.SharedPreferences) {
+        // 1. Xóa toàn bộ dữ liệu phiên cũ
         sharedPreferences.edit().clear().apply()
 
+        // Reset biến global (Từ code bạn bạn)
+        RetrofitClient.token = ""
+
+        // 2. 🚀 ĐÃ SỬA: Bắt buộc gọi startActivity trên Main Thread để chống văng app (Từ code bạn bạn)
         // Mở lại màn hình dangnhap.kt và xóa hết lịch sử các Activity trước đó
-        val intent = Intent(context, dangnhap::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        Handler(Looper.getMainLooper()).post {
+            val intent = Intent(context, dangnhap::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            context.startActivity(intent)
         }
-        context.startActivity(intent)
     }
 }
