@@ -25,17 +25,12 @@ class TaiKhoanActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.taikkhoan)
 
-        // Ánh xạ UI (Giữ nguyên toàn bộ ID gốc)
+        // Ánh xạ UI
         tvUserFullName = findViewById(R.id.tvUserFullName)
         tvUserEmail = findViewById(R.id.tvUserEmail)
 
-        // 1. Nút quay lại (Dạng ImageView)
+        // 1. Nút quay lại (Đã xóa đoạn trùng lặp, chỉ giữ lại 1 cái chuẩn nhất)
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
-
-        // 1. Nút quay lại (Dạng View chung)
-        findViewById<View>(R.id.btnBack).setOnClickListener {
             finish()
         }
 
@@ -53,47 +48,46 @@ class TaiKhoanActivity : AppCompatActivity() {
 
         // 4. Mở trang Điều khoản & Chính sách
         findViewById<View>(R.id.btnTerms).setOnClickListener {
-            // Lưu ý: Đảm bảo bạn đã tạo file DieuKhoanActivity.kt trong project
             startActivity(Intent(this, DieuKhoanActivity::class.java))
         }
 
-        // 5. Nút đăng xuất (Đã sửa đổi để gọi API đồng bộ xóa Refresh Token trên Server MongoDB)
+        // 5. Nút đăng xuất
         findViewById<View>(R.id.btnLogout).setOnClickListener {
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val refreshToken = sharedPreferences.getString("REFRESH_TOKEN", "") ?: ""
 
-            // GỌI API BÁO BACKEND HỦY TOKEN TRƯỚC KHI TIẾN HÀNH DỌN DẸP MÁY
             if (refreshToken.isNotEmpty()) {
                 val request = LogoutRequest(refreshToken)
                 RetrofitClient.getInstance(this).logoutUser(request)
                     .enqueue(object : Callback<Void> {
                         override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                            // Sau khi server xử lý xong (hoặc kể cả phiên hết hạn trước đó), dọn dẹp local và thoát
                             thucHienDangXuatCucBo()
                         }
 
                         override fun onFailure(call: Call<Void>, t: Throwable) {
-                            // Gặp sự cố mất mạng vẫn cho phép dọn dẹp cục bộ để user thoát ra ngoài, tránh treo app
                             thucHienDangXuatCucBo()
                         }
                     })
             } else {
-                // Nếu không tìm thấy token trên thiết bị, thực hiện thoát cục bộ ngay lập tức
                 thucHienDangXuatCucBo()
             }
         }
 
-        // --- ĐOẠN MỚI THÊM: Cấu hình thanh điều hướng Bottom Navigation ---
+        // Cấu hình thanh điều hướng Bottom Navigation
         setupBottomNavigation()
     }
 
     /**
      * Hàm phụ trợ xử lý xóa bộ nhớ đệm SharedPreferences và chuyển màn hình.
-     * Bảo toàn 100% logic chuyển hướng và các Flags xóa lịch sử trang cũ của bạn.
      */
     private fun thucHienDangXuatCucBo() {
+        // 1. Xóa thông tin đăng nhập và Token
         val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit().clear().apply()
+
+        // 2. 🚀 ĐÃ BỔ SUNG: Xóa sạch thời gian học (StudyData) để tránh lỗi 8 phút
+        val studyPref = getSharedPreferences("StudyData", Context.MODE_PRIVATE)
+        studyPref.edit().clear().apply()
 
         Toast.makeText(this, "Đã đăng xuất tài khoản an toàn!", Toast.LENGTH_SHORT).show()
 
@@ -105,7 +99,6 @@ class TaiKhoanActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Tự động nạp lại thông tin người dùng mới nhất khi quay lại màn hình này
         loadAccountData()
     }
 
@@ -135,17 +128,15 @@ class TaiKhoanActivity : AppCompatActivity() {
     // HÀM MỚI BỔ SUNG: Xử lý Bottom Navigation cho màn hình Tài khoản
     // ====================================================================
     private fun setupBottomNavigation() {
-// 1. Nút Trang chủ -> Về MainActivity kèm cờ mở HomeFragment
         findViewById<View>(R.id.btnTrangChu)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "HOME") // <--- CHÌA KHÓA ĐỂ SỬA LỖI HÌNH 1
+            intent.putExtra("OPEN_FRAGMENT", "HOME")
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
             overridePendingTransition(0, 0)
             finish()
         }
 
-        // 2. Nút Khám phá -> Về MainActivity kèm cờ mở LearningFragment
         findViewById<View>(R.id.btnKhamPha)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.putExtra("OPEN_FRAGMENT", "LEARNING")
@@ -155,7 +146,6 @@ class TaiKhoanActivity : AppCompatActivity() {
             finish()
         }
 
-        // 3. Nút Trợ lý AI -> Mở TroLyAIActivity
         findViewById<View>(R.id.btnTroLyAI)?.setOnClickListener {
             val intent = Intent(this, TroLyAIActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -164,7 +154,6 @@ class TaiKhoanActivity : AppCompatActivity() {
             finish()
         }
 
-        // 4. Nút Hồ sơ -> Mở hoso
         findViewById<View>(R.id.btnHoSo)?.setOnClickListener {
             val intent = Intent(this, hoso::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -173,7 +162,6 @@ class TaiKhoanActivity : AppCompatActivity() {
             finish()
         }
 
-        // 5. Nút Tài khoản -> Không làm gì vì đang ở chính màn hình này
         findViewById<View>(R.id.btnTaiKhoan)?.setOnClickListener {
             // Do nothing
         }

@@ -1,9 +1,11 @@
 package com.example.doan3
 
-import android.content.Context // MỚI THÊM: Import Context (Code của bạn kia)
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -12,13 +14,14 @@ import androidx.fragment.app.Fragment
 import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
 import com.example.doan3.ui.profile.hoso
-import com.example.doan3.ui.profile.RetrofitClient // MỚI THÊM: Import RetrofitClient (Code của bạn kia)
+import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.profile.TaiKhoanActivity
 import com.example.doan3.ui.profile.TroLyAIActivity
 import com.example.doan3.ui.learning.LearningFragment
 import com.example.doan3.ui.statistics.StatisticsFragment
 import com.example.doan3.ui.vocabulary.VocabularyFragment
 import com.example.doan3.ui.roadmap.RoadmapFragment
+import com.google.android.material.card.MaterialCardView
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,30 +32,25 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 🚀 BƯỚC KHẮC PHỤC LỖI VĂNG APP: NẠP LẠI TOKEN TỪ BỘ NHỚ LÊN RETROFIT (Code của bạn kia)
         val sharedPreferences = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         val savedToken = sharedPreferences.getString("JWT_TOKEN", "") ?: ""
         RetrofitClient.token = savedToken
-        // 🚀 KẾT THÚC BƯỚC KHẮC PHỤC
 
         if (savedInstanceState == null) {
             replaceFragment(HomeFragment())
             updateBottomNavUI(binding.btnTrangChu)
         }
 
-        // 1. Nút Trang chủ
         binding.btnTrangChu.setOnClickListener {
             replaceFragment(HomeFragment())
             updateBottomNavUI(binding.btnTrangChu)
         }
 
-        // 2. Nút Khám phá
         binding.btnKhamPha.setOnClickListener {
             replaceFragment(LearningFragment())
             updateBottomNavUI(binding.btnKhamPha)
         }
 
-        // 3. Nút Trợ lý AI (KHÔNG GỌI updateBottomNavUI ở đây nữa để tránh kẹt màu - Code của bạn kia)
         binding.btnTroLyAI.setOnClickListener {
             val intent = Intent(this, TroLyAIActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -60,7 +58,6 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
 
-        // 4. Nút Hồ sơ (KHÔNG GỌI updateBottomNavUI ở đây nữa - Code của bạn kia)
         binding.btnHoSo.setOnClickListener {
             val intent = Intent(this, hoso::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -68,7 +65,6 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
 
-        // 5. Nút Tài khoản (KHÔNG GỌI updateBottomNavUI ở đây nữa - Code của bạn kia)
         binding.btnTaiKhoan.setOnClickListener {
             val intent = Intent(this, TaiKhoanActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -94,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         val openFragment = intent.getStringExtra("OPEN_FRAGMENT")
         if (openFragment != null) {
             when (openFragment) {
-                "HOME" -> { // BỔ SUNG LỆNH NÀY ĐỂ MỞ ĐÚNG TRANG CHỦ
+                "HOME" -> {
                     replaceFragment(HomeFragment())
                     updateBottomNavUI(binding.btnTrangChu)
                 }
@@ -121,7 +117,26 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    // HÀM UPDATE UI KẾT HỢP (Chống kẹt màu tuyệt đối + Giữ nguyên padding)
+    // ====================================================================
+    // 🚀 BỘ QUÉT XUYÊN THẤU XML ĐỂ TÌM VIEW BỊ ẨN SÂU BÊN TRONG
+    // ====================================================================
+    private fun <T : View> findChildViewByType(root: ViewGroup, clazz: Class<T>): T? {
+        for (i in 0 until root.childCount) {
+            val child = root.getChildAt(i)
+            if (clazz.isInstance(child)) {
+                return clazz.cast(child)
+            }
+            if (child is ViewGroup) {
+                val found = findChildViewByType(child, clazz)
+                if (found != null) return found
+            }
+        }
+        return null
+    }
+
+    // ====================================================================
+    // HÀM UPDATE UI MỚI NHẤT (Chống 100% kẹt màu dù XML thiết kế thế nào)
+    // ====================================================================
     fun updateBottomNavUI(activeTab: LinearLayout) {
         val tabs = listOf(
             binding.btnTrangChu,
@@ -134,28 +149,29 @@ class MainActivity : AppCompatActivity() {
         val activeColor = Color.parseColor("#0056D2")
         val inactiveColor = Color.parseColor("#94A3B8")
 
-        // BƯỚC 1: TẨY TRẮNG VÀ TẮT HẾT TẤT CẢ CÁC NÚT (ĐƯA VỀ XÁM)
+        // BƯỚC 1: TẨY TRẮNG VÀ TẮT HẾT TẤT CẢ CÁC NÚT
         for (tab in tabs) {
-            // LƯU LẠI PADDING CŨ ĐỂ KHÔNG BỊ TEO NHỎ VIEW KHI XÓA NỀN (Code của tôi)
             val pLeft = tab.paddingLeft
             val pTop = tab.paddingTop
             val pRight = tab.paddingRight
             val pBottom = tab.paddingBottom
 
-            // Dùng số 0 để gỡ bỏ triệt để file XML drawable (Code của tôi)
+            // 1. Gỡ background của thẻ LinearLayout ngoài cùng
             tab.setBackgroundResource(0)
-            // Bắt buộc Android xóa sạch nền (Code của bạn kia)
             tab.background = null
-
-            // PHỤC HỒI LẠI KHUNG PADDING NGAY LẬP TỨC (Code của tôi)
             tab.setPadding(pLeft, pTop, pRight, pBottom)
 
-            val icon = tab.getChildAt(0) as? ImageView
-            val text = tab.getChildAt(1) as? TextView
+            // 2. Quét sâu để lấy các phần tử cốt lõi
+            val cardView = findChildViewByType(tab, MaterialCardView::class.java)
+            val icon = findChildViewByType(tab, ImageView::class.java)
+            val text = findChildViewByType(tab, TextView::class.java)
 
-            // Xóa sạch bộ lọc màu cũ bị kẹt (Code của bạn kia)
+            // 3. Xóa màu nền xanh kẹt cứng bên trong CardView (nếu có)
+            cardView?.setCardBackgroundColor(Color.TRANSPARENT)
+            cardView?.cardElevation = 0f
+
+            // 4. Ép màu xám tuyệt đối
             icon?.clearColorFilter()
-            // BẮT BUỘC SỬ DỤNG PORTER_DUFF ĐỂ ÉP ĐÈ MÀU XÁM LÊN ĐIỂM ẢNH BỊ KẸT (Code của tôi)
             icon?.setColorFilter(inactiveColor, android.graphics.PorterDuff.Mode.SRC_IN)
             text?.setTextColor(inactiveColor)
         }
@@ -166,17 +182,21 @@ class MainActivity : AppCompatActivity() {
         val activePRight = activeTab.paddingRight
         val activePBottom = activeTab.paddingBottom
 
-        activeTab.setBackgroundResource(R.drawable.bg_tab_active)
-
-        // Đảm bảo nút được chọn cũng không bị đổi kích thước (Code của tôi)
+        val activeCard = findChildViewByType(activeTab, MaterialCardView::class.java)
+        if (activeCard != null) {
+            // Nếu UI dùng CardView bọc -> bôi màu nền cho CardView
+            activeCard.setCardBackgroundColor(Color.parseColor("#EFF6FF"))
+            activeCard.cardElevation = 0f
+        } else {
+            // Nếu không dùng CardView -> bôi màu cho Layout chính
+            activeTab.setBackgroundResource(R.drawable.bg_tab_active)
+        }
         activeTab.setPadding(activePLeft, activePTop, activePRight, activePBottom)
 
-        val activeIcon = activeTab.getChildAt(0) as? ImageView
-        val activeText = activeTab.getChildAt(1) as? TextView
+        val activeIcon = findChildViewByType(activeTab, ImageView::class.java)
+        val activeText = findChildViewByType(activeTab, TextView::class.java)
 
-        // Xóa sạch bộ lọc màu cũ bị kẹt (Code của bạn kia)
         activeIcon?.clearColorFilter()
-        // Bắt buộc ép đè màu (Code của tôi)
         activeIcon?.setColorFilter(activeColor, android.graphics.PorterDuff.Mode.SRC_IN)
         activeText?.setTextColor(activeColor)
     }

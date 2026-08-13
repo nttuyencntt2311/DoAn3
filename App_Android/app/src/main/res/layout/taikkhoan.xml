@@ -120,18 +120,7 @@
                         android:textColor="#64748B"
                         android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_circle_gray"
-                        android:backgroundTint="#FFF7ED"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="4dp"
-                        android:text="★ THÀNH VIÊN PRO"
-                        android:textColor="#EA580C"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

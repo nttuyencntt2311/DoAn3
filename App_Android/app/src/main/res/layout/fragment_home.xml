@@ -268,10 +268,8 @@
                         android:id="@+id/tvProBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PRO"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
-                        android:background="@drawable/bg_pro_badge" android:paddingHorizontal="12dp"
                         android:paddingVertical="4dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />

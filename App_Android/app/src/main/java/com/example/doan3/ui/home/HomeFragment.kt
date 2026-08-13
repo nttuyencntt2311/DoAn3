@@ -35,10 +35,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // (ĐÃ XÓA dòng fetchUserData ở đây để tránh bị gọi 2 lần, chuyển nó xuống hàm onResume bên dưới)
-
         // ====================================================================
-        // ĐỔ DỮ LIỆU VÀO GIAO DIỆN (Đã sửa ID chuẩn theo đúng XML của bạn)
+        // ĐỔ DỮ LIỆU VÀO GIAO DIỆN
         // ====================================================================
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             binding.tvUserName.text = name
@@ -48,12 +46,10 @@ class HomeFragment : Fragment() {
             binding.tvUserLevel.text = level
         }
 
-        // Chip StreakDays trong XML của bạn
         viewModel.streakDays.observe(viewLifecycleOwner) { days ->
             binding.tvStreakDays.text = "$days ngày"
         }
 
-        // ProgressBar và Text % (Sử dụng đúng ID progressBar và tvTaskPercent)
         viewModel.progressPercent.observe(viewLifecycleOwner) { percent ->
             binding.progressBar.progress = percent
             binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
@@ -63,11 +59,10 @@ class HomeFragment : Fragment() {
             binding.tvTaskTarget.text = targetText
         }
 
-        // Lưu ý: wordsCount và timeLearned sẽ được nạp ban đầu từ ViewModel,
-        // sau đó sẽ được cập nhật chính xác lại từ hàm syncLearnedWords() bên dưới.
         viewModel.wordsCount.observe(viewLifecycleOwner) { count ->
             binding.tvWordsCount.text = count.toString()
         }
+
         viewModel.timeLearned.observe(viewLifecycleOwner) { time ->
             binding.tvTimeLearned.text = time
         }
@@ -75,6 +70,7 @@ class HomeFragment : Fragment() {
         viewModel.nextLessonName.observe(viewLifecycleOwner) { lessonName ->
             binding.tvLessonName.text = lessonName
         }
+
         viewModel.nextLessonXp.observe(viewLifecycleOwner) { xpText ->
             binding.tvXp.text = xpText
         }
@@ -105,6 +101,7 @@ class HomeFragment : Fragment() {
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
                 .addToBackStack(null).commit()
         }
+
         binding.tvStreakDays.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, com.example.doan3.ui.statistics.StatisticsFragment())
@@ -113,16 +110,12 @@ class HomeFragment : Fragment() {
     }
 
     // ====================================================================
-    // HÀM NÀY CHẠY MỖI KHI NGƯỜI DÙNG QUAY LẠI TRANG CHỦ
+    // HÀM CHẠY MỖI KHI NGƯỜI DÙNG QUAY LẠI TRANG CHỦ
     // ====================================================================
     override fun onResume() {
         super.onResume()
 
-        // 1. Thực hiện quét và nạp dữ liệu từ Backend (MongoDB)
-        // TẠM THỜI TẮT DÒNG NÀY ĐỂ NÓ KHÔNG GHI ĐÈ SỐ 0 LÊN GIAO DIỆN NỮA
-        // viewModel.fetchUserData(requireContext())
-
-        // 2. Kích hoạt hàm đồng bộ từ vựng ngay lập tức
+        viewModel.fetchUserData(requireContext())
         syncLearnedWords()
     }
 
@@ -144,7 +137,6 @@ class HomeFragment : Fragment() {
 
                 if (response.isSuccessful && response.body() != null) {
                     val stats = response.body()?.stats
-
                     val learnedCount = stats?.wordsLearned ?: 0
                     android.util.Log.d("HomeFragment", "API Thành công! Số từ đã học: $learnedCount")
 
@@ -179,38 +171,28 @@ class HomeFragment : Fragment() {
                     val learnedCount = allWords.count { it.proficiency >= 80 }
                     binding.tvWordsCount.text = learnedCount.toString()
 
-                    // ====================================================================
-                    // 2. [MỚI]: TÍNH TOÁN & CẬP NHẬT NHIỆM VỤ HÀNG NGÀY TRÊN GIAO DIỆN
-                    // ====================================================================
-                    val dailyTarget = 10 // Đặt mục tiêu học 10 từ/ngày
-
-                    // Giả lập logic tính số từ hôm nay dựa trên tổng số từ đã thuộc
-                    // (Bạn có thể thay bằng thuật toán khác nếu Backend có trả về số lượng theo ngày)
+                    // 2. CẬP NHẬT NHIỆM VỤ HÀNG NGÀY TRÊN GIAO DIỆN
+                    val dailyTarget = 10
                     val wordsToday = learnedCount % dailyTarget
 
-                    // Tính phần trăm và làm tròn
                     val percent = if (wordsToday == 0 && learnedCount > 0) 100 else ((wordsToday.toFloat() / dailyTarget) * 100).toInt()
                     val displayWords = if (wordsToday == 0 && learnedCount > 0) dailyTarget else wordsToday
 
-                    // Đẩy dữ liệu lên XML
                     binding.progressBar.progress = percent
                     binding.tvTaskPercent.text = "$percent% Hoàn\nthành"
                     binding.tvTaskTarget.text = "Mục tiêu hôm nay: $displayWords/$dailyTarget từ mới"
 
-                    // ====================================================================
                     // 3. ĐỌC THỜI GIAN THỰC TẾ TỪ BỘ NHỚ MÁY (SharedPreferences)
-                    // ====================================================================
                     val sharedPref = requireContext().getSharedPreferences("StudyData", android.content.Context.MODE_PRIVATE)
                     val totalSeconds = sharedPref.getInt("totalSeconds", 0)
 
-                    // Chuyển đổi giây thành phút
                     val totalMinutes = totalSeconds / 60
                     binding.tvTimeLearned.text = "$totalMinutes phút"
                 }
             }
 
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
-                // Log lỗi hoặc xử lý khi mất mạng
+                android.util.Log.e("HomeFragment", "Lỗi tải dữ liệu: ${t.message}")
             }
         })
     }

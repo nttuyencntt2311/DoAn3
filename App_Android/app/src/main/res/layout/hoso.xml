@@ -168,18 +168,6 @@
                                     android:textColor="#666666"
                                     android:textSize="14sp" />
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:background="@drawable/bg_circle_gray"
-                                    android:backgroundTint="#F4EEFF"
-                                    android:paddingHorizontal="8dp"
-                                    android:paddingVertical="4dp"
-                                    android:text="PRO"
-                                    android:textColor="#8A2BE2"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold" />
                             </LinearLayout>
                         </LinearLayout>
 
@@ -601,7 +589,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
-                            android:text="Bạn đã học trung bình 42 phút mỗi ngày. Tuyệt vời!"
+                            android:text="Bạn đã học rất tốt mỗi ngày. Cố lên!"
                             android:textColor="#475569"
                             android:textSize="14sp" />
                     </LinearLayout>

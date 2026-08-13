@@ -218,10 +218,13 @@ exports.updateProficiency = async (req, res) => {
     // Lưu thẳng vào Database
     await user.save();
 
+    const currentStreak = await updateStreak(userId);
+    
     res.status(200).json({
       message: "Cập nhật tiến độ học thành công",
       wordsLearned: user.wordsLearned,
       xp: user.xp,
+      streakDays: currentStreak // Trả về số chuỗi ngày mới cho App nếu cần
     });
   } catch (error) {
     console.error("Lỗi khi updateProficiency:", error);

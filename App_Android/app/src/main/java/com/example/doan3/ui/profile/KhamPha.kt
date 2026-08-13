@@ -37,7 +37,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var currentCategory: String = "Tổng hợp"
     private val BATCH_SIZE = 10
 
-    // --- MỚI THÊM: CÁC BIẾN ĐẾM THỜI GIAN ---
+    // --- CÁC BIẾN ĐẾM THỜI GIAN ---
     private var secondsElapsed = 0
     private var isTimerRunning = false
     private val timerHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -46,7 +46,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             if (isTimerRunning) {
                 secondsElapsed++
                 updateTimerUI()
-                timerHandler.postDelayed(this, 1000) // Lặp lại sau mỗi 1 giây
+                timerHandler.postDelayed(this, 1000)
             }
         }
     }
@@ -89,7 +89,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
 
         setupWindowInsets()
-        setupBottomNav() // Gọi hàm cài đặt Bottom Nav (bao gồm việc đổi màu tab)
+        setupBottomNav()
         setupFlashcardAnimation()
         setupActionButtons()
         setupBreathingEffect()
@@ -129,12 +129,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onPause()
         stopTimer()
 
-        // 🚀 ĐOẠN LƯU THỜI GIAN Ở ĐÂY ĐỂ ĐẢM BẢO LƯU TRƯỚC KHI VỀ TRANG CHỦ (Từ code của bạn kia)
         val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
         val savedSeconds = sharedPref.getInt("totalSeconds", 0)
         sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
 
-        // Reset lại biến đếm giây cho lần học sau
         secondsElapsed = 0
     }
 
@@ -176,7 +174,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     }
                 }
             }
-
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
                 Toast.makeText(this@KhamPhaActivity, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show()
             }
@@ -195,7 +192,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    // 🚀 ĐÃ BỌC LỖI TRY-CATCH VÀ CHỈNH SỬA ÉP KIỂU VIEW (Từ code bạn kia kết hợp gốc của bạn)
     private fun showSessionCompleteDialog() {
         try {
             val dialog = Dialog(this)
@@ -208,7 +204,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
             tvMessage?.text = "Bạn đã hoàn thành $BATCH_SIZE từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
 
-            // Dùng generic View thay vì MaterialButton để tránh lỗi cast exception
             val btnHocTiep = dialog.findViewById<View>(R.id.btnHocTiep)
             btnHocTiep?.setOnClickListener {
                 dialog.dismiss()
@@ -218,11 +213,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val btnNghiNgoi = dialog.findViewById<View>(R.id.btnNghiNgoi)
             btnNghiNgoi?.setOnClickListener {
                 dialog.dismiss()
-
                 val minutesLearned = secondsElapsed / 60
-                // Ghi chú: Sau này em sẽ gọi API đẩy biến minutesLearned này lên MongoDB tại đây (Ghi chú gốc của bạn)
-                // TODO: Gọi API đẩy minutesLearned lên server
-
                 finish()
             }
 
@@ -233,7 +224,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    // 🚀 ĐÃ SỬA LỖI, BỌC TRY-CATCH VÀ SỬ DỤNG CLASS API MỚI (Từ code bạn kia)
     private fun handleScore(scoreType: String) {
         try {
             if (currentIndex >= studyList.size) return
@@ -249,7 +239,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             val apiService = RetrofitClient.getInstance(this)
 
-            // Lấy userId từ SharedPreferences
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
             val currentUserId = sharedPreferences.getString("USER_ID", "") ?: ""
 
@@ -258,16 +247,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 return
             }
 
-            // 1. Tạo request bằng Data Class (Triệt tiêu hoàn toàn lỗi Wildcard so với kiểu Map gốc)
-            /* Code gốc của bạn:
-               val request = mapOf("proficiency" to newProficiency)
-            */
             val request = ProficiencyRequest(
                 proficiency = newProficiency,
                 userId = currentUserId
             )
-
-            // 2. Cập nhật Callback thành ProficiencyResponse
             apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<ProficiencyResponse> {
                 override fun onResponse(call: Call<ProficiencyResponse>, response: Response<ProficiencyResponse>) {
                     if (response.isSuccessful) {
@@ -344,9 +327,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    // ====================================================================
-    // MỚI: XỬ LÝ CẬP NHẬT MÀU SẮC CHO BOTTOM NAVIGATION
-    // ====================================================================
     private fun setupBottomNav() {
         findViewById<LinearLayout?>(R.id.btnTrangChu)?.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java).apply {
@@ -354,41 +334,43 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             })
             overridePendingTransition(0, 0)
         }
-
-        // Gọi hàm tô màu đúng tab khi Activity được khởi tạo
         updateActiveTab()
     }
 
+    // 🚀 ĐÃ CẬP NHẬT: HÀM NÀY SẼ DỌN DẸP SẠCH MÀU CỦA NÚT TRANG CHỦ VÀ BẬT MÀU NÚT KHÁM PHÁ
     private fun updateActiveTab() {
         val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
         val btnKhamPha = findViewById<LinearLayout>(R.id.btnKhamPha)
 
         val activeColor = Color.parseColor("#0056D2")
-        val inactiveColor = Color.parseColor("#777777")
+        val inactiveColor = Color.parseColor("#94A3B8")
 
-        // 1. Tẩy nền xanh và chuyển nút Trang Chủ thành màu xám
+        // 1. TẨY MÀU NÚT TRANG CHỦ TRIỆT ĐỂ
         btnTrangChu?.let {
-            it.background = null
-            (it.getChildAt(0) as? ImageView)?.setColorFilter(inactiveColor)
-            (it.getChildAt(1) as? TextView)?.setTextColor(inactiveColor)
+            it.setBackgroundResource(android.R.color.transparent)
+
+            val icon = it.getChildAt(0) as? ImageView
+            val text = it.getChildAt(1) as? TextView
+
+            icon?.clearColorFilter()
+            icon?.setColorFilter(inactiveColor, android.graphics.PorterDuff.Mode.SRC_IN)
+            text?.setTextColor(inactiveColor)
         }
 
-        // 2. Bôi nền xanh và chuyển màu icon/text nút Khám Phá
+        // 2. BẬT MÀU NÚT KHÁM PHÁ
         btnKhamPha?.let {
             it.setBackgroundResource(R.drawable.bg_tab_active)
-            (it.getChildAt(0) as? ImageView)?.setColorFilter(activeColor)
-            (it.getChildAt(1) as? TextView)?.setTextColor(activeColor)
+
+            val icon = it.getChildAt(0) as? ImageView
+            val text = it.getChildAt(1) as? TextView
+
+            icon?.clearColorFilter()
+            icon?.setColorFilter(activeColor, android.graphics.PorterDuff.Mode.SRC_IN)
+            text?.setTextColor(activeColor)
         }
     }
 
     override fun onDestroy() {
-        // (Phần lưu thời gian gốc của bạn đã được dời lên onPause để đảm bảo an toàn như code của bạn kia)
-        /* Gốc:
-        stopTimer()
-        val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
-        val savedSeconds = sharedPref.getInt("totalSeconds", 0)
-        sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
-        */
         if (this::tts.isInitialized) {
             tts.stop()
             tts.shutdown()

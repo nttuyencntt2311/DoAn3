@@ -31,13 +31,21 @@ export default function Users() {
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        
+        // Đảm bảo dữ liệu nhận được chắc chắn là một mảng
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else if (data && Array.isArray(data.users)) {
+          setUsers(data.users);
+        } else {
+          setUsers([]); 
+        }
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách người dùng:", error);
+      setUsers([]); 
     }
   };
-
   // Logic lọc (Search + Status)
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
