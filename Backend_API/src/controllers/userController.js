@@ -43,3 +43,32 @@ exports.getUserStats = async (req, res) => {
     res.status(500).json({ error: "Lỗi server khi lấy thống kê" });
   }
 };
+
+// API: Cập nhật trạng thái người dùng (Khóa / Mở khóa)
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Kiểm tra để đảm bảo trạng thái gửi lên hợp lệ
+    if (!["Active", "Banned"].includes(status)) {
+      return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+    }
+
+    // Tìm và cập nhật trạng thái cho user
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { status: status },
+      { new: true } // Trả về document sau khi đã cập nhật
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Lỗi updateUserStatus:", error);
+    res.status(500).json({ message: "Lỗi server khi cập nhật trạng thái" });
+  }
+};
