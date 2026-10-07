@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+xgboost==2.0.3
+shap
+pydantic
+pandas
+numpy
+scikit-learn==1.9.1

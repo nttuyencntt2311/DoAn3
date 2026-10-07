@@ -3,6 +3,7 @@ const ChatSession = require('../models/ChatSession');
 const ChatMessage = require('../models/ChatMessage'); 
 const Roadmap = require('../models/Roadmap');
 const User = require('../models/User'); // 🚀 Đưa lên đầu file cho chuẩn cấu trúc
+const xaiService = require('../service/xaiService');
 
 // ==========================================
 // 1. TẠO PHIÊN CHAT MỚI (Mở phòng chat)
@@ -200,11 +201,23 @@ exports.getMyRoadmap = async (req, res) => {
 };
 
 // ==========================================
-// 7. AI SINH BÀI TẬP TRẮC NGHIỆM THEO CHẶNG HỌC
+// 7. AI SINH BÀI TẬP TRẮC NGHIỆM THEO CHẶNG HỌC (BẢN VÁ LỖI & THEO DÕI)
 // ==========================================
 exports.generateStepQuiz = async (req, res) => {
     try {
-        // 🚀 BỔ SUNG: Nhận thêm questionCount từ Android (Mặc định là 5 nếu không truyền)
+        console.log("\n=== BẮT ĐẦU TIẾN TRÌNH TẠO QUIZ ===");
+        
+        // 1. Lấy thông tin User an toàn (tránh văng lỗi nếu Token lỏng)
+        const userId = req.user?.id || req.user?.userId || req.user?._id;
+        if (!userId) {
+            throw new Error("Không lấy được ID người dùng từ Token!");
+        }
+        
+        const user = await User.findById(userId);
+        const userHistoryAcc = (user && user.level) ? Math.min(0.2 + (user.level * 0.1), 0.9) : 0.5; 
+        const userAttempted = user ? ((user.quizzesCount || 0) * 5) : 0;
+        console.log(`✅ [1/4] Đã nạp dữ liệu User. Tỉ lệ đúng: ${userHistoryAcc}, Đã làm: ${userAttempted}`);
+
         const { stepTitle, stepDesc, questionCount } = req.query;
         const numOfQuestions = questionCount ? parseInt(questionCount) : 5;
 
@@ -212,7 +225,7 @@ exports.generateStepQuiz = async (req, res) => {
             return res.status(400).json({ error: "Thiếu chủ đề chặng học (stepTitle)!" });
         }
         
-        // 🚀 BỔ SUNG: Sửa lại Prompt để thay số lượng câu hỏi linh hoạt
+        // 2. Dùng Gemini sinh câu hỏi JSON
         const prompt = `
 Bạn là một chuyên gia khảo thí ngôn ngữ và Giám khảo IELTS/Tiếng Anh giao tiếp cấp độ B1 đến C1.
 Nhiệm vụ của bạn là tạo ra ${numOfQuestions} câu hỏi trắc nghiệm (Multiple Choice) CHẤT LƯỢNG CAO, THỬ THÁCH VÀ MANG TÍNH ĐÁNH GIÁ, dựa trên chủ đề: "${stepTitle}" (Mô tả: ${stepDesc}).
@@ -232,34 +245,105 @@ BẮT BUỘC trả về định dạng JSON thuần, cấu trúc là một mản
     "pronounceText": "Từ vựng chính yếu xuất hiện trong đáp án đúng để luyện phát âm",
     "hint": "Dịch nghĩa tiếng Việt của cả câu hỏi để giúp học viên hiểu ngữ cảnh"
   }
-]
-`;
+]`;
 
-        const model = aiService.genAI?.getGenerativeModel 
+        const jsonModel = aiService.genAI?.getGenerativeModel 
             ? aiService.genAI.getGenerativeModel({ 
                 model: "gemini-2.5-flash",
                 generationConfig: { responseMimeType: "application/json" }
               })
             : null;
 
-        if (!model) {
-            return res.status(500).json({ error: "Không tìm thấy cấu hình Google AI!" });
-        }
+        if (!jsonModel) throw new Error("Không tìm thấy cấu hình Google AI!");
 
-        const result = await model.generateContent(prompt);
+        console.log(`⏳ [2/4] Đang nhờ Gemini tạo ${numOfQuestions} câu hỏi...`);
+        const result = await jsonModel.generateContent(prompt);
         let responseText = result.response.text();
 
-        // Dùng Regex tìm mảng JSON chuẩn xác bất chấp AI sinh ra chữ rác gì
         const jsonMatch = responseText.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
+            console.error("❌ RAW TEXT TỪ GEMINI LỖI:", responseText);
             throw new Error("AI không trả về định dạng mảng JSON hợp lệ!");
         }
 
-        const quizData = JSON.parse(jsonMatch[0]);
+        let quizData;
+        try {
+            quizData = JSON.parse(jsonMatch[0]);
+            console.log(`✅ [3/4] Parse JSON thành công! Đã tạo được ${quizData.length} câu hỏi.`);
+        } catch (parseError) {
+            console.error("❌ LỖI PARSE JSON. Chuỗi bị lỗi là:", jsonMatch[0]);
+            throw new Error("JSON do AI sinh ra bị sai cú pháp.");
+        }
+
+        // ==========================================================
+        // 🚀 TÍCH HỢP XAI (THỬ THÁCH NHÂN PHẨM & GỢI Ý)
+        // ==========================================================
+        console.log(`⏳ [4/4] Bắt đầu gọi Python XAI phân tích độ khó...`);
+        
+        // VÁ LỖI QUAN TRỌNG: Tạo một Model riêng biệt để hỏi văn bản Hint (Không ép format JSON)
+        const textModel = aiService.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        for (let i = 0; i < quizData.length; i++) {
+            let questionItem = quizData[i];
+            const simulatedDifficulty = Math.min((questionItem.question.length / 100), 1.0);
+
+            const studentDataForML = {
+                historyAcc: userHistoryAcc, 
+                totalQuestions: userAttempted,
+                questionDifficulty: simulatedDifficulty,
+                avgTime: 0.0 
+            };
+
+           try {
+                const mlPrediction = await xaiService.getWeaknessPrediction(studentDataForML);
+
+                if (mlPrediction) {
+                    const predictedAcc = mlPrediction.predicted_accuracy;
+                    
+                    // 🚀 THÊM DÒNG NÀY ĐỂ XEM ĐIỂM THỰC TẾ TRÊN TERMINAL
+                    console.log(`- Câu ${i + 1}: Python đoán trúng ${predictedAcc}% | Khó khăn: ${mlPrediction.is_struggling}`);
+                    
+                    // 1. ÉP LOGIC THỬ THÁCH NHÂN PHẨM LUÔN HIỆN ĐỂ DEMO
+                    // Sửa thành < 100.0 (hoặc thay bằng câu lệnh: if (i === 0) để chỉ hiện ở câu đầu tiên)
+                    if (predictedAcc < 100.0) { 
+                        quizData[i].is_high_risk = true;
+                        quizData[i].reward_multiplier = 3;
+                        quizData[i].challenge_message = `🔥 THỬ THÁCH DEMO XAI: Dự đoán bạn chỉ có ${predictedAcc}% cơ hội đúng câu này. Trả lời đúng nhận x3 XP!`;
+                    } else {
+                        quizData[i].is_high_risk = false;
+                        quizData[i].reward_multiplier = 1;
+                    }
+
+                    // 2. ÉP LOGIC LỜI KHUYÊN GIA SƯ LUÔN HIỆN
+                    // Thêm chữ "|| true" để bắt buộc gọi AI Tutor
+                    if (mlPrediction.is_struggling || true) { 
+                        const negativeReasons = mlPrediction.xai_explanation.negative_factors.join(", ");
+                        const advicePrompt = `Học sinh có thể làm sai câu: "${questionItem.question}". Đáp án đúng là: ${questionItem.correctAnswer}. Lý do: ${negativeReasons}. Hãy đóng vai gia sư AI, đưa ra 1 GỢI Ý MẸO siêu ngắn (dưới 15 chữ) để học sinh tự suy luận ra đáp án. KHÔNG nói thẳng đáp án.`;
+                        
+                        const adviceResult = await textModel.generateContent(advicePrompt);
+                        quizData[i].ai_advice = adviceResult.response.text().replace(/"/g, '').trim(); 
+                    } else {
+                        quizData[i].ai_advice = null;
+                    }
+                }
+            } catch (xaiError) {
+                console.log(`⚠️ Bỏ qua lỗi XAI ở câu ${i + 1}:`, xaiError.message);
+                quizData[i].is_high_risk = false;
+                quizData[i].reward_multiplier = 1;
+                quizData[i].ai_advice = null;
+            }
+        }
+        
+        console.log("✅ HOÀN TẤT! Đang gửi dữ liệu về Android.");
         res.status(200).json(quizData);
 
     } catch (error) {
-        console.error("Lỗi khi sinh câu hỏi Quiz:", error);
+        // IN CHI TIẾT LỖI RA TERMINAL NODE.JS
+        console.error("\n=================================");
+        console.error("❌ LỖI CHÍNH KHI TẠO QUIZ:");
+        console.error(error.stack || error.message);
+        console.error("=================================\n");
+        
         res.status(500).json({ error: "Lỗi hệ thống khi tải câu hỏi trắc nghiệm!" });
     }
 };

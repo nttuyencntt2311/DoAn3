@@ -25,7 +25,12 @@ data class QuizQuestion(
     val options: List<String>,
     val correctAnswer: String,
     val pronounceText: String,
-    val hint: String
+    val hint: String,
+    // --- BỔ SUNG CHO XAI ---
+    val is_high_risk: Boolean = false,
+    val reward_multiplier: Int = 1,
+    val challenge_message: String? = null,
+    val ai_advice: String? = null
 )
 
 class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -36,6 +41,9 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var quizList = listOf<QuizQuestion>()
     private var currentQuestionIndex = 0
     private var score = 0
+
+    // 🚀 BIẾN LƯU TỔNG ĐIỂM KINH NGHIỆM TỪ XAI
+    private var totalEarnedXp = 0
 
     private var selectedOptionIndex: Int = -1
     private var isAnswerChecked: Boolean = false
@@ -89,6 +97,8 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         editor.putString("${currentStepTitle}_list", jsonList)
         editor.putInt("${currentStepTitle}_index", currentQuestionIndex)
         editor.putInt("${currentStepTitle}_score", score)
+        // Lưu luôn cả điểm XP hiện tại nếu thoát ra
+        editor.putInt("${currentStepTitle}_xp", totalEarnedXp)
         editor.apply()
     }
 
@@ -102,6 +112,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             quizList = gson.fromJson(jsonList, type)
             currentQuestionIndex = prefs.getInt("${stepTitle}_index", 0)
             score = prefs.getInt("${stepTitle}_score", 0)
+            totalEarnedXp = prefs.getInt("${stepTitle}_xp", 0)
             return true // Trả về true nếu nạp dữ liệu cũ thành công
         }
         return false // Trả về false nếu chưa có dữ liệu lưu trước đó
@@ -113,6 +124,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             .remove("${stepTitle}_list")
             .remove("${stepTitle}_index")
             .remove("${stepTitle}_score")
+            .remove("${stepTitle}_xp")
             .apply()
     }
     // ---------------------------------------------------
@@ -124,10 +136,18 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding.tvGetHint.setOnClickListener {
             if (quizList.isNotEmpty()) {
                 val currentQuestion = quizList[currentQuestionIndex]
-                binding.tvExplanation.visibility = View.VISIBLE
-                binding.tvExplanation.text = "💡 Gợi ý: ${currentQuestion.hint}"
-                binding.tvExplanation.setTextColor(Color.parseColor("#D97706"))
-                binding.tvExplanation.setBackgroundColor(Color.parseColor("#FEF3C7"))
+
+                // 🚀 NÂNG CẤP NÚT HINT: Ưu tiên lấy lời khuyên của Gia sư AI
+                if (currentQuestion.ai_advice != null) {
+                    binding.cardAiTutor.visibility = View.VISIBLE
+                    binding.tvAiTutorMessage.text = "🤖 AI phân tích: ${currentQuestion.ai_advice}"
+                    Toast.makeText(this, "Đã nhờ Gia sư AI phân tích!", Toast.LENGTH_SHORT).show()
+                } else {
+                    binding.tvExplanation.visibility = View.VISIBLE
+                    binding.tvExplanation.text = "💡 Dịch nghĩa: ${currentQuestion.hint}"
+                    binding.tvExplanation.setTextColor(Color.parseColor("#D97706"))
+                    binding.tvExplanation.setBackgroundColor(Color.parseColor("#FEF3C7"))
+                }
             }
         }
 
@@ -214,6 +234,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         quizList = response.body()!!
                         currentQuestionIndex = 0
                         score = 0
+                        totalEarnedXp = 0 // Reset tổng điểm
                         displayQuestion()
                         binding.btnNopBai.isEnabled = true
                     } else {
@@ -244,6 +265,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         )
         currentQuestionIndex = 0
         score = 0
+        totalEarnedXp = 0
         displayQuestion()
         binding.btnNopBai.isEnabled = true
     }
@@ -255,6 +277,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         selectedOptionIndex = -1
         binding.btnNopBai.text = "KIỂM TRA"
         binding.tvExplanation.visibility = View.GONE
+        binding.cardAiTutor.visibility = View.GONE
 
         resetOptionsUI()
 
@@ -275,6 +298,37 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding.tvAnswerB.text = currentQuiz.options.getOrNull(1) ?: ""
         binding.tvAnswerC.text = currentQuiz.options.getOrNull(2) ?: ""
         binding.tvAnswerD.text = currentQuiz.options.getOrNull(3) ?: ""
+
+        // ==========================================
+        // 🚀 BẮT ĐẦU: XỬ LÝ GIAO DIỆN XAI
+        // ==========================================
+
+        // 1. Thử Thách Nhân Phẩm
+        if (currentQuiz.is_high_risk) {
+            binding.cardQuestion.strokeColor = Color.parseColor("#EF4444")
+            binding.cardQuestion.strokeWidth = 4
+
+            // Hiện thanh thông báo thử thách
+            binding.tvChallengeAlert.visibility = View.VISIBLE
+            binding.tvChallengeAlert.text = currentQuiz.challenge_message
+            binding.tvChallengeAlert.setBackgroundColor(Color.parseColor("#FEF2F2"))
+            binding.tvChallengeAlert.setTextColor(Color.parseColor("#DC2626"))
+        } else {
+            // Trả về bình thường
+            binding.cardQuestion.strokeColor = Color.parseColor("#E2E8F0")
+            binding.cardQuestion.strokeWidth = 2
+            binding.tvChallengeAlert.visibility = View.GONE
+        }
+
+        // 2. Lời khuyên Gia sư AI
+        if (currentQuiz.ai_advice != null) {
+            binding.cardAiTutor.visibility = View.VISIBLE
+            binding.tvAiTutorMessage.text = "🤖 ${currentQuiz.ai_advice}"
+        }
+
+        // ==========================================
+        // 🚀 KẾT THÚC: XỬ LÝ GIAO DIỆN XAI
+        // ==========================================
 
         speakOut(currentQuiz.pronounceText)
     }
@@ -303,14 +357,26 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         if (userAnswer == currentQuiz.correctAnswer) {
             score++
+
+            val baseXP = 10
+            // 🚀 BỌC LÓT AN TOÀN CHO XAI: Tránh lỗi Gson trả về 0 nếu lấy nhầm dữ liệu cũ
+            val safeMultiplier = if (currentQuiz.reward_multiplier > 0) currentQuiz.reward_multiplier else 1
+            val gainedXp = baseXP * safeMultiplier
+            totalEarnedXp += gainedXp
+
             cards[selectedOptionIndex].setCardBackgroundColor(Color.parseColor("#F0FDF4"))
             cards[selectedOptionIndex].strokeColor = Color.parseColor("#16A34A")
             letters[selectedOptionIndex].setBackgroundResource(R.drawable.bg_circle_green)
             letters[selectedOptionIndex].setTextColor(Color.WHITE)
             answers[selectedOptionIndex].setTextColor(Color.parseColor("#16A34A"))
 
-            binding.btnNopBai.text = "TUYỆT VỜI! TIẾP TỤC"
+            binding.btnNopBai.text = "TUYỆT VỜI! +$gainedXp XP" // Cập nhật text nút bấm để khen thưởng
             binding.btnNopBai.setBackgroundColor(Color.parseColor("#16A34A"))
+
+            // Báo hiệu nếu vượt qua thử thách
+            if(currentQuiz.is_high_risk) {
+                Toast.makeText(this, "Kẻ Phá Vỡ Giới Hạn! Nhận x3 XP", Toast.LENGTH_SHORT).show()
+            }
         } else {
             cards[selectedOptionIndex].setCardBackgroundColor(Color.parseColor("#FEF2F2"))
             cards[selectedOptionIndex].strokeColor = Color.parseColor("#DC2626")
@@ -334,6 +400,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             binding.btnNopBai.text = "ĐÃ HIỂU! TIẾP TỤC"
             binding.btnNopBai.setBackgroundColor(Color.parseColor("#DC2626"))
 
+            // Nhét câu sai xuống cuối mảng để bắt làm lại
             val mutableList = quizList.toMutableList()
             mutableList.add(currentQuiz)
             quizList = mutableList
@@ -353,13 +420,15 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun showResultDialog() {
         val stepId = intent.getStringExtra("STEP_ID") ?: "1"
-        val displayXp = 50 + (score * 10)
+
+        // 🚀 SỬA LỖI ĐIỂM TỔNG: 50 XP Cơ bản + Tổng điểm XAI đã nhân hệ số
+        val finalXp = 50 + totalEarnedXp
 
         clearProgress(currentStepTitle)
 
         AlertDialog.Builder(this)
             .setTitle("Hoàn Thành Bài Học! 🎉")
-            .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$displayXp XP!")
+            .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$finalXp XP!")
             .setCancelable(false)
             .setPositiveButton("Tiếp tục lộ trình") { dialog, _ ->
                 dialog.dismiss()
@@ -371,7 +440,8 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         val response = api.completeRoadmapStep(mapOf(
                             "stepId" to stepId,
                             "score" to score.toString(),
-                            "totalQuestions" to quizList.size.toString()
+                            "totalQuestions" to quizList.size.toString(),
+                            "earnedXp" to totalEarnedXp.toString() // Truyền tổng điểm XAI lên Backend
                         ))
 
                         withContext(Dispatchers.Main) {
