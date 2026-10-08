@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import android.os.CountDownTimer
 
 data class QuizQuestion(
     val question: String,
@@ -41,6 +42,9 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var quizList = listOf<QuizQuestion>()
     private var currentQuestionIndex = 0
     private var score = 0
+
+    private var countDownTimer: CountDownTimer? = null
+    private val QUIZ_TIME_MILLIS: Long = 15 * 60 * 1000
 
     // 🚀 BIẾN LƯU TỔNG ĐIỂM KINH NGHIỆM TỪ XAI
     private var totalEarnedXp = 0
@@ -75,6 +79,16 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             // Nếu không có tiến độ cũ thì mới gọi AI tải mới
             loadQuizFromAi(currentStepTitle, stepDesc, questionCount)
         }
+        // 🚀 KIỂM TRA XEM CÓ TIẾN ĐỘ CŨ KHÔNG
+        if (loadProgress(currentStepTitle)) {
+            Toast.makeText(this, "Đang tiếp tục bài học dang dở...", Toast.LENGTH_SHORT).show()
+            displayQuestion()
+            startTimer() // GỌI Ở ĐÂY NẾU TIẾP TỤC BÀI
+        } else {
+            // Nếu không có tiến độ cũ thì mới gọi AI tải mới
+            loadQuizFromAi(currentStepTitle, stepDesc, questionCount)
+            // Lưu ý: nên chuyển startTimer() vào bên trong hàm loadQuizFromAi() khi tải dữ liệu thành công.
+        }
     }
 
     // 🚀 LƯU TIẾN ĐỘ KHI NGƯỜI DÙNG THOÁT MÀN HÌNH (Bấm Home, Back, Đa nhiệm...)
@@ -100,6 +114,26 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         // Lưu luôn cả điểm XP hiện tại nếu thoát ra
         editor.putInt("${currentStepTitle}_xp", totalEarnedXp)
         editor.apply()
+    }
+    private fun startTimer() {
+        countDownTimer?.cancel() // Hủy timer cũ nếu có để tránh chạy đè
+
+        countDownTimer = object : CountDownTimer(QUIZ_TIME_MILLIS, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val minutes = (millisUntilFinished / 1000) / 60
+                val seconds = (millisUntilFinished / 1000) % 60
+
+                // Vì bạn dùng ViewBinding, hãy gọi qua `binding`
+                binding.tvTimer.text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+            }
+
+            override fun onFinish() {
+                binding.tvTimer.text = "00:00"
+                Toast.makeText(this@IeltsQuizActivity, "Hết giờ làm bài!", Toast.LENGTH_SHORT).show()
+                // Tùy chọn: Tự động nộp bài khi hết giờ
+                // showResultDialog()
+            }
+        }.start()
     }
 
     private fun loadProgress(stepTitle: String): Boolean {
@@ -237,6 +271,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         totalEarnedXp = 0 // Reset tổng điểm
                         displayQuestion()
                         binding.btnNopBai.isEnabled = true
+                        startTimer()
                     } else {
                         Log.e("IeltsQuiz", "Lỗi API Backend")
                         Toast.makeText(this@IeltsQuizActivity, "Lỗi Server. Xem Logcat!", Toast.LENGTH_LONG).show()
@@ -268,6 +303,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         totalEarnedXp = 0
         displayQuestion()
         binding.btnNopBai.isEnabled = true
+        startTimer()
     }
 
     private fun displayQuestion() {
@@ -419,6 +455,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun showResultDialog() {
+        countDownTimer?.cancel()
         val stepId = intent.getStringExtra("STEP_ID") ?: "1"
 
         // 🚀 SỬA LỖI ĐIỂM TỔNG: 50 XP Cơ bản + Tổng điểm XAI đã nhân hệ số

@@ -36,5 +36,9 @@ router.get('/my-roadmap', verifyToken, aiController.getMyRoadmap);
 router.get('/generate-quiz', verifyToken, aiController.generateStepQuiz);
 // Lệnh export bắt buộc phải nằm ở cuối cùng của file
 router.post('/roadmap/complete-step', verifyToken, aiController.completeStep);
+router.post('/weakness', verifyToken, aiController.predictWeakness);
+// Endpoint: POST /api/ai/post-mortem
+// Chức năng: Phân tích toàn bộ bài Quiz sau khi nộp để ra "Bệnh án học tập"
+router.post('/post-mortem', verifyToken, aiController.generatePostMortem);
 
 module.exports = router;

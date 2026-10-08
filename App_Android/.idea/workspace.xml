@@ -292,15 +292,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Predictive_AI/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Predictive_AI/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -504,12 +498,12 @@
       <map>
         <entry key="com.example.doan3">
           <value>
-            <CheckInfo lastCheckTimestamp="1791340111576" />
+            <CheckInfo lastCheckTimestamp="1791434833339" />
           </value>
         </entry>
         <entry key="com.example.doan3.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1791340111578" />
+            <CheckInfo lastCheckTimestamp="1791434833329" />
           </value>
         </entry>
       </map>

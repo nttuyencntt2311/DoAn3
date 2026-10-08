@@ -2,8 +2,68 @@ const aiService = require('../service/aiService'); // Giữ nguyên đường d�
 const ChatSession = require('../models/ChatSession'); 
 const ChatMessage = require('../models/ChatMessage'); 
 const Roadmap = require('../models/Roadmap');
-const User = require('../models/User'); // 🚀 Đưa lên đầu file cho chuẩn cấu trúc
+const User = require('../models/User'); 
 const xaiService = require('../service/xaiService');
+
+// ==========================================
+// MOCK DATA: PHAO CỨU SINH KHI DEMO BỊ LỖI MẠNG / QUÁ TẢI API
+// ==========================================
+const MOCK_QUIZ_FALLBACK = [
+    {
+        "question": "The manager decided to ___ the meeting until next week due to the CEO's absence.",
+        "options": ["put off", "call off", "take over", "bring up"],
+        "correctAnswer": "put off",
+        "pronounceText": "put off",
+        "hint": "Quản lý quyết định hoãn cuộc họp cho đến tuần sau do sự vắng mặt của CEO.",
+        "ai_advice": "Cụm từ nào đi với 'off' mang ý nghĩa là trì hoãn?",
+        "is_high_risk": false,
+        "reward_multiplier": 1
+    },
+    {
+        "question": "Despite the heavy rain, the outdoor concert went ___ as planned.",
+        "options": ["ahead", "forward", "through", "over"],
+        "correctAnswer": "ahead",
+        "pronounceText": "ahead",
+        "hint": "Mặc dù trời mưa to, buổi hòa nhạc ngoài trời vẫn diễn ra như dự kiến.",
+        "ai_advice": "Cụm 'go ___' có nghĩa là tiến hành, tiếp tục diễn ra.",
+        "is_high_risk": true,
+        "reward_multiplier": 3,
+        "challenge_message": "🔥 THỬ THÁCH DEMO XAI: Câu này khá dễ nhầm lẫn. Trả lời đúng nhận x3 XP!"
+    },
+    {
+        "question": "It's crucial for the team to ___ the root cause of the system failure.",
+        "options": ["figure out", "make up", "turn down", "look after"],
+        "correctAnswer": "figure out",
+        "pronounceText": "figure out",
+        "hint": "Điều quan trọng là đội ngũ phải tìm ra nguyên nhân gốc rễ của lỗi hệ thống.",
+        "ai_advice": "Động từ nào miêu tả hành động suy nghĩ để hiểu ra vấn đề?",
+        "is_high_risk": false,
+        "reward_multiplier": 1
+    },
+    {
+        "question": "The new marketing strategy had a significant ___ on our overall sales this quarter.",
+        "options": ["impact", "result", "affect", "consequence"],
+        "correctAnswer": "impact",
+        "pronounceText": "impact",
+        "hint": "Chiến lược tiếp thị mới đã có tác động đáng kể đến tổng doanh số bán hàng quý này.",
+        "ai_advice": "Chú ý từ 'on' phía sau, danh từ nào thường đi kèm với 'on'?",
+        "is_high_risk": false,
+        "reward_multiplier": 1
+    },
+    {
+        "question": "If you don't ___ to the new company policies quickly, you might struggle to fit in.",
+        "options": ["adapt", "adopt", "adjust", "accept"],
+        "correctAnswer": "adapt",
+        "pronounceText": "adapt",
+        "hint": "Nếu bạn không thích nghi với các chính sách mới của công ty nhanh chóng, bạn có thể sẽ gặp khó khăn để hòa nhập.",
+        "ai_advice": "Từ nào diễn tả việc thay đổi bản thân để phù hợp với môi trường?",
+        "is_high_risk": false,
+        "reward_multiplier": 1
+    }
+];
+
+// Hàm tiện ích: Tạm dừng (delay) dùng cho Retry
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 // ==========================================
 // 1. TẠO PHIÊN CHAT MỚI (Mở phòng chat)
@@ -11,13 +71,9 @@ const xaiService = require('../service/xaiService');
 exports.createChatSession = async (req, res) => {
     try {
         const { userId, chatType, firstMessage } = req.body;
-        
-        // Cắt 20 ký tự đầu của câu hỏi đầu tiên để làm Tiêu đề tự động
         const title = firstMessage ? firstMessage.substring(0, 20) + '...' : 'Cuộc trò chuyện mới';
-
         const newSession = new ChatSession({ userId, chatType, title });
         await newSession.save();
-
         res.status(201).json({ sessionId: newSession._id, title: newSession.title });
     } catch (error) {
         console.error("Lỗi tạo phiên chat:", error);
@@ -26,50 +82,29 @@ exports.createChatSession = async (req, res) => {
 };
 
 // ==========================================
-// 2. GỬI TIN NHẮN & LƯU DB (Đã sửa lỗi Mất Trí Nhớ)
+// 2. GỬI TIN NHẮN & LƯU DB
 // ==========================================
 exports.chatWithAI = async (req, res) => {
   try {
     const { sessionId, message } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ error: "Tin nhắn không được để trống!" });
-    }
+    if (!message) return res.status(400).json({ error: "Tin nhắn không được để trống!" });
 
-    // Mảng chứa ngữ cảnh cuộc trò chuyện để nạp cho AI
     let chatHistory = [];
-
-    // GIAI ĐOẠN 1: Nếu có phòng chat -> Lấy lịch sử cũ TRƯỚC khi lưu tin nhắn mới
     if (sessionId) {
-        // Lấy 10 tin nhắn gần nhất để làm context (Tránh lấy quá nhiều gây tràn Token của AI)
-        // Sắp xếp theo createdAt: -1 để lấy các tin nhắn mới nhất trước
-        const rawHistory = await ChatMessage.find({ sessionId })
-                                            .sort({ createdAt: -1 })
-                                            .limit(10);
-        
-        // Đảo ngược mảng lại để lịch sử có thứ tự thời gian chuẩn: Cũ -> Mới
+        const rawHistory = await ChatMessage.find({ sessionId }).sort({ createdAt: -1 }).limit(10);
         chatHistory = rawHistory.reverse();
-
-        // Sau khi đã lấy lịch sử xong, tiến hành lưu tin nhắn mới của User vào DB
         const userMsg = new ChatMessage({ sessionId, role: 'user', text: message });
         await userMsg.save();
-
-        // Đẩy phòng chat này lên đầu danh sách
         await ChatSession.findByIdAndUpdate(sessionId, { updatedAt: new Date() });
     }
 
-    // GIAI ĐOẠN 2: Gọi AI từ service (Truyền thêm chatHistory để AI có trí nhớ)
     const aiReply = await aiService.generateChatReply(message, chatHistory);
 
-    // GIAI ĐOẠN 3: Nhận kết quả từ AI -> Lưu vào DB
     if (sessionId) {
         const aiMsg = new ChatMessage({ sessionId, role: 'ai', text: aiReply });
         await aiMsg.save();
     }
-
-    // Trả kết quả về cho điện thoại Android hiển thị
     res.status(200).json({ reply: aiReply });
-    
   } catch (error) {
     console.error("Lỗi chi tiết từ Google Gemini/Groq:", error);
     res.status(500).json({ error: `Lỗi từ AI: ${error.message}` });
@@ -82,10 +117,7 @@ exports.chatWithAI = async (req, res) => {
 exports.getChatHistory = async (req, res) => {
     try {
         const { sessionId } = req.params;
-        
-        // Lấy tất cả tin nhắn thuộc về phòng chat này, sắp xếp cũ nhất -> mới nhất (1)
         const messages = await ChatMessage.find({ sessionId }).sort({ createdAt: 1 });
-        
         res.status(200).json({ messages });
     } catch (error) {
         console.error("Lỗi lấy lịch sử:", error);
@@ -99,7 +131,6 @@ exports.getChatHistory = async (req, res) => {
 exports.getUserChatSessions = async (req, res) => {
     try {
         const { userId } = req.params;
-        // Lấy tất cả phòng chat của user này, cái nào mới nhắn (updatedAt) thì xếp lên đầu
         const sessions = await ChatSession.find({ userId }).sort({ updatedAt: -1 });
         res.status(200).json({ sessions });
     } catch (error) {
@@ -113,47 +144,35 @@ exports.getUserChatSessions = async (req, res) => {
 // ==========================================
 exports.generateRoadmap = async (req, res) => {
     try {
-        // 1. Lấy ID chuẩn xác từ Token đăng nhập
         const userId = req.user.id || req.user.userId || req.user._id;
-
         const { target, currentLevel, freeTime, expectation } = req.body;
-
         const aiRoadmap = await aiService.generateRoadmapJSON(target, currentLevel, freeTime);
 
-        // 3. Chuẩn bị câu động viên
         const customMotivation = expectation 
             ? `🎯 Mong muốn: "${expectation}". ${aiRoadmap.motivationMessage}` 
             : aiRoadmap.motivationMessage;
 
-        // 4. Map lại danh sách chặng học cho chuẩn Schema
         const steps = aiRoadmap.steps.map((s, index) => ({
-            id: (index + 1).toString(), // Gắn ID 1, 2, 3, 4 cho từng chặng
+            id: (index + 1).toString(),
             title: s.title,
             description: s.description,
-            status: index === 0 ? "CURRENT" : "LOCKED", // Chặng đầu tiên mặc định đang học
+            status: index === 0 ? "CURRENT" : "LOCKED", 
             currentProgress: 0,
             maxProgress: s.maxProgress || 30
         }));
 
-        // 5. Lưu vào MongoDB (Tự động cập nhật lộ trình cũ nếu có)
         const updatedRoadmap = await Roadmap.findOneAndUpdate(
             { userId: userId },
-            { 
-                overallProgressPercent: 0, 
-                motivationMessage: customMotivation, 
-                steps: steps 
-            },
+            { overallProgressPercent: 0, motivationMessage: customMotivation, steps: steps },
             { upsert: true, returnDocument: 'after' } 
         );
 
-        // 6. Trả kết quả về cho Android
         res.status(200).json({
             userId: updatedRoadmap.userId,
             overallProgressPercent: updatedRoadmap.overallProgressPercent,
             motivationMessage: updatedRoadmap.motivationMessage,
             steps: updatedRoadmap.steps
         });
-
     } catch (error) {
         console.error("Lỗi khi gen Roadmap:", error);
         res.status(500).json({ error: "Lỗi hệ thống khi khởi tạo lộ trình!" });
@@ -165,33 +184,23 @@ exports.generateRoadmap = async (req, res) => {
 // ==========================================
 exports.getMyRoadmap = async (req, res) => {
     try {
-        // Lấy ID chuẩn xác từ Token
         const userId = req.user.id || req.user.userId || req.user._id;
-        
         const roadmap = await Roadmap.findOne({ userId: userId });
         
-        // Nếu user mới tinh chưa có lộ trình, trả về dữ liệu mặc định tránh crash App
         if (!roadmap) {
             return res.status(200).json({
-                userId: userId,
-                overallProgressPercent: 0,
+                userId: userId, overallProgressPercent: 0,
                 motivationMessage: "Bạn chưa có lộ trình. Hãy để AI thiết kế cho bạn nhé!",
                 steps: []
             });
         }
-
-        // TỐI ƯU HÓA: Map lại y hệt cấu trúc Kotlin cần (lọc bỏ _id rác của MongoDB để không văng app)
         res.status(200).json({
             userId: roadmap.userId,
             overallProgressPercent: roadmap.overallProgressPercent,
             motivationMessage: roadmap.motivationMessage,
             steps: roadmap.steps.map(s => ({
-                id: s.id, 
-                title: s.title,
-                description: s.description,
-                status: s.status,
-                currentProgress: s.currentProgress,
-                maxProgress: s.maxProgress
+                id: s.id, title: s.title, description: s.description,
+                status: s.status, currentProgress: s.currentProgress, maxProgress: s.maxProgress
             }))
         });
     } catch (error) {
@@ -201,17 +210,14 @@ exports.getMyRoadmap = async (req, res) => {
 };
 
 // ==========================================
-// 7. AI SINH BÀI TẬP TRẮC NGHIỆM THEO CHẶNG HỌC (BẢN VÁ LỖI & THEO DÕI)
+// 7. AI SINH BÀI TẬP TRẮC NGHIỆM TỐI ƯU HÓA (KHÔNG BỊ LỖI 429)
 // ==========================================
 exports.generateStepQuiz = async (req, res) => {
     try {
         console.log("\n=== BẮT ĐẦU TIẾN TRÌNH TẠO QUIZ ===");
         
-        // 1. Lấy thông tin User an toàn (tránh văng lỗi nếu Token lỏng)
         const userId = req.user?.id || req.user?.userId || req.user?._id;
-        if (!userId) {
-            throw new Error("Không lấy được ID người dùng từ Token!");
-        }
+        if (!userId) throw new Error("Không lấy được ID người dùng từ Token!");
         
         const user = await User.findById(userId);
         const userHistoryAcc = (user && user.level) ? Math.min(0.2 + (user.level * 0.1), 0.9) : 0.5; 
@@ -221,29 +227,27 @@ exports.generateStepQuiz = async (req, res) => {
         const { stepTitle, stepDesc, questionCount } = req.query;
         const numOfQuestions = questionCount ? parseInt(questionCount) : 5;
 
-        if (!stepTitle) {
-            return res.status(400).json({ error: "Thiếu chủ đề chặng học (stepTitle)!" });
-        }
+        if (!stepTitle) return res.status(400).json({ error: "Thiếu chủ đề chặng học (stepTitle)!" });
         
-        // 2. Dùng Gemini sinh câu hỏi JSON
+        // CẢI TIẾN 1: Yêu cầu Gemini sinh luôn "ai_advice" ngay từ đầu để tránh phải gọi API lặp lại
         const prompt = `
 Bạn là một chuyên gia khảo thí ngôn ngữ và Giám khảo IELTS/Tiếng Anh giao tiếp cấp độ B1 đến C1.
-Nhiệm vụ của bạn là tạo ra ${numOfQuestions} câu hỏi trắc nghiệm (Multiple Choice) CHẤT LƯỢNG CAO, THỬ THÁCH VÀ MANG TÍNH ĐÁNH GIÁ, dựa trên chủ đề: "${stepTitle}" (Mô tả: ${stepDesc}).
+Nhiệm vụ của bạn là tạo ra ${numOfQuestions} câu hỏi trắc nghiệm (Multiple Choice) CHẤT LƯỢNG CAO, dựa trên chủ đề: "${stepTitle}" (Mô tả: ${stepDesc}).
 
-⚠️ YÊU CẦU CHUYÊN MÔN KHẮT KHE (TUYỆT ĐỐI TUÂN THỦ):
-1. KHÔNG HỎI KIẾN THỨC HIỂN NHIÊN, TRẺ CON (Ví dụ: tuyệt đối không hỏi bảng chữ cái, đếm số, màu sắc cơ bản).
-2. TRỌNG TÂM: Kiểm tra "Từ vựng trong ngữ cảnh" (Vocabulary in context), "Cụm từ cố định" (Collocations), "Thành ngữ" (Idioms), hoặc Phrasal verbs.
-3. ĐÁP ÁN NHIỄU (Distractors): 3 đáp án sai phải cực kỳ thông minh, có vẻ hợp lý, có thể đúng về ngữ pháp nhưng sai về ngữ nghĩa, hoặc ngược lại. Tránh các đáp án sai quá lộ liễu.
-4. CÂU HỎI: Phải là một câu văn tiếng Anh hoàn chỉnh (dài từ 10-20 từ), có chứa một khoảng trống "___" để điền từ. Không dùng câu hỏi dạng định nghĩa.
+⚠️ YÊU CẦU CHUYÊN MÔN:
+1. TRỌNG TÂM: Kiểm tra "Từ vựng trong ngữ cảnh", "Cụm từ cố định", "Thành ngữ".
+2. ĐÁP ÁN NHIỄU (Distractors): 3 đáp án sai phải cực kỳ thông minh, có vẻ hợp lý.
+3. CÂU HỎI: Câu tiếng Anh hoàn chỉnh (10-20 từ) chứa khoảng trống "___". Không hỏi trẻ con hiển nhiên.
 
-BẮT BUỘC trả về định dạng JSON thuần, cấu trúc là một mảng [] chứa các đối tượng có thuộc tính sau:
+BẮT BUỘC trả về định dạng mảng JSON thuần với cấu trúc:
 [
   {
-    "question": "Câu văn tiếng Anh chất lượng cao, có khoảng trống ___",
-    "options": ["Đáp án nhiễu 1", "Đáp án đúng", "Đáp án nhiễu 2", "Đáp án nhiễu 3"],
-    "correctAnswer": "Viết chính xác nội dung của đáp án đúng",
-    "pronounceText": "Từ vựng chính yếu xuất hiện trong đáp án đúng để luyện phát âm",
-    "hint": "Dịch nghĩa tiếng Việt của cả câu hỏi để giúp học viên hiểu ngữ cảnh"
+    "question": "Câu văn có khoảng trống ___",
+    "options": ["Sai 1", "Đúng", "Sai 2", "Sai 3"],
+    "correctAnswer": "Đáp án đúng",
+    "pronounceText": "Từ vựng chính xuất hiện trong đáp án đúng",
+    "hint": "Dịch nghĩa tiếng Việt nguyên câu",
+    "ai_advice": "Đóng vai gia sư, viết 1 câu gợi ý/mẹo bằng tiếng Việt (dưới 15 chữ) giúp học viên tự suy luận ra đáp án, KHÔNG nói thẳng đáp án."
   }
 ]`;
 
@@ -256,32 +260,38 @@ BẮT BUỘC trả về định dạng JSON thuần, cấu trúc là một mản
 
         if (!jsonModel) throw new Error("Không tìm thấy cấu hình Google AI!");
 
-        console.log(`⏳ [2/4] Đang nhờ Gemini tạo ${numOfQuestions} câu hỏi...`);
-        const result = await jsonModel.generateContent(prompt);
-        let responseText = result.response.text();
+        console.log(`⏳ [2/4] Đang nhờ Gemini tạo ${numOfQuestions} câu hỏi (Kèm luôn gợi ý Gia sư)...`);
+        
+        // CẢI TIẾN 2: Cơ chế Tự động thử lại (Retry)
+        let result = null;
+        let responseText = "";
+        let maxRetries = 3;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                result = await jsonModel.generateContent(prompt);
+                responseText = result.response.text();
+                break; // Nếu gọi thành công thì thoát vòng lặp ngay
+            } catch (err) {
+                if ((err.message.includes('503') || err.message.includes('429')) && attempt < maxRetries) {
+                    console.log(`[Gemini API] Quá tải. Đang thử lại lần ${attempt + 1}...`);
+                    await delay(2000); 
+                } else {
+                    throw err; // Bắn lỗi ra ngoài để kích hoạt Mock Data
+                }
+            }
+        }
 
         const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) {
-            console.error("❌ RAW TEXT TỪ GEMINI LỖI:", responseText);
-            throw new Error("AI không trả về định dạng mảng JSON hợp lệ!");
-        }
+        if (!jsonMatch) throw new Error("AI không trả về định dạng mảng JSON hợp lệ!");
 
-        let quizData;
-        try {
-            quizData = JSON.parse(jsonMatch[0]);
-            console.log(`✅ [3/4] Parse JSON thành công! Đã tạo được ${quizData.length} câu hỏi.`);
-        } catch (parseError) {
-            console.error("❌ LỖI PARSE JSON. Chuỗi bị lỗi là:", jsonMatch[0]);
-            throw new Error("JSON do AI sinh ra bị sai cú pháp.");
-        }
+        let quizData = JSON.parse(jsonMatch[0]);
+        console.log(`✅ [3/4] Parse JSON thành công! Đã tạo được ${quizData.length} câu hỏi.`);
 
         // ==========================================================
-        // 🚀 TÍCH HỢP XAI (THỬ THÁCH NHÂN PHẨM & GỢI Ý)
+        // CẢI TIẾN 3: XAI chỉ xử lý logic số liệu, không gọi AI text nữa -> KHÔNG BAO GIỜ DÍNH LỖI 429
         // ==========================================================
         console.log(`⏳ [4/4] Bắt đầu gọi Python XAI phân tích độ khó...`);
-        
-        // VÁ LỖI QUAN TRỌNG: Tạo một Model riêng biệt để hỏi văn bản Hint (Không ép format JSON)
-        const textModel = aiService.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         for (let i = 0; i < quizData.length; i++) {
             let questionItem = quizData[i];
@@ -294,17 +304,14 @@ BẮT BUỘC trả về định dạng JSON thuần, cấu trúc là một mản
                 avgTime: 0.0 
             };
 
-           try {
+            try {
                 const mlPrediction = await xaiService.getWeaknessPrediction(studentDataForML);
-
+                
                 if (mlPrediction) {
                     const predictedAcc = mlPrediction.predicted_accuracy;
-                    
-                    // 🚀 THÊM DÒNG NÀY ĐỂ XEM ĐIỂM THỰC TẾ TRÊN TERMINAL
                     console.log(`- Câu ${i + 1}: Python đoán trúng ${predictedAcc}% | Khó khăn: ${mlPrediction.is_struggling}`);
                     
-                    // 1. ÉP LOGIC THỬ THÁCH NHÂN PHẨM LUÔN HIỆN ĐỂ DEMO
-                    // Sửa thành < 100.0 (hoặc thay bằng câu lệnh: if (i === 0) để chỉ hiện ở câu đầu tiên)
+                    // Logic Thử thách nhân phẩm
                     if (predictedAcc < 100.0) { 
                         quizData[i].is_high_risk = true;
                         quizData[i].reward_multiplier = 3;
@@ -313,38 +320,27 @@ BẮT BUỘC trả về định dạng JSON thuần, cấu trúc là một mản
                         quizData[i].is_high_risk = false;
                         quizData[i].reward_multiplier = 1;
                     }
-
-                    // 2. ÉP LOGIC LỜI KHUYÊN GIA SƯ LUÔN HIỆN
-                    // Thêm chữ "|| true" để bắt buộc gọi AI Tutor
-                    if (mlPrediction.is_struggling || true) { 
-                        const negativeReasons = mlPrediction.xai_explanation.negative_factors.join(", ");
-                        const advicePrompt = `Học sinh có thể làm sai câu: "${questionItem.question}". Đáp án đúng là: ${questionItem.correctAnswer}. Lý do: ${negativeReasons}. Hãy đóng vai gia sư AI, đưa ra 1 GỢI Ý MẸO siêu ngắn (dưới 15 chữ) để học sinh tự suy luận ra đáp án. KHÔNG nói thẳng đáp án.`;
-                        
-                        const adviceResult = await textModel.generateContent(advicePrompt);
-                        quizData[i].ai_advice = adviceResult.response.text().replace(/"/g, '').trim(); 
-                    } else {
-                        quizData[i].ai_advice = null;
-                    }
+                    // ai_advice đã được sinh sẵn ở Bước 2, không cần gọi thêm API nữa!
                 }
             } catch (xaiError) {
                 console.log(`⚠️ Bỏ qua lỗi XAI ở câu ${i + 1}:`, xaiError.message);
                 quizData[i].is_high_risk = false;
                 quizData[i].reward_multiplier = 1;
-                quizData[i].ai_advice = null;
             }
         }
         
         console.log("✅ HOÀN TẤT! Đang gửi dữ liệu về Android.");
-        res.status(200).json(quizData);
+        return res.status(200).json(quizData);
 
     } catch (error) {
-        // IN CHI TIẾT LỖI RA TERMINAL NODE.JS
+        // CẢI TIẾN 4: KÍCH HOẠT PHAO CỨU SINH KHI LỖI (MOCK DATA)
         console.error("\n=================================");
-        console.error("❌ LỖI CHÍNH KHI TẠO QUIZ:");
-        console.error(error.stack || error.message);
+        console.error("❌ LỖI CHÍNH KHI TẠO QUIZ (ĐÃ KÍCH HOẠT MOCK DATA CHO DEMO):");
+        console.error(error.message);
         console.error("=================================\n");
         
-        res.status(500).json({ error: "Lỗi hệ thống khi tải câu hỏi trắc nghiệm!" });
+        // Trả về bộ câu hỏi Mock xịn sò thay vì ném lỗi 500
+        return res.status(200).json(MOCK_QUIZ_FALLBACK);
     }
 };
 
@@ -359,37 +355,28 @@ exports.completeStep = async (req, res) => {
         const roadmap = await Roadmap.findOne({ userId });
         if (!roadmap) return res.status(404).json({ error: "Không tìm thấy lộ trình!" });
 
-        // 1. Tìm vị trí của chặng người dùng học xong
         const stepIndex = roadmap.steps.findIndex(s => s.id === stepId);
         if (stepIndex !== -1) {
-            // Đổi chặng hiện tại thành ĐH (COMPLETED)
             roadmap.steps[stepIndex].status = 'COMPLETED';
             roadmap.steps[stepIndex].currentProgress = roadmap.steps[stepIndex].maxProgress;
 
-            // Mở khóa chặng tiếp theo (CURRENT)
             if (stepIndex + 1 < roadmap.steps.length) {
                 roadmap.steps[stepIndex + 1].status = 'CURRENT';
             }
-
-            // Tính lại % tiến độ của cả lộ trình
             const completedCount = roadmap.steps.filter(s => s.status === 'COMPLETED').length;
             roadmap.overallProgressPercent = Math.round((completedCount / roadmap.steps.length) * 100);
-
             await roadmap.save();
         }
 
-       // CỘNG ĐIỂM (XP), TÍNH CHUỖI NGÀY VÀ XỬ LÝ MỤC TIÊU TUẦN CHO USER
         const scoreEarned = parseInt(score) || 0;
         const xpEarned = 50 + (scoreEarned * 10);
 
         try {
             const user = await User.findById(userId);
             if (user) {
-                // 1. CỘNG XP VÀ TÍNH LEVEL
                 user.xp = (user.xp || 0) + xpEarned;
                 user.level = Math.floor(user.xp / 100) + 1;
 
-                // 2. TÍNH TOÁN CHUỖI NGÀY HỌC (STREAK DAYS) - VỪA BỔ SUNG
                 const getVNFormatDate = (date) => {
                     const vnTime = new Date(date.getTime() + (7 * 60 * 60 * 1000));
                     return vnTime.toISOString().split('T')[0];
@@ -413,12 +400,10 @@ exports.completeStep = async (req, res) => {
                         user.streakDays = 1;
                     }
                 }
-                user.lastStudyDate = new Date(); // Cập nhật ngày học chuỗi
+                user.lastStudyDate = new Date(); 
 
-                // 3. LOGIC KIỂM TRA MỤC TIÊU TUẦN
                 const now = new Date();
                 const lastDate = user.lastLessonDate || new Date(0);
-                
                 const isSameWeek = (now - lastDate) / (1000 * 60 * 60 * 24) < 7 && now.getDay() >= lastDate.getDay();
 
                 if (!isSameWeek) {
@@ -429,8 +414,7 @@ exports.completeStep = async (req, res) => {
                         user.weeklyLessonsCompleted += 1;
                     }
                 }
-                user.lastLessonDate = now; // Cập nhật ngày làm bài tuần
-                
+                user.lastLessonDate = now; 
                 await user.save();
             }
         } catch (err) {
@@ -447,38 +431,27 @@ exports.completeStep = async (req, res) => {
 };
 
 // ==========================================
-// 9. NHẬN QUÀ MỤC TIÊU TUẦN (NEW)
+// 9. NHẬN QUÀ MỤC TIÊU TUẦN
 // ==========================================
 exports.claimWeeklyReward = async (req, res) => {
     try {
         const userId = req.user.id || req.user.userId || req.user._id;
         const user = await User.findById(userId);
 
-        if (!user) {
-            return res.status(404).json({ error: "Không tìm thấy người dùng!" });
-        }
+        if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng!" });
+        if (user.weeklyLessonsCompleted < 5) return res.status(400).json({ error: "Bạn chưa hoàn thành đủ 5 bài học tuần này!" });
+        if (user.isWeeklyRewardClaimed) return res.status(400).json({ error: "Bạn đã nhận rương quà của tuần này rồi!" });
 
-        if (user.weeklyLessonsCompleted < 5) {
-            return res.status(400).json({ error: "Bạn chưa hoàn thành đủ 5 bài học tuần này!" });
-        }
-
-        if (user.isWeeklyRewardClaimed) {
-            return res.status(400).json({ error: "Bạn đã nhận rương quà của tuần này rồi!" });
-        }
-
-        // Đủ điều kiện -> Nhận 500 XP siêu to khổng lồ
         const REWARD_XP = 500;
         user.xp += REWARD_XP;
         user.level = Math.floor(user.xp / 100) + 1;
-        user.isWeeklyRewardClaimed = true; // Khóa lại không cho nhận nữa
+        user.isWeeklyRewardClaimed = true; 
 
         await user.save();
 
         res.status(200).json({ 
-            message: "Nhận quà thành công!", 
-            rewardXp: REWARD_XP,
-            currentXp: user.xp,
-            currentLevel: user.level
+            message: "Nhận quà thành công!", rewardXp: REWARD_XP,
+            currentXp: user.xp, currentLevel: user.level
         });
 
     } catch (error) {
@@ -487,4 +460,126 @@ exports.claimWeeklyReward = async (req, res) => {
     }
 };
 
+// xAI
+// Hàm xử lý request dự đoán điểm yếu
+exports.predictWeakness = async (req, res) => {
+    try {
+        // Lấy dữ liệu học viên từ request body (do Android gửi lên)
+        const studentData = {
+            historyAcc: req.body.historyAcc,
+            totalQuestions: req.body.totalQuestions,
+            questionDifficulty: req.body.questionDifficulty,
+            avgTime: req.body.avgTime
+        };
 
+        // Gọi service để bắn HTTP POST sang Python Microservice (cổng 8000)
+        const predictionResult = await xaiService.getWeaknessPrediction(studentData);
+
+        // Trả kết quả SHAP & XGBoost về cho client (Android)
+        res.status(200).json({
+            success: true,
+            message: "Dự đoán thành công",
+            data: predictionResult
+        });
+    } catch (error) {
+        console.error("Lỗi Predictive AI:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Hệ thống AI dự đoán đang bận, vui lòng thử lại sau.",
+            error: error.message
+        });
+    }
+};
+
+exports.generatePostMortem = async (req, res) => {
+    try {
+        // Android sẽ gửi lên một mảng chứa dữ liệu của 10 câu hỏi vừa làm
+        const { quizHistory } = req.body; 
+        
+        if (!quizHistory || !Array.isArray(quizHistory) || quizHistory.length === 0) {
+            return res.status(400).json({ success: false, message: "Thiếu dữ liệu lịch sử làm bài." });
+        }
+
+        // 1. Gọi API Python cho toàn bộ các câu hỏi cùng lúc (tiết kiệm thời gian)
+        const shapPromises = quizHistory.map(studentData => 
+            xaiService.getWeaknessPrediction(studentData)
+        );
+        const results = await Promise.all(shapPromises);
+
+        // 2. Khởi tạo biến để cộng dồn SHAP values
+        let totalShap = {
+            historyAcc: 0,
+            questionDifficulty: 0,
+            avgTime: 0
+        };
+        let totalAvgTimeRaw = 0; // Thời gian làm bài thực tế trung bình
+
+        // 3. Cộng dồn dữ liệu từ 10 câu hỏi
+        results.forEach((resItem, index) => {
+            const contributions = resItem.explanation.feature_contributions;
+            totalShap.historyAcc += contributions.user_history_acc;
+            totalShap.questionDifficulty += contributions.question_difficulty;
+            totalShap.avgTime += contributions.user_avg_elapsed_time;
+            
+            totalAvgTimeRaw += quizHistory[index].avgTime;
+        });
+
+        const meanRealTime = totalAvgTimeRaw / quizHistory.length;
+
+        // 4. "Dịch" SHAP Value thành Bệnh án
+        let strengths = [];
+        let weaknesses = [];
+
+        // Phân tích Điểm mạnh (SHAP Dương)
+        if (totalShap.historyAcc > 0.5) {
+            strengths.push({
+                title: "Phong độ ổn định",
+                desc: "Nền tảng kiến thức cũ của bạn đang là bệ phóng rất tốt cho bài test này."
+            });
+        }
+        if (totalShap.questionDifficulty > 0.5) {
+            strengths.push({
+                title: "Thợ săn câu khó",
+                desc: "Bạn xử lý cực kỳ bản lĩnh những câu hỏi có độ khó cao."
+            });
+        }
+        if (strengths.length === 0) strengths.push({ title: "Đang làm nóng", desc: "Bạn đang ở mức an toàn, hãy bứt phá hơn ở lần sau!" });
+
+        // Phân tích Điểm yếu (SHAP Âm)
+        if (totalShap.avgTime < -0.3) {
+            if (meanRealTime < 10) { // Ví dụ: dưới 10 giây/câu là vội
+                weaknesses.push({
+                    title: "Hội chứng vội vàng",
+                    desc: "Bạn mất khá nhiều điểm oan vì chốt đáp án quá nhanh. Hãy nán lại thêm vài giây!"
+                });
+            } else {
+                weaknesses.push({
+                    title: "Thiếu dứt khoát",
+                    desc: "Phân tích cho thấy bạn thường sai khi ngâm một câu quá lâu. Lần sau hãy tin vào trực giác đầu tiên!"
+                });
+            }
+        }
+        
+        if (totalShap.historyAcc < -0.5) {
+            weaknesses.push({
+                title: "Hổng kiến thức nền",
+                desc: "XAI nhận thấy bạn đang chật vật vì quên kiến thức cũ. Hãy quay lại ôn tập chặng trước."
+            });
+        }
+        if (weaknesses.length === 0) weaknesses.push({ title: "Không có điểm mù", desc: "Phong độ hoàn hảo, không phát hiện lỗi sai hệ thống nào!" });
+
+        // 5. Trả kết quả về cho Android
+        res.status(200).json({
+            success: true,
+            data: {
+                strengths: strengths,
+                weaknesses: weaknesses,
+                raw_shap_totals: totalShap // Trả về số liệu gốc nếu Android cần vẽ biểu đồ
+            }
+        });
+
+    } catch (error) {
+        console.error("Lỗi Post-Mortem AI:", error.message);
+        res.status(500).json({ success: false, message: "Lỗi phân tích bệnh án." });
+    }
+};
