@@ -34,11 +34,22 @@ router.post('/generate-roadmap', verifyToken, aiController.generateRoadmap);
 router.get('/my-roadmap', verifyToken, aiController.getMyRoadmap);
 // Sinh câu hỏi trắc nghiệm theo chủ đề chặng học
 router.get('/generate-quiz', verifyToken, aiController.generateStepQuiz);
-// Lệnh export bắt buộc phải nằm ở cuối cùng của file
 router.post('/roadmap/complete-step', verifyToken, aiController.completeStep);
+
+// ==========================================
+// 5. API NHẬN QUÀ MỤC TIÊU TUẦN (ĐÃ BỔ SUNG)
+// Endpoint: POST /api/ai/claim-weekly-reward
+// ==========================================
+router.post('/claim-weekly-reward', verifyToken, aiController.claimWeeklyReward);
+
+// ==========================================
+// 6. API DÀNH CHO XAI (BỆNH ÁN HỌC TẬP)
+// ==========================================
 router.post('/weakness', verifyToken, aiController.predictWeakness);
+
 // Endpoint: POST /api/ai/post-mortem
 // Chức năng: Phân tích toàn bộ bài Quiz sau khi nộp để ra "Bệnh án học tập"
 router.post('/post-mortem', verifyToken, aiController.generatePostMortem);
 
+// Lệnh export bắt buộc phải nằm ở cuối cùng của file
 module.exports = router;

@@ -35,6 +35,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var studyList: List<Vocabulary> = emptyList()
     private var currentIndex = 0
     private var currentCategory: String = "Tổng hợp"
+    private var predictiveWords: ArrayList<String>? = null
     private val BATCH_SIZE = 10
 
     // --- CÁC BIẾN ĐẾM THỜI GIAN ---
@@ -81,6 +82,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tagIelts = findViewById(R.id.tagIelts)
         tvTimer = findViewById(R.id.tvTimer)
 
+        // 1. Lấy thông tin Chủ đề truyền sang
         val categoryFromIntent = intent.getStringExtra("CATEGORY_NAME")
         if (categoryFromIntent != null) {
             currentCategory = categoryFromIntent
@@ -88,6 +90,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tvTag?.text = currentCategory.uppercase()
         }
 
+        // 2. Lấy danh sách từ vựng AI gửi sang (Nằm ngay đây là đẹp nhất)
+        predictiveWords = intent.getStringArrayListExtra("PREDICTIVE_WORDS")
+
+        // 3. Khởi tạo các thành phần giao diện
         setupWindowInsets()
         setupBottomNav()
         setupFlashcardAnimation()
@@ -95,6 +101,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         setupBreathingEffect()
         setupAudioButton()
 
+        // 4. Bắt đầu gọi API lấy dữ liệu từ vựng
         fetchStudyWords()
     }
 
@@ -159,9 +166,15 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 if (response.isSuccessful) {
                     val allWords = response.body() ?: emptyList()
 
-                    studyList = allWords
-                        .filter { it.proficiency < 80 && it.category == currentCategory }
-                        .take(BATCH_SIZE)
+                    // 🚀 KIỂM TRA LUỒNG: Nếu có dữ liệu từ AI gửi sang thì học các từ đó
+                    if (predictiveWords != null && predictiveWords!!.isNotEmpty()) {
+                        studyList = allWords.filter { predictiveWords!!.contains(it.word) }
+                    } else {
+                        // Nếu không có, học bình thường theo chủ đề như cũ
+                        studyList = allWords
+                            .filter { it.proficiency < 80 && it.category == currentCategory }
+                            .take(BATCH_SIZE) // BATCH_SIZE là 10 từ mỗi phiên
+                    }
 
                     if (studyList.isNotEmpty()) {
                         currentIndex = 0
@@ -179,7 +192,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
         })
     }
-
     private fun loadWordToUI() {
         if (currentIndex < studyList.size) {
             val currentWord = studyList[currentIndex]
@@ -202,7 +214,8 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             dialog.setCancelable(false)
 
             val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
-            tvMessage?.text = "Bạn đã hoàn thành $BATCH_SIZE từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
+            // 🚀 Đã thay cứng số 10 thành "studyList.size" để hiển thị chính xác số từ vừa học
+            tvMessage?.text = "Bạn đã hoàn thành ${studyList.size} từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
 
             val btnHocTiep = dialog.findViewById<View>(R.id.btnHocTiep)
             btnHocTiep?.setOnClickListener {
@@ -213,7 +226,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val btnNghiNgoi = dialog.findViewById<View>(R.id.btnNghiNgoi)
             btnNghiNgoi?.setOnClickListener {
                 dialog.dismiss()
-                val minutesLearned = secondsElapsed / 60
                 finish()
             }
 
@@ -223,7 +235,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             finish()
         }
     }
-
     private fun handleScore(scoreType: String) {
         try {
             if (currentIndex >= studyList.size) return

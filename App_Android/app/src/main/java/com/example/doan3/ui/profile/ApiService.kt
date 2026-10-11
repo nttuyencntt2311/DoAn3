@@ -19,13 +19,13 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
+import retrofit2.Response
+import retrofit2.http.Query
 
 // === CÁC MODEL TỪ MODULE KHÁC ===
 import com.example.doan3.ui.vocabulary.Vocabulary
 import com.example.doan3.ui.roadmap.UserRoadmapResponse
 import com.example.doan3.ui.vocabulary.VocabStatsResponse
-import retrofit2.Response
-import retrofit2.http.Query
 
 // ==========================================
 //                 MODELS
@@ -64,12 +64,9 @@ data class UserStatsData(
 )
 data class UserStatsResponse(val stats: UserStatsData?, val error: String?)
 
-// ĐÃ KẾT HỢP: Bao gồm cả cấu trúc lồng nhau (của bạn) và cấu trúc phẳng (của bạn bạn)
+// ĐÃ KẾT HỢP: Bao gồm cả cấu trúc lồng nhau và cấu trúc phẳng
 data class LearningStatsResponse(
-    // Cấu trúc của bạn
     val stats: StatsData? = null,
-
-    // Cấu trúc của bạn bạn
     val streakDays: Int? = null,
     val totalHours: Int? = null,
     val totalWords: Int? = null,
@@ -93,15 +90,63 @@ data class MemoryItem(
     val xp: Int
 )
 
+
+
+// === MODEL QUIZ VÀ BỆNH ÁN XAI MỚI ===
 data class SubmitQuizRequest(
     val topic: String,
     val score: Int,
     val totalQuestions: Int,
     val earnedXp: Int,
     val learnedWords: Int,
-    val timeSpentMinutes: Int
+    val timeSpentMinutes: Int,
+    val difficulty: Int = 3, // Thêm trường độ khó để truyền sang Node.js
+    val wrongWords: List<String> = emptyList() // 🚀 BỔ SUNG TRƯỜNG NÀY ĐỂ BẮT LỖI TỪ VỰNG
 )
-data class SubmitQuizResponse(val message: String)
+
+// Chức năng " Sổ tay tiên tri "
+data class PredictiveFlashcard(
+    val wordId: String,
+    val wordText: String,
+    val meaning: String,
+    val phonetic: String,
+    val predicted_accuracy: Double,
+    val is_struggling: Boolean
+)
+
+data class PredictForgettingResponse(
+    val message: String,
+    val warning: String,
+    val predictiveFlashcards: List<PredictiveFlashcard>
+)
+
+// Cấu trúc chi tiết của 1 yếu tố SHAP để sau này dùng vẽ biểu đồ
+data class ShapDetail(
+    @SerializedName("feature") val feature: String,
+    @SerializedName("vi_description") val viDescription: String,
+    @SerializedName("value") val value: Double,
+    @SerializedName("shap_score") val shapScore: Double
+)
+
+// Cấu trúc Giải thích XAI (Điểm mạnh / Điểm yếu) ĐÃ ĐƯỢC CẬP NHẬT
+data class XaiExplanation(
+    @SerializedName("negative_factors") val negativeFactors: List<String>,
+    @SerializedName("positive_factors") val positiveFactors: List<String>,
+    @SerializedName("detailed_shap") val detailedShap: List<ShapDetail>? = null // Đón dữ liệu vẽ biểu đồ
+)
+
+// Cấu trúc Bệnh án AI tổng thể
+data class AiReport(
+    @SerializedName("predicted_accuracy") val predictedAccuracy: Double,
+    @SerializedName("is_struggling") val isStruggling: Boolean,
+    @SerializedName("xai_explanation") val xaiExplanation: XaiExplanation
+)
+
+data class SubmitQuizResponse(
+    val message: String,
+    val isLevelUp: Boolean,
+    @SerializedName("ai_report") val aiReport: AiReport? = null // Bổ sung trường này để hứng bệnh án
+)
 
 // === MODEL ĐỂ LƯU TỪ VỰNG YÊU THÍCH ===
 data class SaveWordRequest(
@@ -137,7 +182,7 @@ data class GenerateCustomQuizRequest(val content: String, val questionCount: Int
 data class GenerateCustomQuizResponse(val message: String, val categoryName: String)
 data class CustomCategoriesResponse(val success: Boolean, val categories: List<String>)
 
-// === MODEL CẬP NHẬT ĐIỂM (Từ bạn bạn) ===
+// === MODEL CẬP NHẬT ĐIỂM ===
 data class ProficiencyRequest(val proficiency: Int, val userId: String)
 data class ProficiencyResponse(val message: String, val wordsLearned: Int, val xp: Int)
 
@@ -171,12 +216,12 @@ interface ApiService {
     @POST("api/auth/refresh-token")
     fun refreshToken(@Body request: RefreshTokenRequest): Call<RefreshTokenResponse>
 
-    // Logout endpoints (Giữ lại cả 2 cấu trúc tham số theo đúng thiết kế của mỗi bạn)
+    // Logout endpoints
     @POST("api/auth/logout")
-    fun logout(@Body request: RefreshTokenRequest): Call<LogoutResponse> // Của Văn
+    fun logout(@Body request: RefreshTokenRequest): Call<LogoutResponse>
 
     @POST("api/auth/logout")
-    fun logoutUser(@Body request: LogoutRequest): Call<Void> // Của Tuyến
+    fun logoutUser(@Body request: LogoutRequest): Call<Void>
 
     @POST("api/auth/save-word")
     fun saveWord(@Body request: SaveWordRequest): Call<Any>
@@ -185,13 +230,10 @@ interface ApiService {
     @POST("api/quiz/submit")
     fun submitQuiz(@Body request: SubmitQuizRequest): Call<SubmitQuizResponse>
 
-    // --- VOCABULARY & ROADMAP (KẾT HỢP ENDPOINT CŨ VÀ MỚI ĐỂ KHÔNG BỊ LỖI MODULE) ---
-
-    // Của bạn bạn (Đã đổi thành số nhiều vocabularies)
+    // --- VOCABULARY & ROADMAP ---
     @GET("api/vocabularies")
     fun getAllVocabularies(): Call<List<Vocabulary>>
 
-    // Của bạn (Số ít vocabulary - Đổi tên hàm thành Old để tránh trùng tên)
     @GET("api/vocabulary")
     fun getAllVocabulariesOld(): Call<List<Vocabulary>>
 
@@ -204,14 +246,12 @@ interface ApiService {
     @GET("api/vocabularies/stats")
     fun getVocabStats(): Call<VocabStatsResponse>
 
-    // Hàm cập nhật điểm theo code mới (Data Class) của bạn bạn
     @PUT("api/vocabularies/{id}/proficiency")
     fun updateProficiency(
         @Path("id") id: String,
         @Body request: ProficiencyRequest
     ): Call<ProficiencyResponse>
 
-    // Hàm cập nhật điểm theo code cũ (Map) của bạn
     @PUT("api/vocabulary/{id}/proficiency")
     fun updateProficiencyOld(
         @Path("id") id: String,
@@ -251,29 +291,34 @@ interface ApiService {
     suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
 
     // --- CUSTOM QUIZ ---
-    // Của bạn bạn
     @POST("api/vocabularies/custom-quiz")
     fun generateCustomQuiz(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
 
     @GET("api/vocabularies/custom-categories")
     fun getCustomQuizCategories(): Call<CustomCategoriesResponse>
 
-    // Của bạn
     @POST("api/vocabulary/custom-quiz")
     fun generateCustomQuizOld(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
 
     @GET("api/vocabulary/custom-categories")
     fun getCustomQuizCategoriesOld(): Call<CustomCategoriesResponse>
+
+    // --- PREDICTIVE FLASHCARDS (SỔ TAY TIÊN TRI) ---
+    @GET("api/vocabularies/predict-forgetting")
+    fun getPredictiveFlashcards(): Call<PredictForgettingResponse>
+
+    // --- LEADERBOARD ---
+    @GET("api/users/leaderboard")
+    fun getLeaderboard(): Call<List<LeaderboardUser>>
 }
 
 // ==========================================
 //             RETROFIT CLIENT
 // ==========================================
 object RetrofitClient {
-    // 🚀 Đã lấy cổng 5000 theo cấu hình backend mới nhất của bạn bạn
+    // 🚀 Sử dụng cổng 3000 hoặc 5000 tùy vào cấu hình Node.js
     const val BASE_URL = "http://10.0.2.2:3000/"
 
-    // Biến token toàn cục
     var token: String = ""
 
     val instance: ApiService by lazy {
@@ -300,7 +345,7 @@ object RetrofitClient {
             .create(ApiService::class.java)
     }
 
-    // 🚀 DÙNG SINGLETON ĐỂ KHÔNG BỊ RÒ RỈ BỘ NHỚ VÀ MẤT TOKEN (Từ bạn bạn)
+    // 🚀 DÙNG SINGLETON ĐỂ KHÔNG BỊ RÒ RỈ BỘ NHỚ VÀ MẤT TOKEN
     @Volatile
     private var contextInstance: ApiService? = null
 
@@ -328,9 +373,6 @@ object RetrofitClient {
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
-            // 🚀 ĐÃ TẠM TẮT TOKEN_AUTHENTICATOR ĐỂ TRÁNH LỖI CHẶN REQUEST NGẦM (Theo code của bạn bạn)
-            // Nếu bạn muốn dùng lại logic của bạn, chỉ cần bỏ comment dòng dưới đây.
-            // .authenticator(TokenAuthenticator(context))
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)

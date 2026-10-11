@@ -235,6 +235,11 @@
           <theme>@style/Theme.DoAn3</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/item_leaderboard.xml">
+        <config>
+          <theme>@style/Theme.DoAn3</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/item_lesson.xml">
         <config>
           <theme>@style/Theme.DoAn3</theme>
@@ -292,9 +297,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/LeaderboardAdapter.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_leaderboard.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/ielts_quiz.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/hoso.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/hoso.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -330,9 +342,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="resourceFile" />
         <option value="layoutResourceFile" />
         <option value="Kotlin Class" />
-        <option value="resourceFile" />
       </list>
     </option>
   </component>
@@ -498,12 +510,12 @@
       <map>
         <entry key="com.example.doan3">
           <value>
-            <CheckInfo lastCheckTimestamp="1791434833339" />
+            <CheckInfo lastCheckTimestamp="1791616285018" />
           </value>
         </entry>
         <entry key="com.example.doan3.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1791434833329" />
+            <CheckInfo lastCheckTimestamp="1791616285022" />
           </value>
         </entry>
       </map>

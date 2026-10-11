@@ -15,7 +15,9 @@ const userSchema = new mongoose.Schema({
   wordsLearned: { type: Number, default: 0 },          // Số từ vựng đã học (Mặc định: 0)
   timeLearnedMinutes: { type: Number, default: 0 },    // Thời gian học (phút) (Mặc định: 0)
   quizzesCount: { type: Number, default: 0 },          // Số bài Quiz đã làm
-
+// Bổ sung vào dưới phần các chỉ số Gamification trong User.js
+  badges: { type: [String], default: [] }, // Mảng chứa các danh hiệu đã mở khóa (Ví dụ: ["Kẻ Phá Vỡ Giới Hạn"])
+  currentTitle: { type: String, default: "Học viên mới" }, // Danh hiệu đang đeo hiện tại
   // === MỤC TIÊU TUẦN & NHẬN QUÀ (NEW) ===
   weeklyLessonsCompleted: { type: Number, default: 0 },    // Số bài đã làm trong tuần (Tối đa 5)
   lastLessonDate: { type: Date, default: Date.now },       // Lần cuối làm bài là khi nào (dùng để reset tuần)

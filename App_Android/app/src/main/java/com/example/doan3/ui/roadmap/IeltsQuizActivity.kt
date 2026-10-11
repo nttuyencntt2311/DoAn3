@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.doan3.R
 import com.example.doan3.databinding.IeltsQuizBinding
 import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.profile.SubmitQuizRequest
+import com.example.doan3.ui.profile.AiReport
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import android.os.CountDownTimer
+import kotlin.math.max
 
 data class QuizQuestion(
     val question: String,
@@ -46,13 +52,16 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var countDownTimer: CountDownTimer? = null
     private val QUIZ_TIME_MILLIS: Long = 15 * 60 * 1000
 
-    // 🚀 BIẾN LƯU TỔNG ĐIỂM KINH NGHIỆM TỪ XAI
+    // 🚀 CÁC BIẾN CHO HỆ THỐNG XAI & THEO DÕI HỌC TẬP
     private var totalEarnedXp = 0
+    private var questionStartTime: Long = 0 // Radar đo thời gian từng câu
+    private var hasShownPacingAlert = false
+    private var startTimeMillis: Long = 0 // Đo tổng thời gian bài học
+    private val wrongWordsList = mutableListOf<String>() // Lưu danh sách từ sai để gửi về Sổ tay
 
     private var selectedOptionIndex: Int = -1
     private var isAnswerChecked: Boolean = false
 
-    // Tên file lưu trữ tiến độ
     private val PREFS_NAME = "QuizProgressPrefs"
     private var currentStepTitle = ""
 
@@ -71,67 +80,48 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         setupListeners()
 
-        // 🚀 KIỂM TRA XEM CÓ TIẾN ĐỘ CŨ KHÔNG
+        // Bắt đầu tính giờ tổng bài làm
+        startTimeMillis = System.currentTimeMillis()
+
         if (loadProgress(currentStepTitle)) {
             Toast.makeText(this, "Đang tiếp tục bài học dang dở...", Toast.LENGTH_SHORT).show()
             displayQuestion()
+            startTimer()
         } else {
-            // Nếu không có tiến độ cũ thì mới gọi AI tải mới
             loadQuizFromAi(currentStepTitle, stepDesc, questionCount)
-        }
-        // 🚀 KIỂM TRA XEM CÓ TIẾN ĐỘ CŨ KHÔNG
-        if (loadProgress(currentStepTitle)) {
-            Toast.makeText(this, "Đang tiếp tục bài học dang dở...", Toast.LENGTH_SHORT).show()
-            displayQuestion()
-            startTimer() // GỌI Ở ĐÂY NẾU TIẾP TỤC BÀI
-        } else {
-            // Nếu không có tiến độ cũ thì mới gọi AI tải mới
-            loadQuizFromAi(currentStepTitle, stepDesc, questionCount)
-            // Lưu ý: nên chuyển startTimer() vào bên trong hàm loadQuizFromAi() khi tải dữ liệu thành công.
         }
     }
 
-    // 🚀 LƯU TIẾN ĐỘ KHI NGƯỜI DÙNG THOÁT MÀN HÌNH (Bấm Home, Back, Đa nhiệm...)
     override fun onPause() {
         super.onPause()
         saveProgress()
     }
 
-    // --- CÁC HÀM XỬ LÝ LƯU TRỮ (SHARED PREFERENCES) ---
     private fun saveProgress() {
-        // Chỉ lưu khi đã có câu hỏi và chưa hoàn thành bài
         if (quizList.isEmpty() || currentQuestionIndex >= quizList.size) return
-
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val editor = prefs.edit()
-
         val gson = Gson()
         val jsonList = gson.toJson(quizList)
 
         editor.putString("${currentStepTitle}_list", jsonList)
         editor.putInt("${currentStepTitle}_index", currentQuestionIndex)
         editor.putInt("${currentStepTitle}_score", score)
-        // Lưu luôn cả điểm XP hiện tại nếu thoát ra
         editor.putInt("${currentStepTitle}_xp", totalEarnedXp)
         editor.apply()
     }
-    private fun startTimer() {
-        countDownTimer?.cancel() // Hủy timer cũ nếu có để tránh chạy đè
 
+    private fun startTimer() {
+        countDownTimer?.cancel()
         countDownTimer = object : CountDownTimer(QUIZ_TIME_MILLIS, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = (millisUntilFinished / 1000) / 60
                 val seconds = (millisUntilFinished / 1000) % 60
-
-                // Vì bạn dùng ViewBinding, hãy gọi qua `binding`
                 binding.tvTimer.text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
             }
-
             override fun onFinish() {
                 binding.tvTimer.text = "00:00"
                 Toast.makeText(this@IeltsQuizActivity, "Hết giờ làm bài!", Toast.LENGTH_SHORT).show()
-                // Tùy chọn: Tự động nộp bài khi hết giờ
-                // showResultDialog()
             }
         }.start()
     }
@@ -139,7 +129,6 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun loadProgress(stepTitle: String): Boolean {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val jsonList = prefs.getString("${stepTitle}_list", null)
-
         if (jsonList != null) {
             val gson = Gson()
             val type = object : TypeToken<List<QuizQuestion>>() {}.type
@@ -147,35 +136,25 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             currentQuestionIndex = prefs.getInt("${stepTitle}_index", 0)
             score = prefs.getInt("${stepTitle}_score", 0)
             totalEarnedXp = prefs.getInt("${stepTitle}_xp", 0)
-            return true // Trả về true nếu nạp dữ liệu cũ thành công
+            return true
         }
-        return false // Trả về false nếu chưa có dữ liệu lưu trước đó
+        return false
     }
 
     private fun clearProgress(stepTitle: String) {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit()
-            .remove("${stepTitle}_list")
-            .remove("${stepTitle}_index")
-            .remove("${stepTitle}_score")
-            .remove("${stepTitle}_xp")
-            .apply()
+        prefs.edit().remove("${stepTitle}_list").remove("${stepTitle}_index").remove("${stepTitle}_score").remove("${stepTitle}_xp").apply()
     }
-    // ---------------------------------------------------
 
     private fun setupListeners() {
         binding.btnBack.setOnClickListener { finish() }
         binding.tvSkipQuestion.setOnClickListener { skipQuestion() }
-
         binding.tvGetHint.setOnClickListener {
             if (quizList.isNotEmpty()) {
                 val currentQuestion = quizList[currentQuestionIndex]
-
-                // 🚀 NÂNG CẤP NÚT HINT: Ưu tiên lấy lời khuyên của Gia sư AI
                 if (currentQuestion.ai_advice != null) {
                     binding.cardAiTutor.visibility = View.VISIBLE
                     binding.tvAiTutorMessage.text = "🤖 AI phân tích: ${currentQuestion.ai_advice}"
-                    Toast.makeText(this, "Đã nhờ Gia sư AI phân tích!", Toast.LENGTH_SHORT).show()
                 } else {
                     binding.tvExplanation.visibility = View.VISIBLE
                     binding.tvExplanation.text = "💡 Dịch nghĩa: ${currentQuestion.hint}"
@@ -184,15 +163,11 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 }
             }
         }
-
         binding.btnOptionA.setOnClickListener { selectOption(0) }
         binding.btnOptionB.setOnClickListener { selectOption(1) }
         binding.btnOptionC.setOnClickListener { selectOption(2) }
         binding.btnOptionD.setOnClickListener { selectOption(3) }
-
-        binding.btnNopBai.setOnClickListener {
-            checkAnswerAndSubmit()
-        }
+        binding.btnNopBai.setOnClickListener { checkAnswerAndSubmit() }
     }
 
     private fun skipQuestion() {
@@ -201,8 +176,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val mutableList = quizList.toMutableList()
             mutableList.add(currentQuiz)
             quizList = mutableList
-
-            Toast.makeText(this, "Đã bỏ qua! Câu hỏi sẽ được lặp lại ở cuối bài.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Đã bỏ qua! Câu hỏi sẽ lặp lại ở cuối bài.", Toast.LENGTH_SHORT).show()
             goToNextQuestion()
         }
     }
@@ -225,32 +199,25 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             letters[i].setTextColor(defaultTextColor)
             answers[i].setTextColor(defaultTextColor)
             ticks[i].visibility = View.INVISIBLE
-
             cards[i].isClickable = true
         }
     }
 
     private fun selectOption(index: Int) {
         if (isAnswerChecked) return
-
         selectedOptionIndex = index
         resetOptionsUI()
-
-        val selectedBg = Color.parseColor("#F0F7FF")
-        val selectedStroke = Color.parseColor("#0056D2")
-        val selectedLetterBg = R.drawable.bg_circle_blue
-        val selectedTextColor = Color.parseColor("#0056D2")
 
         val cards = listOf(binding.btnOptionA, binding.btnOptionB, binding.btnOptionC, binding.btnOptionD)
         val letters = listOf(binding.tvLetterA, binding.tvLetterB, binding.tvLetterC, binding.tvLetterD)
         val answers = listOf(binding.tvAnswerA, binding.tvAnswerB, binding.tvAnswerC, binding.tvAnswerD)
         val ticks = listOf(binding.imgTickA, binding.imgTickB, binding.imgTickC, binding.imgTickD)
 
-        cards[index].setCardBackgroundColor(selectedBg)
-        cards[index].strokeColor = selectedStroke
-        letters[index].setBackgroundResource(selectedLetterBg)
+        cards[index].setCardBackgroundColor(Color.parseColor("#F0F7FF"))
+        cards[index].strokeColor = Color.parseColor("#0056D2")
+        letters[index].setBackgroundResource(R.drawable.bg_circle_blue)
         letters[index].setTextColor(Color.WHITE)
-        answers[index].setTextColor(selectedTextColor)
+        answers[index].setTextColor(Color.parseColor("#0056D2"))
         ticks[index].visibility = View.VISIBLE
     }
 
@@ -268,20 +235,17 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         quizList = response.body()!!
                         currentQuestionIndex = 0
                         score = 0
-                        totalEarnedXp = 0 // Reset tổng điểm
+                        totalEarnedXp = 0
                         displayQuestion()
                         binding.btnNopBai.isEnabled = true
+                        startTimeMillis = System.currentTimeMillis() // Reset đo thời gian tổng
                         startTimer()
                     } else {
-                        Log.e("IeltsQuiz", "Lỗi API Backend")
-                        Toast.makeText(this@IeltsQuizActivity, "Lỗi Server. Xem Logcat!", Toast.LENGTH_LONG).show()
                         loadMockQuiz()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Log.e("IeltsQuiz", "Lỗi tải câu hỏi AI: ${e.message}", e)
-                    Toast.makeText(this@IeltsQuizActivity, "Lỗi mạng. Tải bộ mặc định!", Toast.LENGTH_SHORT).show()
                     loadMockQuiz()
                 }
             }
@@ -291,11 +255,13 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private fun loadMockQuiz() {
         quizList = listOf(
             QuizQuestion(
-                question = "The wording of the agreement was so ... that both parties interpreted it differently.",
-                options = listOf("Clear", "Uncertain", "Obvious", "Specific"),
-                correctAnswer = "Uncertain",
-                pronounceText = "Uncertain",
-                hint = "Không chắc chắn, mơ hồ"
+                question = "We need to sign the ___ before starting the project.",
+                options = listOf("contract", "contact", "compact", "contrast"),
+                correctAnswer = "contract",
+                pronounceText = "contract",
+                hint = "Hợp đồng (văn bản pháp lý)",
+                is_high_risk = true,
+                challenge_message = "Câu hỏi thường bị nhầm lẫn!"
             )
         )
         currentQuestionIndex = 0
@@ -303,24 +269,27 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         totalEarnedXp = 0
         displayQuestion()
         binding.btnNopBai.isEnabled = true
+        startTimeMillis = System.currentTimeMillis()
         startTimer()
     }
 
     private fun displayQuestion() {
         if (quizList.isEmpty() || currentQuestionIndex >= quizList.size) return
-
         isAnswerChecked = false
         selectedOptionIndex = -1
+
+        // 🚀 BẮT ĐẦU BẤM GIỜ XAI KHI CÂU HỎI XUẤT HIỆN
+        questionStartTime = System.currentTimeMillis()
+        hasShownPacingAlert = false
+
         binding.btnNopBai.text = "KIỂM TRA"
         binding.tvExplanation.visibility = View.GONE
         binding.cardAiTutor.visibility = View.GONE
-
         resetOptionsUI()
 
         val currentQuiz = quizList[currentQuestionIndex]
         val currentNum = currentQuestionIndex + 1
         val totalNum = quizList.size
-
         val percent = ((currentNum.toFloat() / totalNum.toFloat()) * 100).toInt()
 
         binding.tvQuestionCount.text = "Question $currentNum / $totalNum"
@@ -335,36 +304,23 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding.tvAnswerC.text = currentQuiz.options.getOrNull(2) ?: ""
         binding.tvAnswerD.text = currentQuiz.options.getOrNull(3) ?: ""
 
-        // ==========================================
-        // 🚀 BẮT ĐẦU: XỬ LÝ GIAO DIỆN XAI
-        // ==========================================
-
-        // 1. Thử Thách Nhân Phẩm
         if (currentQuiz.is_high_risk) {
             binding.cardQuestion.strokeColor = Color.parseColor("#EF4444")
             binding.cardQuestion.strokeWidth = 4
-
-            // Hiện thanh thông báo thử thách
             binding.tvChallengeAlert.visibility = View.VISIBLE
             binding.tvChallengeAlert.text = currentQuiz.challenge_message
             binding.tvChallengeAlert.setBackgroundColor(Color.parseColor("#FEF2F2"))
             binding.tvChallengeAlert.setTextColor(Color.parseColor("#DC2626"))
         } else {
-            // Trả về bình thường
             binding.cardQuestion.strokeColor = Color.parseColor("#E2E8F0")
             binding.cardQuestion.strokeWidth = 2
             binding.tvChallengeAlert.visibility = View.GONE
         }
 
-        // 2. Lời khuyên Gia sư AI
         if (currentQuiz.ai_advice != null) {
             binding.cardAiTutor.visibility = View.VISIBLE
             binding.tvAiTutorMessage.text = "🤖 ${currentQuiz.ai_advice}"
         }
-
-        // ==========================================
-        // 🚀 KẾT THÚC: XỬ LÝ GIAO DIỆN XAI
-        // ==========================================
 
         speakOut(currentQuiz.pronounceText)
     }
@@ -380,9 +336,36 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             return
         }
 
-        isAnswerChecked = true
         val currentQuiz = quizList[currentQuestionIndex]
         val userAnswer = currentQuiz.options[selectedOptionIndex]
+        val isCorrect = (userAnswer == currentQuiz.correctAnswer)
+
+        // ==========================================
+        // 🚀 XAI - RADAR THỜI GIAN
+        // ==========================================
+        val timeSpent = System.currentTimeMillis() - questionStartTime
+        val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        val isPacingAlertEnabled = prefs.getBoolean("PREF_PACING_ALERT", true)
+
+        if (isPacingAlertEnabled && timeSpent < 2000 && !isCorrect && !hasShownPacingAlert) {
+            hasShownPacingAlert = true
+            binding.cardAiTutor.visibility = View.VISIBLE
+            binding.tvAiTutorMessage.text = "⏳ Radar XAI: Bạn trả lời dưới 2 giây và có dấu hiệu sai! Hãy đọc kỹ lại, bạn còn 1 cơ hội."
+            binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#FEF3C7"))
+            binding.tvAiTutorMessage.setTextColor(Color.parseColor("#D97706"))
+
+            Toast.makeText(this, "⚠️ AI phát hiện bạn đang vội!", Toast.LENGTH_SHORT).show()
+
+            selectedOptionIndex = -1
+            resetOptionsUI()
+            questionStartTime = System.currentTimeMillis()
+            return
+        }
+
+        binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#F0F7FF"))
+        binding.tvAiTutorMessage.setTextColor(Color.parseColor("#0056D2"))
+
+        isAnswerChecked = true
         val correctIndex = currentQuiz.options.indexOf(currentQuiz.correctAnswer)
 
         val cards = listOf(binding.btnOptionA, binding.btnOptionB, binding.btnOptionC, binding.btnOptionD)
@@ -391,11 +374,9 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         for (card in cards) card.isClickable = false
 
-        if (userAnswer == currentQuiz.correctAnswer) {
+        if (isCorrect) {
             score++
-
             val baseXP = 10
-            // 🚀 BỌC LÓT AN TOÀN CHO XAI: Tránh lỗi Gson trả về 0 nếu lấy nhầm dữ liệu cũ
             val safeMultiplier = if (currentQuiz.reward_multiplier > 0) currentQuiz.reward_multiplier else 1
             val gainedXp = baseXP * safeMultiplier
             totalEarnedXp += gainedXp
@@ -406,14 +387,18 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             letters[selectedOptionIndex].setTextColor(Color.WHITE)
             answers[selectedOptionIndex].setTextColor(Color.parseColor("#16A34A"))
 
-            binding.btnNopBai.text = "TUYỆT VỜI! +$gainedXp XP" // Cập nhật text nút bấm để khen thưởng
+            binding.btnNopBai.text = "TUYỆT VỜI! +$gainedXp XP"
             binding.btnNopBai.setBackgroundColor(Color.parseColor("#16A34A"))
 
-            // Báo hiệu nếu vượt qua thử thách
-            if(currentQuiz.is_high_risk) {
-                Toast.makeText(this, "Kẻ Phá Vỡ Giới Hạn! Nhận x3 XP", Toast.LENGTH_SHORT).show()
+            if (currentQuiz.is_high_risk) {
+                Toast.makeText(this, "🔥 Kẻ Phá Vỡ Giới Hạn! Nhận x3 XP", Toast.LENGTH_SHORT).show()
             }
         } else {
+            // 🚀 BẮT LỖI TỪ SAI VÀO MẢNG
+            if (!wrongWordsList.contains(currentQuiz.correctAnswer)) {
+                wrongWordsList.add(currentQuiz.correctAnswer)
+            }
+
             cards[selectedOptionIndex].setCardBackgroundColor(Color.parseColor("#FEF2F2"))
             cards[selectedOptionIndex].strokeColor = Color.parseColor("#DC2626")
             letters[selectedOptionIndex].setBackgroundResource(R.drawable.bg_circle_red)
@@ -436,7 +421,6 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             binding.btnNopBai.text = "ĐÃ HIỂU! TIẾP TỤC"
             binding.btnNopBai.setBackgroundColor(Color.parseColor("#DC2626"))
 
-            // Nhét câu sai xuống cuối mảng để bắt làm lại
             val mutableList = quizList.toMutableList()
             mutableList.add(currentQuiz)
             quizList = mutableList
@@ -445,81 +429,191 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun goToNextQuestion() {
         binding.btnNopBai.setBackgroundColor(Color.parseColor("#6200EE"))
-
         currentQuestionIndex++
         if (currentQuestionIndex < quizList.size) {
             displayQuestion()
         } else {
-            showResultDialog()
+            submitQuizAndShowReport()
         }
     }
 
-    private fun showResultDialog() {
+    private fun submitQuizAndShowReport() {
         countDownTimer?.cancel()
-        val stepId = intent.getStringExtra("STEP_ID") ?: "1"
-
-        // 🚀 SỬA LỖI ĐIỂM TỔNG: 50 XP Cơ bản + Tổng điểm XAI đã nhân hệ số
-        val finalXp = 50 + totalEarnedXp
-
         clearProgress(currentStepTitle)
 
+        binding.btnNopBai.text = "Đang phân tích kết quả..."
+        binding.btnNopBai.isEnabled = false
+
+        // 🚀 TÍNH THỜI GIAN THỰC TẾ
+        val timeSpentMillis = System.currentTimeMillis() - startTimeMillis
+        val calculatedMinutes = max(1, (timeSpentMillis / 60000).toInt())
+
+        val finalXp = 50 + totalEarnedXp
+        val request = SubmitQuizRequest(
+            topic = currentStepTitle,
+            score = score,
+            totalQuestions = quizList.size,
+            earnedXp = finalXp,
+            learnedWords = score,
+            timeSpentMinutes = calculatedMinutes,
+            difficulty = 3,
+            wrongWords = wrongWordsList
+        )
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val api = RetrofitClient.getInstance(applicationContext)
+                val response = api.submitQuiz(request).execute()
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val submitData = response.body()!!
+                        if (submitData.aiReport != null) {
+                            showAiPostMortemDialog(submitData.aiReport, finalXp)
+                        } else {
+                            showBasicResultDialog(finalXp)
+                        }
+                    } else {
+                        Toast.makeText(this@IeltsQuizActivity, "Lỗi nộp bài: ${response.code()}", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@IeltsQuizActivity, "Lỗi kết nối: ${e.message}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
+    }
+
+    // 🚀 DỊCH LẠI LOGIC TEXT ĐỂ UI SẠCH SẼ HƠN (ĐƯỢC GỘP TỪ CODE CỦA BẠN BẠN)
+    private fun formatFactorText(rawText: String): String {
+        val regex = Regex("""\(Mức:\s*([\d.]+)\)""")
+        return regex.replace(rawText) { matchResult ->
+            val numberStr = matchResult.groupValues[1]
+            val number = numberStr.toDoubleOrNull()
+            if (number != null) {
+                if (number > 1000) {
+                    val seconds = number / 1000.0
+                    "(${String.format(Locale.US, "%.1f", seconds)} giây)"
+                } else {
+                    "(Điểm: $numberStr)"
+                }
+            } else ""
+        }
+    }
+
+    private fun showAiPostMortemDialog(aiReport: AiReport, finalXp: Int) {
+        val bottomSheet = BottomSheetDialog(this)
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(60, 60, 60, 60)
+            setBackgroundColor(Color.WHITE)
+        }
+
+        val titleText = TextView(this).apply {
+            text = "BÁO CÁO PHÂN TÍCH NĂNG LỰC"
+            textSize = 20f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.parseColor("#0F172A"))
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, 0, 0, 40)
+        }
+        layout.addView(titleText)
+
+        val accText = TextView(this).apply {
+            val isGood = aiReport.predictedAccuracy >= 50.0
+            val colorStr = if(isGood) "#16A34A" else "#EA580C"
+            val status = if(isGood) "Duy trì ổn định 🚀" else "Cần cải thiện thêm ⚠️"
+
+            text = "Mức độ thành thạo dự kiến: ${aiReport.predictedAccuracy}%\n($status)"
+            textSize = 16f
+            setTextColor(Color.parseColor(colorStr))
+            setPadding(0, 0, 0, 40)
+            gravity = android.view.Gravity.CENTER
+        }
+        layout.addView(accText)
+
+        val posTitle = TextView(this).apply {
+            text = "🌟 Nhân tố tích cực (Ưu điểm):"
+            setTextColor(Color.parseColor("#059669"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        layout.addView(posTitle)
+
+        aiReport.xaiExplanation.positiveFactors.forEach { factor ->
+            val pt = TextView(this).apply {
+                text = "• ${formatFactorText(factor)}"
+                setPadding(20, 15, 0, 20)
+                setTextColor(Color.parseColor("#334155"))
+            }
+            layout.addView(pt)
+        }
+
+        val negTitle = TextView(this).apply {
+            text = "⚠️ Nhân tố rủi ro (Hạn chế):"
+            setTextColor(Color.parseColor("#DC2626"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 20, 0, 0)
+        }
+        layout.addView(negTitle)
+
+        aiReport.xaiExplanation.negativeFactors.forEach { factor ->
+            val nt = TextView(this).apply {
+                text = "• ${formatFactorText(factor)}"
+                setPadding(20, 15, 0, 20)
+                setTextColor(Color.parseColor("#334155"))
+            }
+            layout.addView(nt)
+        }
+
+        val btnClose = Button(this).apply {
+            text = "NHẬN +$finalXp XP & HOÀN THÀNH"
+            setBackgroundColor(Color.parseColor("#0056D2"))
+            setTextColor(Color.WHITE)
+            setPadding(0, 30, 0, 30)
+            setOnClickListener {
+                bottomSheet.dismiss()
+                finish()
+            }
+        }
+        val btnParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, 50, 0, 0) }
+
+        layout.addView(btnClose, btnParams)
+
+        bottomSheet.setContentView(layout)
+        bottomSheet.setCancelable(false)
+        bottomSheet.show()
+    }
+
+    private fun showBasicResultDialog(finalXp: Int) {
         AlertDialog.Builder(this)
             .setTitle("Hoàn Thành Bài Học! 🎉")
             .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$finalXp XP!")
             .setCancelable(false)
-            .setPositiveButton("Tiếp tục lộ trình") { dialog, _ ->
+            .setPositiveButton("Tuyệt vời") { dialog, _ ->
                 dialog.dismiss()
-
-                // BẮT ĐẦU ĐOẠN CODE ĐÃ ĐƯỢC CHỈNH SỬA ĐỂ BẮT LỖI
-                lifecycleScope.launch(Dispatchers.IO) {
-                    try {
-                        val api = RetrofitClient.getInstance(applicationContext)
-                        val response = api.completeRoadmapStep(mapOf(
-                            "stepId" to stepId,
-                            "score" to score.toString(),
-                            "totalQuestions" to quizList.size.toString(),
-                            "earnedXp" to totalEarnedXp.toString() // Truyền tổng điểm XAI lên Backend
-                        ))
-
-                        withContext(Dispatchers.Main) {
-                            // Ép Android phải kiểm tra xem Backend trả về mã gì
-                            if (response.isSuccessful) {
-                                Toast.makeText(this@IeltsQuizActivity, "🔥 Tiến độ đã lưu! Giữ vững phong độ nhé!", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(this@IeltsQuizActivity, "❌ Lỗi Server: Mã ${response.code()}", Toast.LENGTH_LONG).show()
-                            }
-                            finish()
-                        }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@IeltsQuizActivity, "❌ Lỗi mạng/Hệ thống: ${e.message}", Toast.LENGTH_LONG).show()
-                            finish()
-                        }
-                    }
-                }
-                // KẾT THÚC ĐOẠN SỬA
+                finish()
             }
             .create()
             .show()
     }
 
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            ttsEngine?.setLanguage(Locale.US)
-        }
+        if (status == TextToSpeech.SUCCESS) ttsEngine?.setLanguage(Locale.US)
     }
 
     private fun speakOut(text: String) {
-        if (text.isNotEmpty()) {
-            ttsEngine?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
-        }
+        if (text.isNotEmpty()) ttsEngine?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
     }
 
     override fun onDestroy() {
-        if (ttsEngine != null) {
-            ttsEngine?.stop()
-            ttsEngine?.shutdown()
-        }
+        ttsEngine?.stop()
+        ttsEngine?.shutdown()
         super.onDestroy()
     }
 }

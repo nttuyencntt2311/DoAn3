@@ -18,7 +18,7 @@ router.post("/vocabulary", vocabController.createVocab);
 router.put("/vocabulary/:id", vocabController.updateVocab); 
 router.delete("/vocabulary/:id", vocabController.deleteVocab); 
 
-// 🚀 ĐÂY LÀ ĐƯỜNG DẪN MỚI BỔ SUNG ĐỂ LƯU ĐIỂM TỪ ANDROID:
+// ĐÂY LÀ ĐƯỜNG DẪN MỚI BỔ SUNG ĐỂ LƯU ĐIỂM TỪ ANDROID:
 router.put("/vocabulary/:id/proficiency", vocabController.updateProficiency);
 router.post("/vocabulary/custom-quiz", vocabController.generateCustomQuiz);
 router.get("/vocabulary/custom-categories", vocabController.getCustomQuizCategories);
@@ -31,8 +31,16 @@ router.get("/vocabulary/custom-categories", vocabController.getCustomQuizCategor
 // 🚀 2. GẮN VERIFYTOKEN VÀO ĐỂ API BIẾT LÀ TÀI KHOẢN NÀO ĐANG GỌI
 router.get("/vocabularies", vocabController.getAllVocabularies);
 
-// 🚀 BỔ SUNG: GẮN VERIFYTOKEN CHO CẢ API THỐNG KÊ ĐỂ LẤY ĐÚNG SỐ LIỆU CÁ NHÂN
+// BỔ SUNG: GẮN VERIFYTOKEN CHO CẢ API THỐNG KÊ ĐỂ LẤY ĐÚNG SỐ LIỆU CÁ NHÂN
 router.get("/vocabularies/stats", verifyToken, vocabController.getVocabStats);
+
+// 🚀 TÍNH NĂNG 4: SỔ TAY TIÊN TRI (Dự đoán AI)
+// Bắt buộc đặt trước route /:word để không bị lỗi định tuyến
+router.get(
+  "/vocabularies/predict-forgetting", 
+  verifyToken, 
+  vocabController.getPredictiveFlashcards
+);
 
 router.get("/vocabularies/:word", vocabController.getOrFetchVocabulary);
 
@@ -55,5 +63,6 @@ router.get(
   "/vocabularies/custom-categories",
   vocabController.getCustomQuizCategories,
 );
-
+// Nhớ khai báo route này ở file routes nhé:
+router.post("/submit", vocabController.submitQuiz);
 module.exports = router;

@@ -1,4 +1,18 @@
 const User = require("../models/User");
+// API: Lấy Bảng xếp hạng Top 10 XP
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const topUsers = await User.find()
+      .sort({ xp: -1 }) // Sắp xếp XP giảm dần
+      .limit(10)        // Chỉ lấy Top 10
+      .select("name xp level"); // Lấy tên, xp và cấp độ
+
+    res.status(200).json(topUsers);
+  } catch (error) {
+    console.error("Lỗi getLeaderboard:", error);
+    res.status(500).json({ error: "Lỗi server khi lấy bảng xếp hạng" });
+  }
+};
 
 // 1. HÀM PHỤC HỒI LẠI ĐỂ SỬA LỖI SẬP SERVER: Lấy danh sách người dùng
 exports.getAllUsers = async (req, res) => {
