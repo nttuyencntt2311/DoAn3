@@ -4,6 +4,7 @@ const roadmapStepSchema = new mongoose.Schema({
     id: { type: String, required: true },
     title: { type: String, required: true },
     description: { type: String, default: "" },
+    xaiReason: { type: String, default: "" },
     status: { type: String, enum: ['COMPLETED', 'CURRENT', 'LOCKED'], default: 'LOCKED' },
     currentProgress: { type: Number, default: 0 },
     maxProgress: { type: Number, default: 0 }

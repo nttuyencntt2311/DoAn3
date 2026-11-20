@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, X } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export default function Vocabulary() {
   // 1. Khởi tạo mảng rỗng chờ dữ liệu từ API
   const [words, setWords] = useState([]);
@@ -24,7 +26,7 @@ export default function Vocabulary() {
 
   const fetchVocabularies = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/vocabularies", {
+      const response = await fetch(`${API_BASE_URL}/api/vocabularies`, {
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         }
@@ -82,7 +84,7 @@ export default function Vocabulary() {
     );
     if (isConfirm) {
       try {
-        const response = await fetch(`http://localhost:3000/api/vocabularies/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/vocabularies/${id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
@@ -105,7 +107,7 @@ export default function Vocabulary() {
     e.preventDefault();
     try {
       if (editingId) {
-        const response = await fetch(`http://localhost:3000/api/vocabularies/${editingId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/vocabularies/${editingId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -123,7 +125,7 @@ export default function Vocabulary() {
           );
         }
       } else {
-        const response = await fetch("http://localhost:3000/api/vocabularies", {
+        const response = await fetch(`${API_BASE_URL}/api/vocabularies`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

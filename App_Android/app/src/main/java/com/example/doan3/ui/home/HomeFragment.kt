@@ -164,7 +164,8 @@ class HomeFragment : Fragment() {
                 val acc = if (card.predicted_accuracy > 1.0) card.predicted_accuracy else card.predicted_accuracy * 100
                 val dangerLevel = (100 - acc).toInt().coerceIn(0, 100)
 
-                text = "• ${card.wordText} (${card.phonetic})\n  Nghĩa: ${card.meaning}\n  Nguy cơ quên: $dangerLevel%"
+                val reasonLine = if (!card.xai_reason.isNullOrBlank()) "\n  🧠 ${card.xai_reason}" else ""
+                text = "• ${card.wordText} (${card.phonetic})\n  Nghĩa: ${card.meaning}\n  Nguy cơ quên: $dangerLevel%$reasonLine"
                 textSize = 16f
                 setTextColor(android.graphics.Color.parseColor("#1E293B"))
                 setPadding(0, 10, 0, 30)

@@ -40,8 +40,7 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
     const modelsToTry = [
         "gemini-2.5-flash",
         "gemini-2.5-pro",
-        "gemini-flash-latest",
-        "gemini-3.5-flash"
+        "gemini-2.0-flash"
     ];
 
     for (let i = 0; i < modelsToTry.length; i++) {
@@ -116,22 +115,31 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
 // ==========================================
 // TẠO LỘ TRÌNH BẰNG AI (JSON FORMAT)
 // ==========================================
-exports.generateRoadmapJSON = async (target, currentLevel, freeTime) => {
+exports.generateRoadmapJSON = async (target, currentLevel, freeTime, xaiContext = null) => {
+    const xaiBlock = xaiContext ? `
+HỒ SƠ HÀNH VI & PHÂN TÍCH XAI (SHAP) THỰC TẾ CỦA HỌC VIÊN:
+- Xác suất làm đúng dự kiến hiện tại: ${xaiContext.predictedAccuracy}%
+- Các chủ đề yếu cần ưu tiên: ${(xaiContext.weakCategories || []).join(", ") || "Chưa có dữ liệu"}
+- Các từ vựng hay làm sai gần đây: ${(xaiContext.weakWords || []).slice(0, 8).join(", ") || "Chưa có"}
+- Top yếu tố rủi ro từ SHAP: ${(xaiContext.negativeFactors || []).join("; ") || "Chưa phát hiện rủi ro lớn"}
+` : "";
+
     const prompt = `
-Bạn là một chuyên gia thiết kế lộ trình học Tiếng Anh.
+Bạn là một chuyên gia thiết kế lộ trình học Tiếng Anh ứng dụng Explainable AI (EdTech XAI).
 Học viên có thông tin sau:
 - Mục tiêu: ${target}
 - Trình độ hiện tại: ${currentLevel}
 - Thời gian rảnh: ${freeTime}
-
-Hãy tạo một lộ trình học tập gồm 4-5 chặng (steps). 
+${xaiBlock}
+Hãy tạo một lộ trình học tập cá nhân hóa gồm 4 chặng (steps), ưu tiên khắc phục trực tiếp các điểm yếu/rủi ro SHAP ở trên.
 BẮT BUỘC trả về ĐÚNG định dạng JSON dưới đây, không kèm text giải thích, không dùng markdown (\`\`\`json):
 {
-  "motivationMessage": "Một câu động viên ngắn gọn, truyền cảm hứng dựa trên mục tiêu của họ",
+  "motivationMessage": "Một câu động viên ngắn gọn, truyền cảm hứng dựa trên mục tiêu và hồ sơ hành vi của họ",
   "steps": [
     {
       "title": "Tên chặng học (ngắn gọn)",
       "description": "Mô tả ngắn gọn nội dung chặng này",
+      "xaiReason": "Giải thích ngắn 1 câu (<= 25 từ) vì sao AI gợi ý chặng này dựa trên hồ sơ XAI/điểm yếu của học viên",
       "maxProgress": <số lượng từ vựng cần học, là số nguyên từ 20 đến 100>
     }
   ]
@@ -155,5 +163,48 @@ BẮT BUỘC trả về ĐÚNG định dạng JSON dưới đây, không kèm te
     } catch (error) {
         console.error("Lỗi khi Gen Roadmap từ Gemini:", error);
         throw new Error("Không thể tạo lộ trình từ AI");
+    }
+};
+// ==========================================
+// SHAP-TO-TEXT CÓ KIỂM SOÁT (GROUNDED PEDAGOGICAL FEEDBACK)
+// ==========================================
+exports.generateGroundedXaiFeedback = async ({
+    predictedAccuracy,
+    detailedShap = [],
+    counterfactualSummary = "",
+    wrongWords = []
+}) => {
+    const topShap = (detailedShap || []).slice(0, 4).map(
+        (s) => `- ${s.vi_description}: giá trị=${s.value}, SHAP=${s.shap_score > 0 ? "+" : ""}${s.shap_score}`
+    ).join("\n");
+
+    const fallbackText = counterfactualSummary
+        ? `Xác suất thành thạo dự kiến của bạn là ${predictedAccuracy}%. ${counterfactualSummary}`
+        : `Xác suất thành thạo dự kiến của bạn là ${predictedAccuracy}%. Hãy ôn kỹ các từ còn nhầm và giữ tốc độ đọc đề ổn định.`;
+
+    if (!process.env.GEMINI_API_KEY) {
+        return fallbackText;
+    }
+
+    const prompt = `
+Bạn là gia sư tiếng Anh giải thích kết quả phân tích XAI (SHAP) cho học viên Việt Nam.
+CHỈ ĐƯỢC DỰA TRÊN SỐ LIỆU THỰC TẾ DƯỚI ĐÂY (tuyệt đối không bịa thêm chỉ số khác):
+- Xác suất làm đúng dự kiến: ${predictedAccuracy}%
+- Chi tiết đóng góp SHAP (dương = giúp làm đúng, âm = kéo điểm xuống):
+${topShap || "- Không có chi tiết SHAP"}
+- Gợi ý phản thực (What-If): ${counterfactualSummary || "Không có"}
+- Từ vựng vừa làm sai: ${(wrongWords || []).join(", ") || "Không có"}
+
+Hãy viết ĐÚNG 2-3 câu tiếng Việt tự nhiên, ấm áp, dễ hiểu (không dùng thuật ngữ kỹ thuật như 'SHAP' hay tên biến tiếng Anh) giải thích lý do kết quả và 1 hành động cụ thể nên làm ngay. Không chào hỏi rườm rà.
+`;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim();
+        return text || fallbackText;
+    } catch (err) {
+        console.warn("⚠️ Fallback SHAP-to-Text:", err.message);
+        return fallbackText;
     }
 };

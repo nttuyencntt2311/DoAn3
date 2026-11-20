@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Users, BookOpen, Activity } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export default function Dashboard() {
   // 1. Khởi tạo state để chứa dữ liệu thực từ API
   const [stats, setStats] = useState({
@@ -17,7 +19,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       // Thay URL này bằng endpoint Backend thực tế 
-    const response = await fetch("http://localhost:3000/api/stats/dashboard", {
+    const response = await fetch(`${API_BASE_URL}/api/stats/dashboard`, {
         headers: {
             "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
         }

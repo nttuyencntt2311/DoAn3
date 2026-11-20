@@ -6,3 +6,5 @@ __pycache__/
 # Bỏ qua môi trường ảo (nếu bạn có dùng)
 venv/
 env/
+
+.DS_Store

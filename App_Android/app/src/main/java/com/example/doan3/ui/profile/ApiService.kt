@@ -93,6 +93,13 @@ data class MemoryItem(
 
 
 // === MODEL QUIZ VÀ BỆNH ÁN XAI MỚI ===
+data class QuestionLog(
+    val question: String,
+    val topic: String,
+    val isCorrect: Boolean,
+    val elapsedTimeMs: Long
+)
+
 data class SubmitQuizRequest(
     val topic: String,
     val score: Int,
@@ -100,8 +107,10 @@ data class SubmitQuizRequest(
     val earnedXp: Int,
     val learnedWords: Int,
     val timeSpentMinutes: Int,
-    val difficulty: Int = 3, // Thêm trường độ khó để truyền sang Node.js
-    val wrongWords: List<String> = emptyList() // 🚀 BỔ SUNG TRƯỜNG NÀY ĐỂ BẮT LỖI TỪ VỰNG
+    val difficulty: Int = 3,
+    val wrongWords: List<String> = emptyList(),
+    val avgElapsedTimeMs: Long = 0L,
+    val questionLogs: List<QuestionLog> = emptyList()
 )
 
 // Chức năng " Sổ tay tiên tri "
@@ -111,7 +120,8 @@ data class PredictiveFlashcard(
     val meaning: String,
     val phonetic: String,
     val predicted_accuracy: Double,
-    val is_struggling: Boolean
+    val is_struggling: Boolean,
+    val xai_reason: String? = null
 )
 
 data class PredictForgettingResponse(
@@ -130,16 +140,26 @@ data class ShapDetail(
 
 // Cấu trúc Giải thích XAI (Điểm mạnh / Điểm yếu) ĐÃ ĐƯỢC CẬP NHẬT
 data class XaiExplanation(
+    @SerializedName("base_value") val baseValue: Double? = null,
     @SerializedName("negative_factors") val negativeFactors: List<String>,
     @SerializedName("positive_factors") val positiveFactors: List<String>,
-    @SerializedName("detailed_shap") val detailedShap: List<ShapDetail>? = null // Đón dữ liệu vẽ biểu đồ
+    @SerializedName("detailed_shap") val detailedShap: List<ShapDetail>? = null // Dữ liệu vẽ biểu đồ SHAP
 )
 
-// Cấu trúc Bệnh án AI tổng thể
+data class CounterfactualSuggestion(
+    @SerializedName("current_accuracy") val currentAccuracy: Double = 0.0,
+    @SerializedName("target_accuracy") val targetAccuracy: Double = 0.0,
+    @SerializedName("delta_percent") val deltaPercent: Double = 0.0,
+    @SerializedName("summary_vi") val summaryVi: String = ""
+)
+
+// Cấu trúc Bệnh án AI tổng thể (SHAP + Counterfactual + Grounded NLG)
 data class AiReport(
     @SerializedName("predicted_accuracy") val predictedAccuracy: Double,
     @SerializedName("is_struggling") val isStruggling: Boolean,
-    @SerializedName("xai_explanation") val xaiExplanation: XaiExplanation
+    @SerializedName("xai_explanation") val xaiExplanation: XaiExplanation,
+    @SerializedName("counterfactual") val counterfactual: CounterfactualSuggestion? = null,
+    @SerializedName("pedagogical_feedback") val pedagogicalFeedback: String? = null
 )
 
 data class SubmitQuizResponse(
@@ -159,6 +179,7 @@ data class RefreshTokenRequest(val refreshToken: String)
 data class RefreshTokenResponse(val token: String)
 data class LogoutResponse(val message: String)
 data class LogoutRequest(val refreshToken: String)
+
 
 // === MODELS TÍNH NĂNG AI / LỊCH SỬ CHAT ===
 data class ChatResponse(val reply: String)
@@ -201,7 +222,7 @@ interface ApiService {
     @GET("api/auth/profile")
     fun getProfile(): Call<GetProfileResponse>
 
-    @PUT("api/auth/update-profile")
+    @PUT("api/auth/profile")
     fun updateProfile(@Body request: UpdateProfileRequest): Call<UpdateProfileResponse>
 
     @GET("api/auth/stats")
@@ -220,6 +241,7 @@ interface ApiService {
     @POST("api/auth/logout")
     fun logout(@Body request: RefreshTokenRequest): Call<LogoutResponse>
 
+
     @POST("api/auth/logout")
     fun logoutUser(@Body request: LogoutRequest): Call<Void>
 
@@ -234,14 +256,8 @@ interface ApiService {
     @GET("api/vocabularies")
     fun getAllVocabularies(): Call<List<Vocabulary>>
 
-    @GET("api/vocabulary")
-    fun getAllVocabulariesOld(): Call<List<Vocabulary>>
-
     @GET("api/vocabularies/{word}")
     fun getVocabularyByWord(@Path("word") word: String): Call<Vocabulary>
-
-    @GET("api/roadmap/{userId}")
-    fun getRoadmap(@Path("userId") userId: String): Call<UserRoadmapResponse>
 
     @GET("api/vocabularies/stats")
     fun getVocabStats(): Call<VocabStatsResponse>
@@ -251,12 +267,6 @@ interface ApiService {
         @Path("id") id: String,
         @Body request: ProficiencyRequest
     ): Call<ProficiencyResponse>
-
-    @PUT("api/vocabulary/{id}/proficiency")
-    fun updateProficiencyOld(
-        @Path("id") id: String,
-        @Body body: Map<String, Int>
-    ): Call<Any>
 
     // --- AI / CHAT ---
     @POST("api/ai/chat")
@@ -297,12 +307,6 @@ interface ApiService {
     @GET("api/vocabularies/custom-categories")
     fun getCustomQuizCategories(): Call<CustomCategoriesResponse>
 
-    @POST("api/vocabulary/custom-quiz")
-    fun generateCustomQuizOld(@Body request: GenerateCustomQuizRequest): Call<GenerateCustomQuizResponse>
-
-    @GET("api/vocabulary/custom-categories")
-    fun getCustomQuizCategoriesOld(): Call<CustomCategoriesResponse>
-
     // --- PREDICTIVE FLASHCARDS (SỔ TAY TIÊN TRI) ---
     @GET("api/vocabularies/predict-forgetting")
     fun getPredictiveFlashcards(): Call<PredictForgettingResponse>
@@ -317,7 +321,7 @@ interface ApiService {
 // ==========================================
 object RetrofitClient {
     // 🚀 Sử dụng cổng 3000 hoặc 5000 tùy vào cấu hình Node.js
-    const val BASE_URL = "http://10.0.2.2:3000/"
+    const val BASE_URL = "http://10.0.2.2:8080/"
 
     var token: String = ""
 
@@ -373,6 +377,7 @@ object RetrofitClient {
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
+            .authenticator(TokenAuthenticator(context.applicationContext))
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)

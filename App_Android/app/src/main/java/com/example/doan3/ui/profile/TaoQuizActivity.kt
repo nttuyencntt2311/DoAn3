@@ -1,6 +1,10 @@
 package com.example.doan3.ui.profile
 
+import android.content.Intent
 import android.net.Uri
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -129,41 +133,52 @@ class TaoQuizActivity : AppCompatActivity() {
 
     // 3. HÀM GIAO TIẾP VỚI AI (Mô phỏng quy trình)
     private fun generateQuizWithAI(content: String, type: String, difficulty: String, quantity: Int) {
-        Toast.makeText(this, "Đang gửi tài liệu cho AI phân tích...", Toast.LENGTH_SHORT).show()
+        binding.btnTaoQuiz.isEnabled = false
+        binding.btnTaoQuiz.text = "AI đang xử lý..."
 
-        /* ======== GÓC LẬP TRÌNH AI ========
-        Sau này bạn dùng API của Gemini hoặc ChatGPT, bạn sẽ ráp vào đây.
-        Yêu cầu (Prompt) chuẩn sẽ như thế này:
-        */
-        val promptForAI = """
-            Dựa vào nội dung sau: "$content"
-            Hãy tạo cho tôi $quantity câu hỏi $type, với độ khó là $difficulty.
-            Hãy trả về định dạng JSON bao gồm: danh sách câu hỏi, các đáp án và đáp án đúng.
-        """.trimIndent()
+        val enrichedContent = "[$type | Độ khó: $difficulty] $content"
+        val request = GenerateCustomQuizRequest(content = enrichedContent, questionCount = quantity)
 
-        // (Giả lập) Thời gian chờ AI trả lời mất khoảng 2-3 giây.
-        // Dưới đây là kết quả giả lập AI đã sinh ra quiz xong:
-        val aiGeneratedQuizJson = "[ { \"question\": \"Câu hỏi 1\", \"answer\": \"A\" } ]" // Ví dụ chuỗi JSON
+        RetrofitClient.getInstance(this).generateCustomQuiz(request)
+            .enqueue(object : Callback<GenerateCustomQuizResponse> {
+                override fun onResponse(
+                    call: Call<GenerateCustomQuizResponse>,
+                    response: Response<GenerateCustomQuizResponse>
+                ) {
+                    binding.btnTaoQuiz.isEnabled = true
+                    binding.btnTaoQuiz.text = "Tạo Quiz ngay"
 
-        // Sau khi có kết quả từ AI, ta đem đi lưu trữ
-        saveQuizToDatabase(aiGeneratedQuizJson)
-    }
+                    if (response.isSuccessful && response.body() != null) {
+                        val categoryName = response.body()!!.categoryName
+                        Toast.makeText(
+                            this@TaoQuizActivity,
+                            "Tạo bộ Quiz AI thành công!",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
-    // 4. HÀM LƯU TRỮ VÀO DATABASE (Mô phỏng)
-    private fun saveQuizToDatabase(quizDataJson: String) {
-        /*
-        ======== GÓC LƯU TRỮ ========
-        Chỗ này bạn sẽ dùng Room Database hoặc SQLite để INSERT vào bảng.
-        - Bước 1: Lưu Lịch sử (Thời gian tạo, độ khó, loại câu hỏi)
-        - Bước 2: Parse chuỗi JSON bên trên thành List, rồi lưu từng Câu hỏi.
-        */
+                        val intent = Intent(this@TaoQuizActivity, KhamPhaActivity::class.java)
+                        intent.putExtra("CATEGORY_NAME", categoryName)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(
+                            this@TaoQuizActivity,
+                            "Lỗi từ Server (${response.code()})",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
 
-        Toast.makeText(this, "Đã nhờ AI làm xong và LƯU QUIZ THÀNH CÔNG!", Toast.LENGTH_LONG).show()
-
-        // (Tùy chọn) Chuyển sang màn hình Làm bài luôn hoặc màn hình Lịch sử
-        // val intent = Intent(this, LamBaiQuizActivity::class.java)
-        // startActivity(intent)
-        // finish()
+                override fun onFailure(call: Call<GenerateCustomQuizResponse>, t: Throwable) {
+                    binding.btnTaoQuiz.isEnabled = true
+                    binding.btnTaoQuiz.text = "Tạo Quiz ngay"
+                    Toast.makeText(
+                        this@TaoQuizActivity,
+                        "Lỗi kết nối mạng: ${t.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
     }
 
     // Hàm hỗ trợ đổi màu nút

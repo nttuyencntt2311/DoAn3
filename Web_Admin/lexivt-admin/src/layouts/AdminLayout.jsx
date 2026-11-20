@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Users, LogOut, Bell } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, BrainCircuit, LogOut, Bell } from 'lucide-react';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -8,6 +8,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Từ vựng', path: '/vocabulary', icon: <BookOpen size={20} /> },
     { name: 'Người dùng', path: '/users', icon: <Users size={20} /> },
+    { name: 'Phân tích XAI', path: '/xai-analytics', icon: <BrainCircuit size={20} /> },
   ];
 
   const handleLogout = () => {

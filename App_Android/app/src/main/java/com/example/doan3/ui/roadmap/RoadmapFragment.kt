@@ -1,5 +1,6 @@
 package com.example.doan3.ui.roadmap
 
+import android.content.Context
 import android.content.Intent // 🚀 ĐÃ THÊM IMPORT NÀY ĐỂ HẾT ĐỎ INTENT
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -81,8 +82,11 @@ class RoadmapFragment : Fragment() {
             val time = intent.getStringExtra("TIME") ?: "30 phút/ngày"
             val expectation = intent.getStringExtra("EXPECTATION") ?: ""
 
+            val prefs = requireContext().getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            val currentUserId = prefs.getString("USER_ID", "") ?: ""
+
             viewModel.generateAiRoadmap(
-                userId = "user_123",
+                userId = currentUserId,
                 target = goal,
                 currentLevel = level,
                 freeTime = time,
@@ -98,7 +102,9 @@ class RoadmapFragment : Fragment() {
         // Kiểm tra xem có đang trong tiến trình tạo mới không, nếu không thì tự cập nhật lại dữ liệu
         val isGenerateNew = requireActivity().intent.getBooleanExtra("GENERATE_ROADMAP", false)
         if (!isGenerateNew) {
-            viewModel.fetchAiRoadmapForUser("user_123")
+            val prefs = requireContext().getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            val currentUserId = prefs.getString("USER_ID", "") ?: ""
+            viewModel.fetchAiRoadmapForUser(currentUserId)
         }
     }
 

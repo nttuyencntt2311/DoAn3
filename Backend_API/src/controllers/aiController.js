@@ -3,6 +3,7 @@ const ChatSession = require("../models/ChatSession");
 const ChatMessage = require("../models/ChatMessage");
 const Roadmap = require("../models/Roadmap");
 const User = require("../models/User");
+const Vocabulary = require("../models/Vocabulary");
 const xaiService = require("../service/xaiService");
 
 // ==========================================
@@ -169,36 +170,92 @@ exports.generateRoadmap = async (req, res) => {
     const userId = req.user.id || req.user.userId || req.user._id;
     const { target, currentLevel, freeTime, expectation } = req.body;
 
+    // 🚀 TỔNG HỢP HỒ SƠ HÀNH VI & PHÂN TÍCH XAI (SHAP) TRƯỚC KHI SINH LỘ TRÌNH
+    let xaiContext = null;
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        const weakEntries = (user.vocabProgress || []).filter((p) => (p.proficiency || 0) < 80);
+        const weakIds = weakEntries.map((p) => p.wordId).filter((id) => id && id.toString().length === 24);
+        const weakVocabs = weakIds.length > 0 ? await Vocabulary.find({ _id: { $in: weakIds } }).limit(20) : [];
+
+        const weakWords = weakVocabs.map((v) => v.word);
+        const catCounts = {};
+        weakVocabs.forEach((v) => {
+          const cat = v.category || "Tổng hợp";
+          catCounts[cat] = (catCounts[cat] || 0) + 1;
+        });
+        const weakCategories = Object.entries(catCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map((e) => e[0]);
+
+        const histAcc = user.level ? Math.min(0.2 + user.level * 0.1, 0.9) : 0.5;
+        const attempted = (user.quizzesCount || 0) * 5;
+        const avgTimeMs =
+          user.timeLearnedMinutes > 0 && attempted > 0
+            ? Math.min(120000, Math.max(5000, Math.round((user.timeLearnedMinutes * 60 * 1000) / attempted)))
+            : 23000.0;
+        const timeDiffSec = user.lastStudyDate
+          ? Math.max(0, (Date.now() - new Date(user.lastStudyDate).getTime()) / 1000)
+          : 0.0;
+
+        const shapEval = await xaiService.getWeaknessPrediction({
+          historyAcc: histAcc,
+          totalQuestions: attempted,
+          questionDifficulty: 0.5,
+          avgTime: avgTimeMs,
+          rollingAcc5: histAcc,
+          timeDiff: timeDiffSec,
+          elapsedTime: avgTimeMs,
+        });
+
+        xaiContext = {
+          predictedAccuracy: shapEval?.predicted_accuracy ?? Math.round(histAcc * 100),
+          weakCategories,
+          weakWords,
+          negativeFactors: shapEval?.xai_explanation?.negative_factors || [],
+        };
+      }
+    } catch (ctxErr) {
+      console.warn("⚠️ Không thể nạp ngữ cảnh XAI cho Roadmap:", ctxErr.message);
+    }
+
     let aiRoadmap;
     try {
-      // Cố gắng gọi AI sinh lộ trình
+      // Gọi Gemini sinh lộ trình cá nhân hóa dựa trên hồ sơ XAI + SHAP
       aiRoadmap = await aiService.generateRoadmapJSON(
         target,
         currentLevel,
         freeTime,
+        xaiContext,
       );
     } catch (aiError) {
       console.log(
-        "⚠️ [AI QUÁ TẢI 503]: Đang kích hoạt Lộ trình dự phòng (Mock Roadmap) cho Demo...",
+        "⚠️ [AI QUÁ TẢI 503]: Đang kích hoạt Lộ trình dự phòng có giải thích XAI...",
       );
-      // Phao cứu sinh khi Gemini sập
+      const topWeakCat = xaiContext?.weakCategories?.[0] || target || "Giao tiếp";
+      const topRisk = xaiContext?.negativeFactors?.[0] || "cần củng cố nền tảng từ vựng đều đặn";
       aiRoadmap = {
         motivationMessage:
-          "🚀 Lộ trình thiết kế riêng giúp bạn bứt phá mục tiêu nhanh chóng!",
+          "🚀 Lộ trình XAI thiết kế riêng dựa trên hồ sơ hành vi học tập của bạn!",
         steps: [
           {
-            title: `Chặng 1: Nền tảng ${currentLevel || "Cơ bản"}`,
-            description: `Làm quen từ vựng cốt lõi phục vụ mục tiêu ${target || "Giao tiếp"}.`,
+            title: `Chặng 1: Củng cố ${topWeakCat}`,
+            description: `Ôn tập trọng tâm nhóm từ hay nhầm lẫn cho mục tiêu ${target || "Giao tiếp"}.`,
+            xaiReason: `AI ưu tiên chặng này vì phân tích XAI ghi nhận: ${topRisk}.`,
             maxProgress: 30,
           },
           {
-            title: "Chặng 2: Thực chiến hội thoại",
-            description: `Tập trung luyện tập các tình huống thực tế (${freeTime || "30 phút/ngày"}).`,
+            title: "Chặng 2: Thực chiến ngữ cảnh",
+            description: `Luyện tập phản xạ câu hỏi phù hợp quỹ thời gian (${freeTime || "30 phút/ngày"}).`,
+            xaiReason: "Giúp ổn định tốc độ suy nghĩ và nâng phong độ 5 câu gần nhất.",
             maxProgress: 40,
           },
           {
             title: "Chặng 3: Chuyên sâu & Bứt phá",
             description: "Hoàn thiện kỹ năng nâng cao và kiểm tra tổng lực.",
+            xaiReason: `Đưa xác suất làm đúng vượt ngưỡng 80% cho mục tiêu ${target || "đã chọn"}.`,
             maxProgress: 50,
           },
         ],
@@ -213,6 +270,7 @@ exports.generateRoadmap = async (req, res) => {
       id: (index + 1).toString(),
       title: s.title,
       description: s.description,
+      xaiReason: s.xaiReason || "Đề xuất dựa trên mục tiêu và tiến độ học tập cá nhân của bạn.",
       status: index === 0 ? "CURRENT" : "LOCKED",
       currentProgress: 0,
       maxProgress: s.maxProgress || 30,
@@ -265,6 +323,7 @@ exports.getMyRoadmap = async (req, res) => {
         id: s.id,
         title: s.title,
         description: s.description,
+        xaiReason: s.xaiReason || "",
         status: s.status,
         currentProgress: s.currentProgress,
         maxProgress: s.maxProgress,
@@ -376,24 +435,34 @@ BẮT BUỘC trả về định dạng mảng JSON thuần với cấu trúc:
     // ==========================================================
     console.log(`⏳ [4/4] Bắt đầu gọi Python XAI phân tích độ khó...`);
 
+    // Tính tốc độ suy nghĩ trung bình thực tế từ lịch sử user (tránh truyền 0 gây lỗi Out-of-Distribution)
+    const realAvgTimeMs =
+      user && user.timeLearnedMinutes > 0 && userAttempted > 0
+        ? Math.min(120000, Math.max(5000, Math.round((user.timeLearnedMinutes * 60 * 1000) / userAttempted)))
+        : 23000.0;
+    const realTimeDiffSec =
+      user && user.lastStudyDate
+        ? Math.max(0, (Date.now() - new Date(user.lastStudyDate).getTime()) / 1000)
+        : 0.0;
+
     for (let i = 0; i < quizData.length; i++) {
       let questionItem = quizData[i];
-      const simulatedDifficulty = Math.min(questionItem.question.length / 100, 1.0);
+      // Độ khó chuẩn hóa [0.2 -> 0.9]: câu dài/phức tạp hơn -> độ khó cao hơn (khớp question_difficulty = 1 - pass_rate)
+      const simulatedDifficulty = Number(
+        Math.min(0.9, Math.max(0.2, questionItem.question.length / 120)).toFixed(2)
+      );
 
-      // SỬA Ở ĐÂY: Bổ sung đủ 8 biến để gửi cho xaiService
       const studentDataForML = {
         historyAcc: userHistoryAcc,
         totalQuestions: userAttempted,
         questionDifficulty: simulatedDifficulty,
-        avgTime: 0.0, // Thời gian TB lịch sử (giả lập 0 cho lần đầu)
-        rollingAcc5: userHistoryAcc, // Giả định phong độ gần đây bằng phong độ lịch sử
-        timeDiff: 0.0, // Chưa làm bài nên timeDiff = 0
-        elapsedTime: 0.0, // Chưa làm bài nên elapsedTime = 0
-        elapsedRatio: 1.0 // Chưa làm bài nên Ratio = 1
+        avgTime: realAvgTimeMs,
+        rollingAcc5: userHistoryAcc,
+        timeDiff: realTimeDiffSec,
       };
 
       try {
-        const mlPrediction = await xaiService.getWeaknessPrediction(studentDataForML);
+        const mlPrediction = await xaiService.getPreQuizPrediction(studentDataForML);
 
         if (mlPrediction) {
           const predictedAcc = mlPrediction.predicted_accuracy;
@@ -629,17 +698,35 @@ exports.generatePostMortem = async (req, res) => {
     };
     let totalAvgTimeRaw = 0; // Thời gian làm bài thực tế trung bình
 
-    // 3. Cộng dồn dữ liệu từ 10 câu hỏi
+    // 3. Cộng dồn dữ liệu SHAP từ phản hồi chuẩn của FastAPI (xai_explanation.detailed_shap)
+    let validCount = 0;
     results.forEach((resItem, index) => {
-      const contributions = resItem.explanation.feature_contributions;
-      totalShap.historyAcc += contributions.user_history_acc;
-      totalShap.questionDifficulty += contributions.question_difficulty;
-      totalShap.avgTime += contributions.user_avg_elapsed_time;
+      const detailedShap = resItem?.xai_explanation?.detailed_shap;
+      if (Array.isArray(detailedShap)) {
+        const shapMap = {};
+        detailedShap.forEach((item) => {
+          shapMap[item.feature] = Number(item.shap_score) || 0;
+        });
 
-      totalAvgTimeRaw += quizHistory[index].avgTime;
+        totalShap.historyAcc += shapMap.user_history_acc || 0;
+        totalShap.questionDifficulty += shapMap.question_difficulty || 0;
+        totalShap.avgTime += (shapMap.user_avg_elapsed_time || 0) + (shapMap.elapsed_time || 0);
+        validCount++;
+      }
+
+      totalAvgTimeRaw += Number(quizHistory[index]?.avgTime || quizHistory[index]?.elapsedTime || 0);
     });
 
-    const meanRealTime = totalAvgTimeRaw / quizHistory.length;
+    if (validCount === 0) {
+      return res.status(503).json({
+        success: false,
+        message: "Dịch vụ Predictive AI không phản hồi hoặc không trả về dữ liệu SHAP hợp lệ.",
+      });
+    }
+
+    const rawMeanTime = totalAvgTimeRaw / quizHistory.length;
+    // Chuẩn hóa về giây nếu đầu vào là mili-giây (> 1000)
+    const meanRealTime = rawMeanTime > 1000 ? rawMeanTime / 1000 : rawMeanTime;
 
     // 4. "Dịch" SHAP Value thành Bệnh án
     let strengths = [];

@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Vocabulary = require("../models/Vocabulary");
 const { updateStreak } = require("../service/streakService");
+const xaiService = require("../service/xaiService");
 const User = require("../models/User");
 // 1. Hàm lấy danh sách tất cả từ vựng (GET)
 const jwt = require("jsonwebtoken"); // 🚀 Nhớ thêm dòng này ở đầu file nếu chưa có
@@ -215,18 +216,17 @@ exports.updateProficiency = async (req, res) => {
       (v) => v.proficiency >= 80,
     ).length;
 
-    user.lastStudyDate = new Date();
-
-    // Lưu thẳng vào Database
+    // Lưu tiến độ từ vựng trước (KHÔNG ghi đè lastStudyDate tại đây để updateStreak tính đúng khoảng cách ngày)
     await user.save();
 
-    const currentStreak = await updateStreak(userId);
+    const streakUser = await updateStreak(userId);
+    const currentStreakDays = streakUser ? streakUser.streakDays : (user.streakDays || 0);
 
     res.status(200).json({
       message: "Cập nhật tiến độ học thành công",
       wordsLearned: user.wordsLearned,
       xp: user.xp,
-      streakDays: currentStreak, // Trả về số chuỗi ngày mới cho App nếu cần
+      streakDays: currentStreakDays, // Trả về đúng số nguyên streakDays
     });
   } catch (error) {
     console.error("Lỗi khi updateProficiency:", error);
@@ -235,17 +235,41 @@ exports.updateProficiency = async (req, res) => {
       .json({ message: "Lỗi server khi cập nhật điểm", error: error.message });
   }
 };
-// 7. Hàm lấy Thống kê
+// 7. Hàm lấy Thống kê (Cá nhân hóa theo từng học viên)
 exports.getVocabStats = async (req, res) => {
   try {
     const totalWords = await Vocabulary.countDocuments();
-    const masteredWords = await Vocabulary.countDocuments({
-      proficiency: { $gte: 80 },
-    });
-    const learningWords = await Vocabulary.countDocuments({
-      proficiency: { $gt: 0, $lt: 80 },
-    });
-    const newWords = await Vocabulary.countDocuments({ proficiency: 0 });
+
+    // Lấy userId từ verifyToken (hoặc giải mã Bearer token nếu route cũ không gắn middleware)
+    let userId = req.user ? (req.user.userId || req.user.id) : null;
+    if (!userId) {
+      const authHeader = req.header("Authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const decoded = jwt.verify(
+            authHeader.split(" ")[1],
+            process.env.JWT_SECRET || "your_jwt_secret_key"
+          );
+          userId = decoded.userId || decoded.id;
+        } catch (err) {
+          userId = null;
+        }
+      }
+    }
+
+    let masteredWords = 0;
+    let learningWords = 0;
+
+    if (userId) {
+      const user = await User.findById(userId);
+      const progressList = (user && user.vocabProgress) ? user.vocabProgress : [];
+      masteredWords = progressList.filter((p) => (p.proficiency || 0) >= 80).length;
+      learningWords = progressList.filter(
+        (p) => (p.proficiency || 0) > 0 && (p.proficiency || 0) < 80
+      ).length;
+    }
+
+    const newWords = Math.max(0, totalWords - masteredWords - learningWords);
     const masteryPercentage =
       totalWords === 0 ? 0 : Math.round((masteredWords / totalWords) * 100);
 
@@ -1030,11 +1054,12 @@ exports.saveWord = async (req, res) => {
 
     // === TỰ ĐỘNG CẬP NHẬT CHUỖI NGÀY HỌC (STREAK) ===
     // Mỗi khi người dùng bấm Lưu từ, hệ thống hiểu là họ có hoạt động học tập hôm nay
-    const currentStreak = await updateStreak(userId);
+    const streakUser = await updateStreak(userId);
+    const currentStreakDays = streakUser ? streakUser.streakDays : 0;
 
     res.status(200).json({
       message: "Đã lưu từ vựng vào sổ tay thành công!",
-      streakDays: currentStreak, // Trả thêm số ngày Streak mới về cho App cập nhật giao diện nếu cần
+      streakDays: currentStreakDays, // Trả về đúng số nguyên streakDays
     });
   } catch (error) {
     res
@@ -1043,11 +1068,7 @@ exports.saveWord = async (req, res) => {
   }
 };
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-// Đảm bảo bạn đã khai báo API Key của Gemini ở đầu file hoặc trong file .env
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY",
-);
+const { genAI } = require("../service/aiService");
 
 // [HÀM 1] API Nhận text, gọi AI tạo Quiz và lưu vào Database
 exports.generateCustomQuiz = async (req, res) => {
@@ -1064,7 +1085,7 @@ exports.generateCustomQuiz = async (req, res) => {
         Trả về ĐÚNG định dạng mảng JSON thuần túy (không kèm markdown, không có \`\`\`json):
         [{"word": "từ tiếng anh", "phonetic": "phiên âm", "meaning": "nghĩa tiếng việt"}]`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     let textResult = result.response.text();
 
@@ -1123,29 +1144,39 @@ exports.getPredictiveFlashcards = async (req, res) => {
       return res.status(401).json({ message: "Vui lòng đăng nhập!" });
     }
 
-    const User = require("../models/User");
-    const Vocabulary = require("../models/Vocabulary");
     const user = await User.findById(userId);
-
-    // Nếu user chưa học gì thì trả về mảng rỗng để ẩn Sổ tay
     if (!user || !user.vocabProgress || user.vocabProgress.length === 0) {
       return res.status(200).json({ message: "Trống", warning: "", predictiveFlashcards: [] });
     }
 
-    // 🚀 BƯỚC 1: QUÉT THẲNG VÀO DATABASE (BIỆN PHÁP MẠNH)
-    // Cứ từ nào bạn vừa làm sai (0 điểm) hoặc điểm thấp (< 80) là hốt trọn!
-    const weakWords = user.vocabProgress.filter(p => (p.proficiency || 0) < 80);
+    // Lọc các từ chưa đạt thành thạo tuyệt đối (< 95) hoặc đã lâu chưa ôn (>= 2 ngày)
+    const nowMs = Date.now();
+    const candidates = user.vocabProgress.filter((p) => {
+      const prof = p.proficiency || 0;
+      const daysSince = p.lastReviewedDate
+        ? (nowMs - new Date(p.lastReviewedDate).getTime()) / (1000 * 60 * 60 * 24)
+        : 3.0;
+      return prof < 80 || daysSince >= 2.0;
+    });
 
-    if (weakWords.length === 0) {
+    if (candidates.length === 0) {
       return res.status(200).json({ message: "Đã thuộc hết", warning: "", predictiveFlashcards: [] });
     }
 
-    // 🚀 BƯỚC 2: CHUẨN HÓA DỮ LIỆU ĐỂ ANDROID HIỂN THỊ ĐƯỢC 100%
+    const userHistoryAcc = user.level ? Math.min(0.2 + user.level * 0.1, 0.9) : 0.5;
+    const totalQuestions = (user.quizzesCount || 0) * 5;
+    const userAvgTimeMs =
+      user.timeLearnedMinutes > 0 && totalQuestions > 0
+        ? Math.min(120000, Math.max(5000, Math.round((user.timeLearnedMinutes * 60 * 1000) / totalQuestions)))
+        : 23000.0;
+
+    // Giới hạn top 15 từ ưu tiên nhất để tối ưu độ trễ gọi XAI
+    const topCandidates = candidates.slice(0, 15);
+
     const finalFlashcards = await Promise.all(
-      weakWords.map(async (item) => {
+      topCandidates.map(async (item) => {
         let wordDetail = null;
         try {
-          // Xử lý triệt để lỗi Mongoose CastError khi tìm kiếm
           if (item.wordId && item.wordId.toString().length === 24) {
             wordDetail = await Vocabulary.findById(item.wordId);
           }
@@ -1156,123 +1187,67 @@ exports.getPredictiveFlashcards = async (req, res) => {
           console.error("Bỏ qua lỗi tìm kiếm từ:", e.message);
         }
 
-        // Đánh giá mức độ nguy hiểm: Nếu vừa làm sai (0 điểm) -> Trả về 0.05 
-        // Android sẽ tự động tính ra 95% nguy cơ quên và bôi đỏ!
-        const aiAccuracy = item.proficiency === 0 ? 0.05 : (item.proficiency / 100);
+        const proficiency = item.proficiency || 0;
+        const mistakeCount = item.mistakeCount || 0;
+        const reviewCount = item.reviewCount || 1;
+        const daysSinceReview = item.lastReviewedDate
+          ? Math.max(0, (nowMs - new Date(item.lastReviewedDate).getTime()) / (1000 * 60 * 60 * 24))
+          : 2.0;
+
+        // Gọi FastAPI XGBoost + SHAP + Ebbinghaus
+        const xaiRes = await xaiService.getForgettingPrediction({
+          historyAcc: userHistoryAcc,
+          totalQuestions,
+          proficiency,
+          mistakeCount,
+          reviewCount,
+          daysSinceReview,
+          avgTime: userAvgTimeMs,
+        });
+
+        let predictedAccuracy;
+        let isStruggling;
+        let xaiReason;
+
+        if (xaiRes && typeof xaiRes.predicted_accuracy === "number") {
+          predictedAccuracy = Number((xaiRes.predicted_accuracy / 100).toFixed(2));
+          isStruggling = Boolean(xaiRes.is_struggling);
+          xaiReason = xaiRes.xai_reason || "Dự đoán bằng XGBoost + SHAP.";
+        } else {
+          // Fallback khoa học bằng đường cong quên Ebbinghaus R = exp(-t / S) khi Python offline
+          const stabilityDays = Math.max(
+            0.8,
+            (1.5 + reviewCount * 1.2 + proficiency / 25.0) / (1.0 + mistakeCount * 0.5)
+          );
+          const retention = Math.max(0.05, Math.min(0.95, Math.exp(-daysSinceReview / stabilityDays)));
+          predictedAccuracy = Number(retention.toFixed(2));
+          isStruggling = retention < 0.65;
+          const riskPct = Math.round((1 - retention) * 100);
+          xaiReason = `Nguy cơ quên ${riskPct}% (Ebbinghaus: ${daysSinceReview.toFixed(1)} ngày chưa ôn, sai ${mistakeCount} lần).`;
+        }
 
         return {
           wordId: item.wordId || item.word,
           wordText: wordDetail ? wordDetail.word : "Unknown",
           meaning: wordDetail ? wordDetail.meaning : "Cần ôn tập gấp",
           phonetic: wordDetail ? wordDetail.phonetic : "",
-          predicted_accuracy: aiAccuracy, 
-          is_struggling: true 
+          predicted_accuracy: predictedAccuracy,
+          is_struggling: isStruggling,
+          xai_reason: xaiReason,
         };
       })
     );
 
-    // 🚀 BƯỚC 3: BẮN LÊN CHO TRANG CHỦ ANDROID HIỂN THỊ
+    // Sắp xếp từ có nguy cơ quên cao nhất (predicted_accuracy thấp nhất) lên đầu
+    finalFlashcards.sort((a, b) => a.predicted_accuracy - b.predicted_accuracy);
+
     res.status(200).json({
       message: "Thành công!",
-      warning: `Sổ tay Tiên tri phát hiện ${finalFlashcards.length} từ vựng bạn vừa làm sai. Hãy ôn lại ngay!`,
+      warning: `Sổ tay Tiên tri XAI phát hiện ${finalFlashcards.length} từ vựng có nguy cơ quên cao. Hãy ôn lại ngay!`,
       predictiveFlashcards: finalFlashcards,
     });
-
   } catch (error) {
     console.error("Lỗi Sổ tay Tiên tri:", error);
     res.status(500).json({ message: "Lỗi hệ thống!" });
-  }
-};
-// =====================================================================================
-// 🚀 TÍNH NĂNG 5: NỘP BÀI QUIZ & XUẤT BỆNH ÁN HỌC TẬP AI
-// =====================================================================================
-exports.submitQuiz = async (req, res) => {
-  try {
-    // 1. Nhận dữ liệu từ Android gửi lên
-    const userId = req.user && req.user.userId ? req.user.userId : req.body.userId;
-    const { topic, score, totalQuestions, earnedXp, wrongWords } = req.body;
-
-    if (!userId) {
-      return res.status(401).json({ message: "Không tìm thấy thông tin người dùng!" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "Tài khoản không tồn tại" });
-    }
-
-    if (!user.vocabProgress) user.vocabProgress = [];
-
-// 2. 🚀 LOGIC QUAN TRỌNG: XỬ LÝ NHỮNG TỪ LÀM SAI TRONG BÀI QUIZ
-    if (wrongWords && wrongWords.length > 0) {
-      
-      // 🚀 SỬA LỖI Ở ĐÂY: Chuyển toàn bộ danh sách từ sai sang chữ thường để khớp với Database
-      const lowercaseWrongWords = wrongWords.map(w => w.toLowerCase());
-
-      // Tìm các từ vựng này trong DB gốc (dùng mảng chữ thường)
-      const vocabularies = await Vocabulary.find({ word: { $in: lowercaseWrongWords } });
-      
-      vocabularies.forEach(vocab => {
-        // Tìm xem người dùng đã từng học từ này chưa
-        const vocabIndex = user.vocabProgress.findIndex(v => 
-          (v.wordId && v.wordId.toString() === vocab._id.toString()) ||
-          (v.word && v.word.toString() === vocab._id.toString())
-        );
-        
-        if (vocabIndex > -1) {
-          // ... (Giữ nguyên đoạn code bên trong của bạn)
-          user.vocabProgress[vocabIndex].proficiency = 0; 
-          user.vocabProgress[vocabIndex].mistakeCount = (user.vocabProgress[vocabIndex].mistakeCount || 0) + 1;
-          user.vocabProgress[vocabIndex].lastReviewedDate = new Date();
-        } else {
-          // ... (Giữ nguyên)
-          user.vocabProgress.push({
-            word: vocab._id,
-            wordId: vocab._id,
-            proficiency: 0,
-            mistakeCount: 1,
-            reviewCount: 1,
-            lastReviewedDate: new Date()
-          });
-        }
-      });
-      user.markModified("vocabProgress");
-    }
-
-    // 3. Cộng điểm XP và cập nhật ngày học
-    user.xp = (user.xp || 0) + earnedXp;
-    user.lastStudyDate = new Date();
-    await user.save();
-
-    // 4. Trả về "Báo cáo phân tích năng lực (AI Report)" cho Android
-    // (Tạm thời giả lập báo cáo AI, sau này bạn có thể gọi thẳng qua Python tương tự getPredictiveFlashcards)
-    const accuracy = Math.round((score / totalQuestions) * 100 * 10) / 10;
-    
-    res.status(200).json({
-      message: "Nộp bài thành công!",
-      xpGained: earnedXp,
-      totalXp: user.xp,
-      aiReport: {
-        predictedAccuracy: accuracy,
-        xaiExplanation: {
-          positiveFactors: [
-            `(Mức: 2.5) Trả lời câu hỏi khá nhanh và dứt khoát`,
-            `Nắm vững các câu hỏi thuộc chủ đề ${topic}`
-          ],
-          negativeFactors: wrongWords.length > 0 
-            ? [
-                `(Mức: 120500.0) Thời gian suy nghĩ quá lâu ở các từ vựng khó`,
-                `Còn nhầm lẫn ở ${wrongWords.length} từ vựng: ${wrongWords.join(", ")}`
-              ]
-            : [
-                `Không phát hiện rủi ro, phong độ đang rất xuất sắc!`
-              ]
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error("Lỗi khi nộp bài Quiz:", error);
-    res.status(500).json({ message: "Lỗi server khi nộp bài", error: error.message });
   }
 };

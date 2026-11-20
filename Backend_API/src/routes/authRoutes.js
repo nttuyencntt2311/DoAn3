@@ -9,8 +9,6 @@ const { updateStreak } = require("../service/streakService");
 
 const router = express.Router();
 
-let refreshTokens = [];
-
 // =====================================
 // 1. API: ĐĂNG KÝ TÀI KHOẢN
 // =====================================
@@ -60,21 +58,27 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Email không tồn tại!" });
     }
 
+    if (user.status === "Banned") {
+      return res.status(403).json({ error: "Tài khoản của bạn đã bị khóa bởi quản trị viên!" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Mật khẩu không chính xác!" });
     }
 
+    const userRole = user.role || "student";
+
     // 1. Tạo Access Token (Thời hạn 15 phút)
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, role: userRole },
       process.env.JWT_SECRET || "your_jwt_secret_key",
       { expiresIn: "15m" },
     );
 
     // 2. Tạo Refresh Token (Thời hạn 30 ngày)
     const refreshToken = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, role: userRole },
       process.env.REFRESH_SECRET || "your_refresh_secret_key",
       { expiresIn: "30d" },
     );
@@ -86,14 +90,76 @@ router.post("/login", async (req, res) => {
     res.status(200).json({
       message: "Đăng nhập thành công!",
       token: token,
-      refreshToken: refreshToken, // Trả thêm refreshToken về cho App
+      refreshToken: refreshToken,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: userRole,
       },
     });
   } catch (error) {
+    res.status(500).json({ error: "Lỗi máy chủ hệ thống" });
+  }
+});
+
+
+// =====================================
+// 2B. API: ĐĂNG NHẬP QUẢN TRỊ VIÊN (ADMIN WEB)
+// =====================================
+router.post("/admin-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Vui lòng nhập đầy đủ email và mật khẩu!" });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Email hoặc mật khẩu không chính xác!" });
+    }
+
+    if (user.status === "Banned") {
+      return res.status(403).json({ error: "Tài khoản này đã bị khóa!" });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(403).json({ error: "Tài khoản này không có quyền quản trị (Admin)!" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Email hoặc mật khẩu không chính xác!" });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, role: "admin" },
+      process.env.JWT_SECRET || "your_jwt_secret_key",
+      { expiresIn: "2h" },
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user._id, role: "admin" },
+      process.env.REFRESH_SECRET || "your_refresh_secret_key",
+      { expiresIn: "7d" },
+    );
+
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    res.status(200).json({
+      message: "Đăng nhập quản trị thành công!",
+      token,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi đăng nhập Admin:", error);
     res.status(500).json({ error: "Lỗi máy chủ hệ thống" });
   }
 });
@@ -234,9 +300,9 @@ router.post("/refresh-token", async (req, res) => {
         }
 
         const newAccessToken = jwt.sign(
-          { userId: user._id },
+          { userId: user._id, role: user.role || "student" },
           process.env.JWT_SECRET || "your_jwt_secret_key",
-          { expiresIn: "30d" },
+          { expiresIn: "15m" },
         );
 
         res.status(200).json({ token: newAccessToken });
@@ -276,9 +342,13 @@ router.post("/logout", async (req, res) => {
 // ==========================================
 // 9. API: LƯU TỪ VỰNG VÀO SỔ TAY (Từ code của bạn bè)
 // ==========================================
-router.post("/save-word", async (req, res) => {
+router.post("/save-word", verifyToken, async (req, res) => {
   try {
-    const { userId, wordId } = req.body;
+    const userId = req.user.userId;
+    const { wordId } = req.body;
+    if (!wordId) {
+      return res.status(400).json({ error: "Thiếu wordId cần lưu!" });
+    }
 
     // Tìm User theo ID và nhét wordId vào mảng savedWords
     // Lệnh $addToSet giúp kiểm tra nếu từ đó lưu rồi thì không lưu trùng nữa
@@ -295,12 +365,17 @@ router.post("/save-word", async (req, res) => {
 
     // === BỔ SUNG: TỰ ĐỘNG CẬP NHẬT CHUỖI NGÀY HỌC (STREAK) ===
     // Khi lưu từ thành công, gọi hàm updateStreak để tăng số ngày học liên tiếp
-    const currentStreak = await updateStreak(userId);
+    const streakUser = await updateStreak(userId);
+    const currentStreakDays = streakUser ? streakUser.streakDays : (updatedUser.streakDays || 0);
+
+    // Ẩn mật khẩu trước khi trả về client
+    const safeUser = updatedUser.toObject();
+    delete safeUser.password;
 
     res.status(200).json({
       message: "Lưu từ thành công!",
-      user: updatedUser,
-      streakDays: currentStreak, // Trả thêm số ngày Streak mới về
+      user: safeUser,
+      streakDays: currentStreakDays, // Trả về đúng số nguyên streakDays
     });
   } catch (error) {
     console.error("Lỗi hệ thống khi lưu từ:", error);

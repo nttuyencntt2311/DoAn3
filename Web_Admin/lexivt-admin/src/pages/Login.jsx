@@ -2,19 +2,50 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, User } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Giả lập gọi API thành công và lưu Token vào bộ nhớ tạm
-    if (email === "admin@lexivt.com" && password === "123456") {
-      localStorage.setItem("adminToken", "fake-jwt-token");
-      navigate("/"); // Chuyển hướng vào trang chủ Dashboard
-    } else {
-      alert("Sai thông tin đăng nhập! Dùng admin@lexivt.com / 123456");
+    setErrorMsg("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMsg(data.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại!");
+        return;
+      }
+
+      if (!data.token || data.user?.role !== "admin") {
+        setErrorMsg("Tài khoản không có quyền truy cập trang quản trị.");
+        return;
+      }
+
+      localStorage.setItem("adminToken", data.token);
+      if (data.refreshToken) {
+        localStorage.setItem("adminRefreshToken", data.refreshToken);
+      }
+      localStorage.setItem("adminUser", JSON.stringify(data.user));
+      navigate("/");
+    } catch (error) {
+      console.error("Lỗi kết nối đăng nhập Admin:", error);
+      setErrorMsg("Không thể kết nối đến máy chủ Backend!");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -25,6 +56,12 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-blue-600">LexiVT Admin</h1>
           <p className="text-gray-500 mt-2">Đăng nhập hệ thống quản trị</p>
         </div>
+
+        {errorMsg && (
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+            {errorMsg}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
@@ -69,9 +106,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors shadow-md shadow-blue-500/30"
           >
-            Đăng nhập
+            {isLoading ? "Đang xác thực..." : "Đăng nhập"}
           </button>
         </form>
       </div>

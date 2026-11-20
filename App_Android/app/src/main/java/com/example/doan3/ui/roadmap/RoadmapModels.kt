@@ -12,6 +12,7 @@ data class RoadmapStep(
     val id: String,
     val title: String,
     val description: String,
+    val xaiReason: String? = null,
     val status: StepStatus,
     val currentProgress: Int = 0,
     val maxProgress: Int = 0

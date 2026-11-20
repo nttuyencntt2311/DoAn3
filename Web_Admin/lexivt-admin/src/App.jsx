@@ -3,7 +3,8 @@ import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Vocabulary from "./pages/Vocabulary";
-import Users from "./pages/Users"; // Đã import
+import Users from "./pages/Users";
+import XaiAnalytics from "./pages/XaiAnalytics";
 
 // Component làm nhiệm vụ gác cổng
 const ProtectedRoute = ({ children }) => {
@@ -30,11 +31,9 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
-
         <Route path="vocabulary" element={<Vocabulary />} />
-
-        {/* ĐÃ SỬA: Gọi Component <Users /> thay cho thẻ div */}
         <Route path="users" element={<Users />} />
+        <Route path="xai-analytics" element={<XaiAnalytics />} />
       </Route>
     </Routes>
   );

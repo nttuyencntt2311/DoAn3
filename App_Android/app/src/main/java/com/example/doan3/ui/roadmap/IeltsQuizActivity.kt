@@ -17,6 +17,7 @@ import com.example.doan3.databinding.IeltsQuizBinding
 import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.profile.SubmitQuizRequest
 import com.example.doan3.ui.profile.AiReport
+import com.example.doan3.ui.profile.QuestionLog
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -57,7 +58,8 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var questionStartTime: Long = 0 // Radar đo thời gian từng câu
     private var hasShownPacingAlert = false
     private var startTimeMillis: Long = 0 // Đo tổng thời gian bài học
-    private val wrongWordsList = mutableListOf<String>() // Lưu danh sách từ sai để gửi về Sổ tay
+    private val wrongWordsList = mutableListOf<String>()
+    private val questionLogsList = mutableListOf<QuestionLog>() // Lưu danh sách từ sai để gửi về Sổ tay
 
     private var selectedOptionIndex: Int = -1
     private var isAnswerChecked: Boolean = false
@@ -346,11 +348,14 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val timeSpent = System.currentTimeMillis() - questionStartTime
         val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
         val isPacingAlertEnabled = prefs.getBoolean("PREF_PACING_ALERT", true)
+        val savedAvgTimeMs = prefs.getLong("USER_AVG_TIME_MS", 12000L)
+        val personalThresholdMs = (savedAvgTimeMs * 0.3).toLong().coerceIn(1500L, 6000L)
 
-        if (isPacingAlertEnabled && timeSpent < 2000 && !isCorrect && !hasShownPacingAlert) {
+        if (isPacingAlertEnabled && timeSpent < personalThresholdMs && !isCorrect && !hasShownPacingAlert) {
             hasShownPacingAlert = true
+            val secThreshold = String.format(Locale.US, "%.1f", personalThresholdMs / 1000.0)
             binding.cardAiTutor.visibility = View.VISIBLE
-            binding.tvAiTutorMessage.text = "⏳ Radar XAI: Bạn trả lời dưới 2 giây và có dấu hiệu sai! Hãy đọc kỹ lại, bạn còn 1 cơ hội."
+            binding.tvAiTutorMessage.text = "⏳ Radar XAI cá nhân hóa: Bạn trả lời nhanh hơn ngưỡng ${secThreshold}s (30% tốc độ TB của bạn) và có dấu hiệu sai! Hãy đọc kỹ lại, bạn còn 1 cơ hội."
             binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#FEF3C7"))
             binding.tvAiTutorMessage.setTextColor(Color.parseColor("#D97706"))
 
@@ -366,6 +371,14 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding.tvAiTutorMessage.setTextColor(Color.parseColor("#0056D2"))
 
         isAnswerChecked = true
+        questionLogsList.add(
+            QuestionLog(
+                question = currentQuiz.question,
+                topic = currentStepTitle,
+                isCorrect = isCorrect,
+                elapsedTimeMs = timeSpent
+            )
+        )
         val correctIndex = currentQuiz.options.indexOf(currentQuiz.correctAnswer)
 
         val cards = listOf(binding.btnOptionA, binding.btnOptionB, binding.btnOptionC, binding.btnOptionD)
@@ -448,6 +461,16 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val timeSpentMillis = System.currentTimeMillis() - startTimeMillis
         val calculatedMinutes = max(1, (timeSpentMillis / 60000).toInt())
 
+        val exactAvgMs = if (questionLogsList.isNotEmpty()) {
+            questionLogsList.map { it.elapsedTimeMs }.average().toLong()
+        } else {
+            (timeSpentMillis / max(1, quizList.size))
+        }
+        getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putLong("USER_AVG_TIME_MS", exactAvgMs)
+            .apply()
+
         val finalXp = 50 + totalEarnedXp
         val request = SubmitQuizRequest(
             topic = currentStepTitle,
@@ -457,7 +480,9 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             learnedWords = score,
             timeSpentMinutes = calculatedMinutes,
             difficulty = 3,
-            wrongWords = wrongWordsList
+            wrongWords = wrongWordsList,
+            avgElapsedTimeMs = exactAvgMs,
+            questionLogs = questionLogsList
         )
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -506,46 +531,129 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun showAiPostMortemDialog(aiReport: AiReport, finalXp: Int) {
         val bottomSheet = BottomSheetDialog(this)
+        val scrollView = android.widget.ScrollView(this)
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(60, 60, 60, 60)
+            setPadding(56, 56, 56, 56)
             setBackgroundColor(Color.WHITE)
         }
 
         val titleText = TextView(this).apply {
-            text = "BÁO CÁO PHÂN TÍCH NĂNG LỰC"
-            textSize = 20f
+            text = "BÁO CÁO PHÂN TÍCH NĂNG LỰC (XAI)"
+            textSize = 19f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.parseColor("#0F172A"))
             gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 40)
+            setPadding(0, 0, 0, 24)
         }
         layout.addView(titleText)
 
         val accText = TextView(this).apply {
             val isGood = aiReport.predictedAccuracy >= 50.0
-            val colorStr = if(isGood) "#16A34A" else "#EA580C"
-            val status = if(isGood) "Duy trì ổn định 🚀" else "Cần cải thiện thêm ⚠️"
+            val colorStr = if (isGood) "#16A34A" else "#EA580C"
+            val status = if (isGood) "Duy trì ổn định 🚀" else "Cần cải thiện thêm ⚠️"
 
-            text = "Mức độ thành thạo dự kiến: ${aiReport.predictedAccuracy}%\n($status)"
+            text = "Xác suất thành thạo dự kiến: ${aiReport.predictedAccuracy}%\n($status)"
             textSize = 16f
+            setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.parseColor(colorStr))
-            setPadding(0, 0, 0, 40)
+            setPadding(0, 0, 0, 32)
             gravity = android.view.Gravity.CENTER
         }
         layout.addView(accText)
+
+        // ==========================================================
+        // 📊 BIỂU ĐỒ SHAP WATERFALL / HORIZONTAL BAR TRỰC QUAN
+        // ==========================================================
+        val detailedShap = aiReport.xaiExplanation.detailedShap
+        if (!detailedShap.isNullOrEmpty()) {
+            val chartTitle = TextView(this).apply {
+                text = "📊 Biểu đồ đóng góp SHAP (Xanh: Tích cực | Đỏ: Rủi ro)"
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.parseColor("#1E293B"))
+                setPadding(0, 8, 0, 16)
+            }
+            layout.addView(chartTitle)
+
+            val maxAbsShap = detailedShap.maxOfOrNull { kotlin.math.abs(it.shapScore) }
+                ?.coerceAtLeast(0.05) ?: 1.0
+
+            detailedShap.take(5).forEach { item ->
+                val isPositive = item.shapScore >= 0.0
+                val barColor = if (isPositive) Color.parseColor("#16A34A") else Color.parseColor("#DC2626")
+                val bgTrackColor = Color.parseColor("#F1F5F9")
+
+                val rowContainer = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.VERTICAL
+                    setPadding(0, 6, 0, 14)
+                }
+
+                // Dòng nhãn: Tên tiếng Việt bên trái, điểm SHAP bên phải
+                val headerRow = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                }
+                val labelTv = TextView(this).apply {
+                    text = item.viDescription
+                    textSize = 13f
+                    setTextColor(Color.parseColor("#334155"))
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                    )
+                }
+                val scoreTv = TextView(this).apply {
+                    val sign = if (isPositive) "+" else ""
+                    text = "$sign${String.format(Locale.US, "%.2f", item.shapScore)}"
+                    textSize = 13f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(barColor)
+                }
+                headerRow.addView(labelTv)
+                headerRow.addView(scoreTv)
+                rowContainer.addView(headerRow)
+
+                // Thanh ngang biểu diễn tỷ lệ đóng góp SHAP
+                val barTrack = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    setBackgroundColor(bgTrackColor)
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 18
+                    ).apply { setMargins(0, 8, 0, 0) }
+                }
+
+                val ratio = (kotlin.math.abs(item.shapScore) / maxAbsShap).toFloat().coerceIn(0.06f, 1.0f)
+                val filledBar = View(this).apply {
+                    setBackgroundColor(barColor)
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, ratio
+                    )
+                }
+                val emptyBar = View(this).apply {
+                    setBackgroundColor(Color.TRANSPARENT)
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (1.0f - ratio).coerceAtLeast(0f)
+                    )
+                }
+                barTrack.addView(filledBar)
+                barTrack.addView(emptyBar)
+                rowContainer.addView(barTrack)
+
+                layout.addView(rowContainer)
+            }
+        }
 
         val posTitle = TextView(this).apply {
             text = "🌟 Nhân tố tích cực (Ưu điểm):"
             setTextColor(Color.parseColor("#059669"))
             setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 16, 0, 4)
         }
         layout.addView(posTitle)
 
         aiReport.xaiExplanation.positiveFactors.forEach { factor ->
             val pt = TextView(this).apply {
                 text = "• ${formatFactorText(factor)}"
-                setPadding(20, 15, 0, 20)
+                setPadding(16, 10, 0, 10)
                 setTextColor(Color.parseColor("#334155"))
             }
             layout.addView(pt)
@@ -555,24 +663,62 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             text = "⚠️ Nhân tố rủi ro (Hạn chế):"
             setTextColor(Color.parseColor("#DC2626"))
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 20, 0, 0)
+            setPadding(0, 20, 0, 4)
         }
         layout.addView(negTitle)
 
         aiReport.xaiExplanation.negativeFactors.forEach { factor ->
             val nt = TextView(this).apply {
                 text = "• ${formatFactorText(factor)}"
-                setPadding(20, 15, 0, 20)
+                setPadding(16, 10, 0, 10)
                 setTextColor(Color.parseColor("#334155"))
             }
             layout.addView(nt)
+        }
+
+        // ==========================================================
+        // 💡 GIẢI THÍCH PHẢN THỰC (COUNTERFACTUAL "WHAT-IF" XAI)
+        // ==========================================================
+        val cfSummary = aiReport.counterfactual?.summaryVi
+        if (!cfSummary.isNullOrBlank()) {
+            val cfBox = TextView(this).apply {
+                text = "💡 Gợi ý cải thiện (What-If XAI):\n$cfSummary"
+                textSize = 13.5f
+                setTextColor(Color.parseColor("#1E3A8A"))
+                setBackgroundColor(Color.parseColor("#EFF6FF"))
+                setPadding(28, 24, 28, 24)
+            }
+            val cfParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 24, 0, 0) }
+            layout.addView(cfBox, cfParams)
+        }
+
+        // ==========================================================
+        // 🎓 LỜI KHUYÊN SƯ PHẠM TỪ SỐ LIỆU SHAP (SHAP-TO-TEXT)
+        // ==========================================================
+        val pedFeedback = aiReport.pedagogicalFeedback
+        if (!pedFeedback.isNullOrBlank()) {
+            val fbBox = TextView(this).apply {
+                text = "🎓 Nhận xét gia sư XAI:\n$pedFeedback"
+                textSize = 13.5f
+                setTextColor(Color.parseColor("#065F46"))
+                setBackgroundColor(Color.parseColor("#ECFDF5"))
+                setPadding(28, 24, 28, 24)
+            }
+            val fbParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 20, 0, 0) }
+            layout.addView(fbBox, fbParams)
         }
 
         val btnClose = Button(this).apply {
             text = "NHẬN +$finalXp XP & HOÀN THÀNH"
             setBackgroundColor(Color.parseColor("#0056D2"))
             setTextColor(Color.WHITE)
-            setPadding(0, 30, 0, 30)
+            setPadding(0, 28, 0, 28)
             setOnClickListener {
                 bottomSheet.dismiss()
                 finish()
@@ -581,11 +727,12 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val btnParams = android.widget.LinearLayout.LayoutParams(
             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(0, 50, 0, 0) }
+        ).apply { setMargins(0, 40, 0, 0) }
 
         layout.addView(btnClose, btnParams)
+        scrollView.addView(layout)
 
-        bottomSheet.setContentView(layout)
+        bottomSheet.setContentView(scrollView)
         bottomSheet.setCancelable(false)
         bottomSheet.show()
     }

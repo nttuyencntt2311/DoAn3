@@ -297,16 +297,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2508fff4-1aa2-44b7-973b-9551b8f00a31" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/LeaderboardAdapter.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/layout/item_leaderboard.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/TaoQuizActivity.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/IeltsQuiz.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaoQuizActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaoQuizActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TokenAuthenticator.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TokenAuthenticator.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/hoso.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/hoso.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapModels.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapModels.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapStepAdapter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/RoadmapStepAdapter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/aiController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/roadmapController.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/controllers/vocabController.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/controllers/vocabController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/models/History.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/models/History.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/models/Roadmap.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/models/Roadmap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/models/User.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/models/User.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/authRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/authRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/quizRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/quizRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/roadmapRoutes.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/statsRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/statsRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/userRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/userRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/routes/vocabRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/routes/vocabRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/service/aiService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Backend_API/src/service/xaiService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Backend_API/src/service/xaiService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Predictive_AI/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../Predictive_AI/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Predictive_AI/ednet_xgboost_model.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Predictive_AI/ednet_xgboost_model_final.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Predictive_AI/ednet_xgboost_model_final.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Predictive_AI/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Predictive_AI/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Predictive_AI/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Predictive_AI/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/layouts/AdminLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/layouts/AdminLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Dashboard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Login.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Login.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Users.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Users.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Vocabulary.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Web_Admin/lexivt-admin/src/pages/Vocabulary.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

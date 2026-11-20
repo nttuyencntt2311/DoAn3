@@ -5,6 +5,7 @@ const UserModel = require("../models/User");
 const Vocabulary = require("../models/Vocabulary"); 
 const verifyToken = require("../middleware/authMiddleware");
 const axios = require("axios");
+const aiService = require("../service/aiService");
 const router = express.Router();
 
 // =====================================
@@ -21,18 +22,28 @@ router.post("/submit", verifyToken, async (req, res) => {
       timeSpentMinutes,
       wrongWords, // Lấy từ vựng sai từ body
       difficulty,
-      avg_time
+      avg_time,
+      avgElapsedTimeMs,
+      questionLogs
     } = req.body;
     const userId = req.user.userId;
 
     // =========================================================================
     // 1. LƯU LỊCH SỬ LÀM BÀI VÀO BẢNG HISTORY
     // =========================================================================
+    const safeLogs = Array.isArray(questionLogs) ? questionLogs : [];
+    const computedLogAvgMs =
+      safeLogs.length > 0
+        ? Math.round(safeLogs.reduce((sum, q) => sum + (Number(q.elapsedTimeMs) || 0), 0) / safeLogs.length)
+        : (Number(avgElapsedTimeMs) || 0);
+
     const newHistory = new HistoryModel({
       userId: userId,
       topic: topic || "Bài học chung",
       score: score || 0,
       totalQuestions: totalQuestions || 0,
+      avgElapsedTimeMs: computedLogAvgMs,
+      questionLogs: safeLogs,
     });
     await newHistory.save();
 
@@ -48,10 +59,10 @@ router.post("/submit", verifyToken, async (req, res) => {
     user.wordsLearned += learnedWords || 0;
     user.timeLearnedMinutes += timeSpentMinutes || 0;
 
-    // TỰ ĐỘNG TĂNG LEVEL DỰA TRÊN XP
-    const currentCalculatedLevel = Math.floor(user.xp / 100);
+    // TỰ ĐỘNG TĂNG LEVEL DỰA TRÊN XP (Đồng bộ công thức: Level bắt đầu từ 1)
+    const currentCalculatedLevel = Math.floor(user.xp / 100) + 1;
     let isLevelUp = false;
-    if (currentCalculatedLevel > user.level) {
+    if (currentCalculatedLevel > (user.level || 1)) {
       user.level = currentCalculatedLevel;
       isLevelUp = true;
     }
@@ -179,11 +190,13 @@ router.post("/submit", verifyToken, async (req, res) => {
     // Tự động tính toán số liệu từ request của frontend để gửi cho AI
     const accuracy = totalQuestions > 0 ? score / totalQuestions : 0.5;
 
-    // Tính thời gian trung bình (mili-giây) trên 1 câu hỏi
+    // Ưu tiên thời gian thực tế từng câu từ questionLogs (Fine-grained Behavioral Logging)
     const avgTimeMs =
-      timeSpentMinutes && totalQuestions > 0
-        ? Math.round((timeSpentMinutes * 60 * 1000) / totalQuestions)
-        : 45000; // Mặc định 45s nếu không có dữ liệu
+      computedLogAvgMs > 0
+        ? computedLogAvgMs
+        : (timeSpentMinutes && totalQuestions > 0
+            ? Math.round((timeSpentMinutes * 60 * 1000) / totalQuestions)
+            : 23000);
 
     try {
       // Tính khoảng cách thời gian nghỉ (time_diff) tính bằng giây
@@ -191,11 +204,26 @@ router.post("/submit", verifyToken, async (req, res) => {
       const currentTime = new Date().getTime();
       const timeDiffSeconds = Math.max(0, (currentTime - lastStudyTime) / 1000);
 
+      // Chuẩn hóa độ khó từ thang 1-5 của Android sang thang [0.1 - 0.9] khớp kt1_fixed.ipynb (0: Dễ -> 1: Khó)
+      // Thang Android: 1 (Rất dễ) -> 0.1, 2 (Dễ) -> 0.3, 3 (Trung bình) -> 0.5, 4 (Khó) -> 0.7, 5 (Rất khó) -> 0.9
+      let normalizedDifficulty = 0.5;
+      if (typeof difficulty === "number" && !Number.isNaN(difficulty)) {
+        if (difficulty > 1) {
+          normalizedDifficulty = Number(
+            Math.max(0.1, Math.min(0.9, 0.1 + (difficulty - 1) * 0.2)).toFixed(2)
+          );
+        } else if (difficulty >= 0) {
+          normalizedDifficulty = Number(
+            Math.max(0.05, Math.min(0.95, difficulty)).toFixed(2)
+          );
+        }
+      }
+
       // Cấu trúc Data chuẩn 7 biến gửi sang Python XGBoost
       const studentData = {
         user_history_acc: Number(accuracy.toFixed(2)),
         user_questions_attempted: user.quizzesCount * (totalQuestions || 10),
-        question_difficulty: difficulty || 0.5, // XGBoost hoạt động tốt với dải scale 0.1 - 0.9
+        question_difficulty: normalizedDifficulty,
         user_avg_elapsed_time: avg_time || avgTimeMs,
         
         // 3 Biến mới cho bản chốt
@@ -204,9 +232,10 @@ router.post("/submit", verifyToken, async (req, res) => {
         elapsed_time: avgTimeMs // Giả định thời gian làm câu hiện tại bằng mức trung bình
       };
 
-      // Bắn dữ liệu sang Python qua Docker (Cổng 8000)
+      // Bắn dữ liệu sang Python Microservice (đọc từ biến môi trường hoặc mặc định cổng 8000)
+      const pythonAiUrl = process.env.PYTHON_AI_URL || "http://127.0.0.1:8000";
       const aiResponse = await axios.post(
-        "http://localhost:8000/predict-weakness",
+        `${pythonAiUrl}/predict-weakness`,
         studentData
       );
       aiReport = aiResponse.data;
@@ -230,19 +259,24 @@ router.post("/submit", verifyToken, async (req, res) => {
         if (!aiReport.xai_explanation.positive_factors) aiReport.xai_explanation.positive_factors = [];
         if (!aiReport.xai_explanation.negative_factors) aiReport.xai_explanation.negative_factors = [];
 
-        // 1. Chèn thêm số Mili-giây để Android cắt ra bằng Regex (Mức: ...)
-        if (avgTimeMs > 25000) {
-            aiReport.xai_explanation.negative_factors.unshift(`(Mức: ${avgTimeMs}) Thời gian suy nghĩ trung bình khá chậm`);
-        } else {
-            aiReport.xai_explanation.positive_factors.unshift(`(Mức: ${avgTimeMs}) Tốc độ phản xạ cực kỳ nhạy bén`);
-        }
-
-        // 2. Chèn danh sách từ sai (Nếu có)
+        // Chỉ bổ sung danh sách từ vựng cụ thể làm sai (giữ nguyên nguyên bản giải thích SHAP từ FastAPI)
         if (wrongWords && wrongWords.length > 0) {
-            aiReport.xai_explanation.negative_factors.push(`Còn nhầm lẫn ở ${wrongWords.length} từ vựng: ${wrongWords.join(", ")}`);
-        } else {
-            aiReport.xai_explanation.positive_factors.push(`Không phát hiện rủi ro, phong độ đang rất xuất sắc!`);
+            aiReport.xai_explanation.negative_factors.push(`Từ vựng cần ôn lại (${wrongWords.length} từ): ${wrongWords.join(", ")}`);
+        } else if (aiReport.xai_explanation.positive_factors.length === 0) {
+            aiReport.xai_explanation.positive_factors.push(`Không phát hiện rủi ro, phong độ đang rất ổn định!`);
         }
+    }
+
+    // Sinh lời khuyên sư phạm có kiểm soát từ số liệu SHAP + Counterfactual (SHAP-to-Text)
+    try {
+      aiReport.pedagogical_feedback = await aiService.generateGroundedXaiFeedback({
+        predictedAccuracy: aiReport.predicted_accuracy,
+        detailedShap: aiReport.xai_explanation?.detailed_shap || [],
+        counterfactualSummary: aiReport.counterfactual?.summary_vi || "",
+        wrongWords: wrongWords || [],
+      });
+    } catch (nlgErr) {
+      console.warn("⚠️ Bỏ qua lỗi sinh SHAP-to-Text:", nlgErr.message);
     }
 
     // =========================================================================

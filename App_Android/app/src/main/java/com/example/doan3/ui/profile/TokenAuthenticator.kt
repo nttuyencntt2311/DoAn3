@@ -60,7 +60,7 @@ class TokenAuthenticator(private val context: Context) : Authenticator {
 
             // LƯU Ý QUAN TRỌNG: Code của bạn dùng 3000, code bạn bạn dùng 5000.
             // Ở đây giữ số 5000 (đã sửa để gọi đúng tới Backend) từ code bạn bạn.
-            val baseUrl = "http://10.0.2.2:3000"
+            val baseUrl = RetrofitClient.BASE_URL.trimEnd('/')
 
             val request = Request.Builder()
                 .url("$baseUrl/api/auth/refresh-token")

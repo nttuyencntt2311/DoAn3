@@ -6,10 +6,12 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   gender: { type: String, default: "Nam" },
   birthDate: { type: String, default: "" },
+  status: { type: String, enum: ["Active", "Banned"], default: "Active" },
+  role: { type: String, enum: ["student", "admin"], default: "student" },
   
   // === CÁC CHỈ SỐ GAMIFICATION (HỆ THỐNG ĐIỂM THƯỞNG) ===
   xp: { type: Number, default: 0 },                    // Điểm kinh nghiệm (Mặc định: 0)
-  level: { type: Number, default: 0 },                 // Cấp độ (Mặc định: 0 - Mới nhập môn)
+  level: { type: Number, default: 1 },                 // Cấp độ (Mặc định: 1 - đồng bộ công thức Math.floor(xp/100) + 1)
   streakDays: { type: Number, default: 0 },            // Chuỗi ngày học (Mặc định: 0)
   lastStudyDate: { type: Date, default: null },        // THÊM DÒNG NÀY ĐỂ TÍNH STREAK
   wordsLearned: { type: Number, default: 0 },          // Số từ vựng đã học (Mặc định: 0)
@@ -36,6 +38,9 @@ const userSchema = new mongoose.Schema({
       wordId: { type: String },
       word: { type: String },
       proficiency: { type: Number, default: 0 },
+      mistakeCount: { type: Number, default: 0 },
+      reviewCount: { type: Number, default: 0 },
+      lastReviewedDate: { type: Date, default: null },
     },
   ],
 

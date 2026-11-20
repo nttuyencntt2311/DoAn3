@@ -57,7 +57,11 @@ class RoadmapStepAdapter : RecyclerView.Adapter<RoadmapStepAdapter.StepViewHolde
     inner class StepViewHolder(val binding: ItemRoadmapStepBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(step: RoadmapStep) {
             binding.tvStepTitle.text = step.title
-            binding.tvStepDesc.text = step.description
+            binding.tvStepDesc.text = if (!step.xaiReason.isNullOrBlank()) {
+                "${step.description}\n\n🧠 Vì sao AI gợi ý chặng này: ${step.xaiReason}"
+            } else {
+                step.description
+            }
 
             // Reset View
             binding.tvTag.visibility = View.GONE
