@@ -1,12 +1,13 @@
 package com.example.doan3.ui.roadmap
 
 import android.content.Context
-import android.content.Intent // 🚀 ĐÃ THÊM IMPORT NÀY ĐỂ HẾT ĐỎ INTENT
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,7 +21,9 @@ class RoadmapFragment : Fragment() {
     private val viewModel: RoadmapViewModel by viewModels()
     private lateinit var stepAdapter: RoadmapStepAdapter
 
-    private var loadingDialog: androidx.appcompat.app.AlertDialog? = null
+    private var loadingDialog: AlertDialog? = null
+    private var latestProgressPercent: Int = 0
+    private var hasTriggeredGenerate = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,16 +36,13 @@ class RoadmapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Khởi tạo RecyclerView & Nhận sự kiện Click
         stepAdapter = RoadmapStepAdapter()
-
-        // 🚀 Nhận thêm biến questionCount từ Adapter truyền sang
         stepAdapter.setOnContinueClickListener { step, questionCount ->
             val intent = Intent(requireContext(), IeltsQuizActivity::class.java).apply {
                 putExtra("STEP_ID", step.id)
                 putExtra("STEP_TITLE", step.title)
                 putExtra("STEP_DESC", step.description)
-                putExtra("QUESTION_COUNT", questionCount) // 🚀 Đóng gói số câu hỏi vào Intent
+                putExtra("QUESTION_COUNT", questionCount)
             }
             startActivity(intent)
         }
@@ -52,8 +52,10 @@ class RoadmapFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
         }
 
-        // 2. Lắng nghe dữ liệu trả về từ AI (Observe Data)
+        setupWeeklyGiftButton()
+
         viewModel.roadmapData.observe(viewLifecycleOwner) { aiData ->
+            latestProgressPercent = aiData.overallProgressPercent
             binding.tvProgressPercent.text = "${aiData.overallProgressPercent}% Hoàn thành"
             binding.progressOverall.progress = aiData.overallProgressPercent
             binding.tvMotivationText.text = aiData.motivationMessage
@@ -72,15 +74,24 @@ class RoadmapFragment : Fragment() {
             }
         }
 
-        // 3. XỬ LÝ GENERATE MỚI (chỉ chạy khi điền form)
-        val intent = requireActivity().intent
-        val isGenerateNew = intent.getBooleanExtra("GENERATE_ROADMAP", false)
+        // Hỗ trợ nhận tham số tạo lộ trình từ Fragment arguments hoặc Activity intent
+        val argGenerate = arguments?.getBoolean("GENERATE_ROADMAP", false) ?: false
+        val intentGenerate = requireActivity().intent.getBooleanExtra("GENERATE_ROADMAP", false)
 
-        if (isGenerateNew) {
-            val goal = intent.getStringExtra("GOAL") ?: "Giao tiếp cơ bản"
-            val level = intent.getStringExtra("LEVEL") ?: "Mất gốc"
-            val time = intent.getStringExtra("TIME") ?: "30 phút/ngày"
-            val expectation = intent.getStringExtra("EXPECTATION") ?: ""
+        if (argGenerate || intentGenerate) {
+            hasTriggeredGenerate = true
+            val goal = arguments?.getString("GOAL")
+                ?: requireActivity().intent.getStringExtra("GOAL")
+                ?: "Giao tiếp cơ bản"
+            val level = arguments?.getString("LEVEL")
+                ?: requireActivity().intent.getStringExtra("LEVEL")
+                ?: "Mất gốc"
+            val time = arguments?.getString("TIME")
+                ?: requireActivity().intent.getStringExtra("TIME")
+                ?: "30 phút/ngày"
+            val expectation = arguments?.getString("EXPECTATION")
+                ?: requireActivity().intent.getStringExtra("EXPECTATION")
+                ?: ""
 
             val prefs = requireContext().getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val currentUserId = prefs.getString("USER_ID", "") ?: ""
@@ -92,33 +103,75 @@ class RoadmapFragment : Fragment() {
                 freeTime = time,
                 expectation = expectation
             )
-            intent.putExtra("GENERATE_ROADMAP", false)
+            arguments?.putBoolean("GENERATE_ROADMAP", false)
+            requireActivity().intent.putExtra("GENERATE_ROADMAP", false)
         }
     }
 
-    // 🚀 CHỖ SỬA QUAN TRỌNG: Tải lại lộ trình học bất cứ khi nào người dùng quay lại màn hình này
+    private fun setupWeeklyGiftButton() {
+        val prefs = requireContext().getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        val userId = prefs.getString("USER_ID", "guest") ?: "guest"
+        val giftKey = "WEEKLY_GIFT_CLAIMED_$userId"
+
+        fun refreshGiftButtonUI() {
+            val claimed = prefs.getBoolean(giftKey, false)
+            if (claimed) {
+                binding.btnClaimGift.text = "Đã nhận"
+                binding.btnClaimGift.isEnabled = false
+                binding.btnClaimGift.alpha = 0.6f
+            } else {
+                binding.btnClaimGift.text = "Nhận quà"
+                binding.btnClaimGift.isEnabled = true
+                binding.btnClaimGift.alpha = 1.0f
+            }
+        }
+
+        refreshGiftButtonUI()
+
+        binding.btnClaimGift.setOnClickListener {
+            if (prefs.getBoolean(giftKey, false)) return@setOnClickListener
+
+            if (latestProgressPercent <= 0) {
+                Toast.makeText(
+                    requireContext(),
+                    "Hãy hoàn thành ít nhất 1 chặng trong lộ trình để mở khóa quà tuần này nhé!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            prefs.edit().putBoolean(giftKey, true).apply()
+            refreshGiftButtonUI()
+            AlertDialog.Builder(requireContext())
+                .setTitle("Chúc mừng nhận thưởng! 🎁")
+                .setMessage("Bạn đã nhận phần thưởng Mục tiêu tuần (+100 XP khích lệ). Hãy tiếp tục giữ vững chuỗi học tập nhé!")
+                .setPositiveButton("Tuyệt vời", null)
+                .show()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        // Kiểm tra xem có đang trong tiến trình tạo mới không, nếu không thì tự cập nhật lại dữ liệu
-        val isGenerateNew = requireActivity().intent.getBooleanExtra("GENERATE_ROADMAP", false)
-        if (!isGenerateNew) {
+        if (!hasTriggeredGenerate) {
             val prefs = requireContext().getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
             val currentUserId = prefs.getString("USER_ID", "") ?: ""
             viewModel.fetchAiRoadmapForUser(currentUserId)
+        } else {
+            hasTriggeredGenerate = false
         }
     }
 
-    // Hiệu ứng Loading
     private fun showLoadingDialog(show: Boolean) {
+        if (!isAdded) return
         if (show) {
             if (loadingDialog == null) {
                 val progressBar = android.widget.ProgressBar(requireContext()).apply {
                     setPadding(40, 40, 40, 40)
                 }
-                loadingDialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                loadingDialog = AlertDialog.Builder(requireContext())
                     .setView(progressBar)
                     .setMessage("LexiVT AI đang thiết kế bài học dành riêng cho bạn...")
-                    .setCancelable(false) // Không cho bấm ra ngoài khi đang loading
+                    .setCancelable(false)
                     .create()
             }
             loadingDialog?.show()
@@ -130,6 +183,7 @@ class RoadmapFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         loadingDialog?.dismiss()
+        loadingDialog = null
         _binding = null
     }
 }

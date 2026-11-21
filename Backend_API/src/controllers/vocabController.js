@@ -206,8 +206,9 @@ exports.updateProficiency = async (req, res) => {
     if (isNewlyMastered) {
       // ❌ Xóa bỏ dòng cộng dồn cũ dễ gây sai số: user.wordsLearned = (user.wordsLearned || 0) + 1;
 
-      // Vẫn giữ lệnh cộng điểm XP
+      // Cộng điểm XP và cập nhật lại cấp độ theo công thức lũy tiến
       user.xp = (user.xp || 0) + 5;
+      user.level = Math.floor(Math.sqrt(Math.max(0, user.xp) / 100)) + 1;
     }
 
     // 🚀 BỔ SUNG LỆNH NÀY: Bắt Backend tự quét mảng thực tế và đếm lại toàn bộ từ >= 80 điểm

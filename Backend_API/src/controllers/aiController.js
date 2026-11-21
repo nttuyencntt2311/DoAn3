@@ -532,13 +532,15 @@ exports.completeStep = async (req, res) => {
     }
 
     const scoreEarned = parseInt(score) || 0;
-    const xpEarned = 50 + scoreEarned * 10;
+    const totalQ = parseInt(totalQuestions) || 0;
+    const completionBonus = totalQ > 0 ? Math.round((50 * scoreEarned) / totalQ) : (scoreEarned > 0 ? 50 : 0);
+    const xpEarned = completionBonus + scoreEarned * 10;
 
     try {
       const user = await User.findById(userId);
       if (user) {
         user.xp = (user.xp || 0) + xpEarned;
-        user.level = Math.floor(user.xp / 100) + 1;
+        user.level = Math.floor(Math.sqrt(Math.max(0, user.xp) / 100)) + 1;
 
         const getVNFormatDate = (date) => {
           const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
@@ -618,9 +620,9 @@ exports.claimWeeklyReward = async (req, res) => {
         .status(400)
         .json({ error: "Bạn đã nhận rương quà của tuần này rồi!" });
 
-    const REWARD_XP = 500;
-    user.xp += REWARD_XP;
-    user.level = Math.floor(user.xp / 100) + 1;
+    const REWARD_XP = 200;
+    user.xp = (user.xp || 0) + REWARD_XP;
+    user.level = Math.floor(Math.sqrt(Math.max(0, user.xp) / 100)) + 1;
     user.isWeeklyRewardClaimed = true;
 
     await user.save();

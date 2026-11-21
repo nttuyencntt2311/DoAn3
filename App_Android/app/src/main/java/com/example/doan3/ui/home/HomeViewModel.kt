@@ -40,7 +40,6 @@ class HomeViewModel : ViewModel() {
     val nextLessonXp: LiveData<String> = _nextLessonXp
 
     init {
-        // Gán trạng thái mặc định ban đầu khi vừa mở màn hình
         setDefaultNewUserValues()
     }
 
@@ -50,25 +49,33 @@ class HomeViewModel : ViewModel() {
                 val stats = response.body()?.stats
                 if (response.isSuccessful && stats != null) {
                     _userName.value = stats.name
-                    _userLevel.value = "Cấp: ${stats.level}"
+                    _userLevel.value = "Cấp ${stats.level} • ${stats.xp} XP"
                     _streakDays.value = stats.streakDays
                     _wordsCount.value = stats.wordsLearned
                     _timeLearned.value = "${stats.timeLearnedMinutes} phút"
-                    _nextLessonXp.value = "${stats.xp} XP"
-
-                    // Tính phần trăm tiến trình giả lập dựa trên XP
-                    _progressPercent.value = if (stats.xp < 100) stats.xp else (stats.xp % 100)
+                    _nextLessonXp.value = "+50 XP"
                 } else {
-                    // Nếu server trả về lỗi (ví dụ 404, 500), đưa giao diện về mặc định
                     setDefaultNewUserValues()
                 }
             }
 
             override fun onFailure(call: Call<UserStatsResponse>, t: Throwable) {
-                // ĐÃ KHÔI PHỤC: Chủ động đưa giao diện về mặc định khi mất kết nối mạng
                 setDefaultNewUserValues()
             }
         })
+    }
+
+    fun updateDailyVocabularyProgress(masteredCount: Int) {
+        if ((_wordsCount.value ?: 0) == 0 && masteredCount > 0) {
+            _wordsCount.value = masteredCount
+        }
+        val dailyTarget = 10
+        val wordsToday = masteredCount % dailyTarget
+        val percent = if (wordsToday == 0 && masteredCount > 0) 100 else ((wordsToday.toFloat() / dailyTarget) * 100).toInt()
+        val displayWords = if (wordsToday == 0 && masteredCount > 0) dailyTarget else wordsToday
+
+        _progressPercent.value = percent
+        _taskTargetText.value = "Mục tiêu hôm nay: $displayWords/$dailyTarget từ mới"
     }
 
     private fun setDefaultNewUserValues() {
@@ -80,6 +87,6 @@ class HomeViewModel : ViewModel() {
         _wordsCount.value = 0
         _timeLearned.value = "0 phút"
         _nextLessonName.value = "Bài 1: Bắt đầu hành trình"
-        _nextLessonXp.value = "0 XP"
+        _nextLessonXp.value = "+50 XP"
     }
 }

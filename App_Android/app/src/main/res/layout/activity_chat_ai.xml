@@ -25,10 +25,10 @@
 
             <ImageView
                 android:id="@+id/btnBack"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="4dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_arrow_back"
                 app:tint="#1E293B" />
 
@@ -85,19 +85,19 @@
 
                 <ImageView
                     android:id="@+id/btnHistoryChat"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:padding="2dp"
-                    android:layout_marginEnd="16dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="12dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@android:drawable/ic_menu_recent_history"
                     app:tint="#64748B"
                     android:background="?attr/selectableItemBackgroundBorderless"/>
 
                 <ImageView
                     android:id="@+id/btnNewChat"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:padding="2dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="12dp"
                     android:src="@android:drawable/ic_menu_add"
                     app:tint="#64748B"
                     android:background="?attr/selectableItemBackgroundBorderless"/>
@@ -198,7 +198,7 @@
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="75dp"
+        android:layout_height="72dp"
         android:background="@color/white"
         android:elevation="24dp"
         android:orientation="horizontal">

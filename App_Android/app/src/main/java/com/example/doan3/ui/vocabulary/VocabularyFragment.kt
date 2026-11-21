@@ -1,20 +1,24 @@
 package com.example.doan3.ui.vocabulary
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
-import android.speech.tts.TextToSpeech // THÊM IMPORT TTS
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.doan3.R
 import com.example.doan3.databinding.FragmentVocabularyBinding
 import com.google.android.material.tabs.TabLayout
-import java.util.Locale // THÊM IMPORT LOCALE
+import java.util.Locale
 
-// ĐÃ SỬA: Kế thừa thêm TextToSpeech.OnInitListener
 class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var _binding: FragmentVocabularyBinding? = null
@@ -23,17 +27,12 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
     private val viewModel: VocabularyViewModel by viewModels()
     private lateinit var adapter: VocabularyAdapter
 
-    // Biến quản lý bộ đọc phát âm
     private lateinit var tts: TextToSpeech
+    private var isTtsReady = false
 
-    // Lưu trữ toàn bộ danh sách gốc từ API
     private var fullVocabularyList: List<Vocabulary> = emptyList()
-
-    // Biến lưu trạng thái bộ lọc hiện tại
     private var currentCategoryFilter = "Tất cả"
-    private var currentStatusFilter = 0 // 0: Đã thuộc, 1: Đang học, 2: Từ mới
-
-    // Thêm biến này ở dưới các biến currentStatusFilter (Code của bạn 1)
+    private var currentStatusFilter = 0
     private var currentSearchQuery = ""
 
     override fun onCreateView(
@@ -47,66 +46,57 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Khởi tạo TextToSpeech
         tts = TextToSpeech(requireContext(), this)
 
         setupRecyclerView()
         setupFilterListeners()
-        setupSearchListener() // THÊM DÒNG NÀY ĐỂ BẮT ĐẦU LẮNG NGHE TÌM KIẾM (Code của bạn 1)
+        setupSearchListener()
         observeViewModel()
 
-        // Xử lý nút mũi tên quay lại trang chủ
         binding.btnBack.setOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
+
+        binding.btnNotification.setOnClickListener {
+            Toast.makeText(requireContext(), "Không có thông báo mới", Toast.LENGTH_SHORT).show()
+        }
+
+        // Khởi tạo màu chip ban đầu đồng bộ
+        updateChipUI(binding.tvFilterAll)
     }
 
-    // (Code của bạn 2)
     override fun onResume() {
         super.onResume()
-        // 🚀 Gọi đúng tên hàm đang có trong VocabularyViewModel
-
-        viewModel.fetchVocabularyList() // Lấy danh sách từ vựng
-        viewModel.fetchStats()          // Lấy thông số thống kê
+        viewModel.fetchVocabularyList()
+        viewModel.fetchStats()
     }
 
-    // Thiết lập ngôn ngữ đọc là tiếng Anh Mỹ (Code của bạn 1 có thêm log chi tiết)
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            // Cài đặt ngôn ngữ và hứng kết quả trả về
             val result = tts.setLanguage(Locale.US)
-
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                // Báo lỗi nếu thiết bị không hỗ trợ hoặc chưa tải ngôn ngữ này
-                Log.e("TTS_DEBUG", "Ngôn ngữ không được hỗ trợ hoặc thiết bị thiếu dữ liệu!")
-            } else {
-                // Thành công, TTS đã sẵn sàng hoạt động
-                Log.i("TTS_DEBUG", "Khởi tạo thành công! Sẵn sàng phát âm.")
-            }
+            isTtsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
         } else {
             Log.e("TTS_DEBUG", "Khởi tạo TextToSpeech thất bại!")
         }
     }
 
     private fun setupRecyclerView() {
-        // ĐÃ SỬA: Truyền 2 sự kiện vào Adapter (1 cho việc mở chi tiết, 1 cho việc bấm loa)
         adapter = VocabularyAdapter(
             onItemClick = { clickedVocab ->
                 openWordDetailFragment(clickedVocab)
             },
             onSpeakClick = { wordText ->
-                // Lệnh phát âm từ vựng
-                tts.speak(wordText, TextToSpeech.QUEUE_FLUSH, null, "")
+                if (isTtsReady && wordText.isNotEmpty()) {
+                    tts.speak(wordText, TextToSpeech.QUEUE_FLUSH, null, "")
+                }
             }
         )
         binding.rvVocabulary.layoutManager = LinearLayoutManager(requireContext())
         binding.rvVocabulary.adapter = adapter
     }
 
-    // HÀM MỞ TRANG CHI TIẾT VÀ TRUYỀN DỮ LIỆU SANG
     private fun openWordDetailFragment(vocab: Vocabulary) {
         val detailFragment = WordDetailFragment.newInstance(vocab)
-
         requireActivity().supportFragmentManager.beginTransaction()
             .replace((requireView().parent as ViewGroup).id, detailFragment)
             .addToBackStack(null)
@@ -114,19 +104,19 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     private fun observeViewModel() {
-        // 1. Lắng nghe danh sách từ vựng
+        viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
+            binding.progressLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+
         viewModel.vocabularyList.observe(viewLifecycleOwner) { list ->
             fullVocabularyList = list
 
-            // 🚀 TỰ ĐỘNG ĐẾM SỐ LƯỢNG NGAY TRÊN APP (Cực kỳ chính xác và đồng bộ 100% với Trang chủ - Code bạn 2)
             val totalWords = list.size
-            val masteredCount = list.count { it.proficiency >= 80 } // Số từ Đã thuộc
-            val learningCount = list.count { it.proficiency in 1..79 } // Số từ Đang học
-            val newCount = list.count { it.proficiency == 0 } // Số từ Mới
-
+            val masteredCount = list.count { it.proficiency >= 80 }
+            val learningCount = list.count { it.proficiency in 1..79 }
+            val newCount = list.count { it.proficiency == 0 }
             val masteryPercent = if (totalWords > 0) (masteredCount * 100 / totalWords) else 0
 
-            // Cập nhật ngay lập tức lên Giao diện
             binding.tvTotalWords.text = totalWords.toString()
             binding.tvMasteryPercent.text = "$masteryPercent%"
 
@@ -134,46 +124,36 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
             binding.tabLayout.getTabAt(1)?.text = "Đang học\n($learningCount)"
             binding.tabLayout.getTabAt(2)?.text = "Từ mới\n($newCount)"
 
-            // Lọc và đổ danh sách vào RecyclerView
             applyFilters()
         }
 
-        // 2. Lắng nghe lỗi
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             if (!message.isNullOrEmpty()) {
-                android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
                 viewModel.clearError()
             }
         }
 
-        // 3. LẮNG NGHE THỐNG KÊ VÀ ĐỔ VÀO GIAO DIỆN (Code của bạn 1 - Giữ nguyên không xóa)
         viewModel.vocabStats.observe(viewLifecycleOwner) { stats ->
             stats?.let {
-                binding.tvTotalWords.text = it.totalWords.toString()
-                binding.tvMasteryPercent.text = "${it.masteryPercentage}%"
-
-                // (Phần tvNewWordsThisWeek nếu em đã xóa bên XML thì nhớ comment hoặc xóa dòng dưới này đi nhé)
-                // binding.tvNewWordsThisWeek.text = it.newWordsThisWeek.toString()
-
-                binding.tabLayout.getTabAt(0)?.text = "Đã thuộc\n(${it.masteredWords})"
-                binding.tabLayout.getTabAt(1)?.text = "Đang học\n(${it.learningWords})"
-                binding.tabLayout.getTabAt(2)?.text = "Từ mới\n(${it.newWords})"
+                if (fullVocabularyList.isEmpty()) {
+                    binding.tvTotalWords.text = it.totalWords.toString()
+                    binding.tvMasteryPercent.text = "${it.masteryPercentage}%"
+                    binding.tabLayout.getTabAt(0)?.text = "Đã thuộc\n(${it.masteredWords})"
+                    binding.tabLayout.getTabAt(1)?.text = "Đang học\n(${it.learningWords})"
+                    binding.tabLayout.getTabAt(2)?.text = "Từ mới\n(${it.newWords})"
+                }
             }
         }
     }
 
-    // --- CÁC HÀM XỬ LÝ LOGIC LỌC DỮ LIỆU ---
-
-    // HÀM LẮNG NGHE SỰ KIỆN GÕ TỪ KHÓA TÌM KIẾM (Code của bạn 1)
     private fun setupSearchListener() {
         binding.etSearch.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 currentSearchQuery = s.toString().trim()
-                applyFilters() // Gọi lại hàm lọc mỗi khi người dùng gõ phím
+                applyFilters()
             }
-
             override fun afterTextChanged(s: android.text.Editable?) {}
         })
     }
@@ -216,39 +196,44 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
         }
 
         if (currentCategoryFilter != "Tất cả") {
-            filteredList = filteredList.filter { it.category == currentCategoryFilter }
+            filteredList = filteredList.filter { it.category.contains(currentCategoryFilter, ignoreCase = true) }
         }
 
-        // THÊM MỚI: Lọc theo từ khóa tìm kiếm (Code của bạn 1)
         if (currentSearchQuery.isNotEmpty()) {
             filteredList = filteredList.filter {
-                // So sánh không phân biệt hoa thường
-                it.word.contains(currentSearchQuery, ignoreCase = true)
+                it.word.contains(currentSearchQuery, ignoreCase = true) ||
+                        it.meaning.contains(currentSearchQuery, ignoreCase = true)
             }
         }
 
-        // THÊM MỚI: Xử lý hiển thị thông báo "chờ cập nhật dữ liệu" (Code của bạn 1)
         if (filteredList.isEmpty()) {
             binding.rvVocabulary.visibility = View.GONE
-            binding.tvEmptyMessage.visibility = View.VISIBLE // Hiện thông báo chờ cập nhật
+            binding.tvEmptyMessage.visibility = View.VISIBLE
         } else {
             binding.rvVocabulary.visibility = View.VISIBLE
-            binding.tvEmptyMessage.visibility = View.GONE // Ẩn thông báo đi
+            binding.tvEmptyMessage.visibility = View.GONE
         }
 
         adapter.updateData(filteredList)
     }
 
-    private fun updateChipUI(selectedTextView: android.widget.TextView) {
-        binding.tvFilterAll.setBackgroundResource(R.drawable.bg_chip_inactive)
-        binding.tvFilterWork.setBackgroundResource(R.drawable.bg_chip_inactive)
-        binding.tvFilterTravel.setBackgroundResource(R.drawable.bg_chip_inactive)
+    /** Cập nhật cả màu nền lẫn màu chữ & độ đậm khi chuyển chip lọc */
+    private fun updateChipUI(selectedTextView: TextView) {
+        val inactiveTextColor = ContextCompat.getColor(requireContext(), R.color.text_primary)
+        val chips = listOf(binding.tvFilterAll, binding.tvFilterWork, binding.tvFilterTravel)
+
+        chips.forEach { chip ->
+            chip.setBackgroundResource(R.drawable.bg_chip_inactive)
+            chip.setTextColor(inactiveTextColor)
+            chip.setTypeface(null, Typeface.NORMAL)
+        }
 
         selectedTextView.setBackgroundResource(R.drawable.bg_chip_active)
+        selectedTextView.setTextColor(Color.WHITE)
+        selectedTextView.setTypeface(null, Typeface.BOLD)
     }
 
     override fun onDestroyView() {
-        // Tắt bộ đọc để giải phóng RAM khi rời khỏi Fragment này
         if (this::tts.isInitialized) {
             tts.stop()
             tts.shutdown()

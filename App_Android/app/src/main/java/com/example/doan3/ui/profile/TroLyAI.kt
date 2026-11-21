@@ -2,90 +2,103 @@ package com.example.doan3.ui.profile
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.LinearLayout
+import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import com.example.doan3.R
+import androidx.fragment.app.Fragment
 import com.example.doan3.MainActivity
-import com.example.doan3.ui.ai.ChatAIActivity
-import com.google.android.material.card.MaterialCardView
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.doan3.R
 import com.example.doan3.databinding.DialogCreateRoadmapBinding
+import com.example.doan3.ui.ai.ChatAIActivity
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.card.MaterialCardView
 
-class TroLyAIActivity : AppCompatActivity() {
+class TroLyAIFragment : Fragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.troly_ai)
-
-        setupBottomNavigation()
-        setupAICardsNavigation()
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.troly_ai, container, false)
     }
 
-    private fun setupAICardsNavigation() {
-        val cardGiaiThichTuVung = findViewById<MaterialCardView>(R.id.cardGiaiThichTuVung)
-        val cardTaoQuiz = findViewById<MaterialCardView>(R.id.cardTaoQuiz)
-        val cardFlashcard = findViewById<MaterialCardView>(R.id.cardFlashcard)
-        val cardLoTrinhHoc = findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
-        val cardTroChuyenTrucTiep = findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        // 1. Gửi tín hiệu mở Vocabulary
+        // Ẩn bottomNav thừa trong troly_ai.xml vì MainActivity đã có thanh Bottom Nav thống nhất
+        view.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
+
+        setupQuickAsk(view)
+        setupAICardsNavigation(view)
+    }
+
+    private fun setupQuickAsk(view: View) {
+        val edtQuickAsk = view.findViewById<EditText>(R.id.edtQuickAsk)
+        val btnQuickSend = view.findViewById<View>(R.id.btnQuickSend)
+
+        btnQuickSend?.setOnClickListener {
+            val question = edtQuickAsk?.text?.toString()?.trim() ?: ""
+            if (question.isEmpty()) {
+                Toast.makeText(requireContext(), "Vui lòng nhập câu hỏi cho LexiVT AI!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            edtQuickAsk?.setText("")
+            val intent = Intent(requireContext(), ChatAIActivity::class.java).apply {
+                putExtra("INITIAL_MESSAGE", question)
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun setupAICardsNavigation(view: View) {
+        val cardGiaiThichTuVung = view.findViewById<MaterialCardView>(R.id.cardGiaiThichTuVung)
+        val cardTaoQuiz = view.findViewById<MaterialCardView>(R.id.cardTaoQuiz)
+        val cardFlashcard = view.findViewById<MaterialCardView>(R.id.cardFlashcard)
+        val cardLoTrinhHoc = view.findViewById<MaterialCardView>(R.id.cardLoTrinhHoc)
+        val cardTroChuyenTrucTiep = view.findViewById<MaterialCardView>(R.id.cardTroChuyenTrucTiep)
+
         cardGiaiThichTuVung?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("OPEN_FRAGMENT", "VOCABULARY")
-            }
-            startActivity(intent)
+            (activity as? MainActivity)?.openVocabularyScreen()
         }
 
-        // 2. Chuyển sang màn hình Tạo Quiz (Activity)
         cardTaoQuiz?.setOnClickListener {
-            val intent = Intent(this, TaoQuizActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), TaoQuizActivity::class.java))
         }
 
-        // 3. Gửi tín hiệu mở Learning
         cardFlashcard?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("OPEN_FRAGMENT", "LEARNING")
-            }
-            startActivity(intent)
+            (activity as? MainActivity)?.openLearningTab()
         }
 
-        // 4. Mở Form tạo lộ trình (ĐÃ SỬA: Không chuyển trang trực tiếp mà hiện BottomSheet trước)
         cardLoTrinhHoc?.setOnClickListener {
             showRoadmapFormDialog()
         }
 
-        // 5. Chat AI
         cardTroChuyenTrucTiep?.setOnClickListener {
-            val intent = Intent(this, ChatAIActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(requireContext(), ChatAIActivity::class.java))
         }
     }
 
-    // Hàm hiển thị Form đẹp mắt và xử lý sự kiện đóng gói dữ liệu
     private fun showRoadmapFormDialog() {
-        val dialog = BottomSheetDialog(this)
+        val dialog = BottomSheetDialog(requireContext())
         val dialogBinding = DialogCreateRoadmapBinding.inflate(layoutInflater)
         dialog.setContentView(dialogBinding.root)
 
-        // Khởi tạo data mẫu cho các Spinner
         dialogBinding.spinnerGoal.adapter = ArrayAdapter(
-            this,
+            requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             arrayOf("Giao tiếp công việc", "Thi IELTS/TOEIC", "Du lịch", "Lấy lại căn bản")
         )
         dialogBinding.spinnerLevel.adapter = ArrayAdapter(
-            this,
+            requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             arrayOf("Mất gốc", "Cơ bản", "Trung cấp")
         )
         dialogBinding.spinnerTime.adapter = ArrayAdapter(
-            this,
+            requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
             arrayOf("15 phút/ngày", "30 phút/ngày", "1 tiếng/ngày")
         )
@@ -94,80 +107,20 @@ class TroLyAIActivity : AppCompatActivity() {
             val goal = dialogBinding.spinnerGoal.selectedItem.toString()
             val level = dialogBinding.spinnerLevel.selectedItem.toString()
             val time = dialogBinding.spinnerTime.selectedItem.toString()
-            val expectation = dialogBinding.edtExpectation.text.toString().trim() // Lấy mong muốn của user
+            val expectation = dialogBinding.edtExpectation.text.toString().trim()
 
             dialog.dismiss()
 
-            // 🚀 CHUYỂN SANG MAINACTIVITY (Chứa RoadmapFragment) VÀ ĐÓNG GÓI DỮ LIỆU
-            val intent = Intent(this@TroLyAIActivity, MainActivity::class.java).apply {
-                putExtra("OPEN_FRAGMENT", "ROADMAP")
-                putExtra("GENERATE_ROADMAP", true)
-                putExtra("GOAL", goal)
-                putExtra("LEVEL", level)
-                putExtra("TIME", time)
-                putExtra("EXPECTATION", expectation)
-                // Giúp quay lại MainActivity mượt mà không bị tạo trùng màn hình
-                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            val args = Bundle().apply {
+                putBoolean("GENERATE_ROADMAP", true)
+                putString("GOAL", goal)
+                putString("LEVEL", level)
+                putString("TIME", time)
+                putString("EXPECTATION", expectation)
             }
-            startActivity(intent)
+            (activity as? MainActivity)?.openRoadmapScreen(args)
         }
 
         dialog.show()
-    }
-
-    private fun setupBottomNavigation() {
-// 1. Nút Trang chủ -> Về MainActivity kèm cờ mở HomeFragment
-        findViewById<View>(R.id.btnTrangChu)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "HOME") // <--- CHÌA KHÓA ĐỂ SỬA LỖI HÌNH 1
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-            finish()
-        }
-
-        // 2. Nút Khám phá -> Về MainActivity (Kèm lệnh mở LearningFragment)
-        findViewById<View>(R.id.btnKhamPha)?.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("OPEN_FRAGMENT", "LEARNING") // Tín hiệu bắt buộc mở Learning
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-            finish()
-        }
-
-        // 3. Nút Trợ lý AI -> Mở TroLyAIActivity
-        findViewById<View>(R.id.btnTroLyAI)?.setOnClickListener {
-            // Tránh tự mở lại chính nó nếu đang ở màn hình Trợ Lý AI
-            if (this !is TroLyAIActivity) {
-                val intent = Intent(this, TroLyAIActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-
-        // 4. Nút Hồ sơ -> Mở hoso
-        findViewById<View>(R.id.btnHoSo)?.setOnClickListener {
-            if (this !is hoso) {
-                val intent = Intent(this, hoso::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
-
-        // 5. Nút Tài khoản -> Mở TaiKhoanActivity
-        findViewById<View>(R.id.btnTaiKhoan)?.setOnClickListener {
-            if (this !is TaiKhoanActivity) {
-                val intent = Intent(this, TaiKhoanActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                startActivity(intent)
-                overridePendingTransition(0, 0)
-                finish()
-            }
-        }
     }
 }

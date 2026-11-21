@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_app"
@@ -18,7 +19,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="12dp">
 
                 <ImageView
                     android:id="@+id/btnBack"
@@ -40,8 +41,10 @@
 
                 <ImageView
                     android:id="@+id/btnNotification"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:src="@drawable/ic_notifications" />
@@ -51,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:text="Kho từ vựng của tôi"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp" />
@@ -67,6 +70,7 @@
                 android:drawablePadding="12dp"
                 android:hint="Tìm kiếm từ vựng..."
                 android:paddingHorizontal="16dp"
+                android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -107,10 +111,11 @@
                             android:id="@+id/tvTotalWords"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1,240"
+                            android:text="0"
                             android:textColor="@android:color/white"
                             android:textSize="28sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:text="1,240" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -143,10 +148,11 @@
                             android:id="@+id/tvMasteryPercent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="85%"
+                            android:text="0%"
                             android:textColor="@color/card_green_text_dark"
                             android:textSize="28sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:text="85%" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
@@ -212,17 +218,17 @@
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đã thuộc\n(940)" />
+                    android:text="Đã thuộc\n(0)" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đang học\n(220)" />
+                    android:text="Đang học\n(0)" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Từ mới\n(80)" />
+                    android:text="Từ mới\n(0)" />
             </com.google.android.material.tabs.TabLayout>
 
             <View
@@ -230,6 +236,14 @@
                 android:layout_height="1dp"
                 android:layout_marginHorizontal="20dp"
                 android:background="@color/divider_color" />
+
+            <ProgressBar
+                android:id="@+id/progressLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvVocabulary"
@@ -239,14 +253,13 @@
                 android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-            <!-- PHẦN THÊM MỚI: TextView hiển thị khi không có kết quả tìm kiếm -->
             <TextView
                 android:id="@+id/tvEmptyMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="32dp"
-                android:text="Chờ cập nhật dữ liệu"
+                android:text="Chưa có từ vựng phù hợp"
                 android:textAlignment="center"
                 android:textColor="@color/text_secondary"
                 android:textSize="16sp"

@@ -35,48 +35,58 @@
                 android:id="@+id/ivAvatar"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="12dp"
                 android:src="@drawable/ic_account"
                 app:layout_constraintBottom_toBottomOf="@id/tvAppLogo"
                 app:layout_constraintStart_toEndOf="@id/tvAppLogo"
                 app:layout_constraintTop_toTopOf="@id/tvAppLogo" />
 
+            <!-- Neo End_toStartOf tvStreakDays để tên người dùng dài không đè lên chip chuỗi ngày -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="@id/ivAvatar"
+                app:layout_constraintEnd_toStartOf="@id/tvStreakDays"
                 app:layout_constraintStart_toEndOf="@id/ivAvatar"
                 app:layout_constraintTop_toTopOf="@id/ivAvatar">
 
                 <TextView
                     android:id="@+id/tvUserName"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Minh Nguyễn"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Đang tải..."
                     android:textColor="@color/text_primary"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:text="Minh Nguyễn" />
 
                 <TextView
                     android:id="@+id/tvUserLevel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="B1 - Trung cấp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text=""
                     android:textColor="@color/primary_button"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    tools:text="Cấp 1 • 120 XP" />
             </LinearLayout>
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/tvStreakDays"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="15 ngày"
+                android:text="0 ngày"
                 android:textColor="@color/badge_text"
                 app:chipBackgroundColor="@color/badge_bg"
                 app:chipIcon="@drawable/ic_fire"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="15 ngày" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardDailyTask"
@@ -84,7 +94,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 app:cardBackgroundColor="@android:color/white"
-                app:cardCornerRadius="20dp" app:cardElevation="2dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ivAvatar">
@@ -110,21 +121,23 @@
                         android:id="@+id/tvTaskPercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="80% Hoàn\nthành"
+                        android:text="0% Hoàn\nthành"
                         android:textColor="@color/primary_button"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="80% Hoàn\nthành" />
 
                     <TextView
                         android:id="@+id/tvTaskTarget"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Mục tiêu hôm nay: 8/10 từ mới"
+                        android:text="Mục tiêu hôm nay: 0/10 từ mới"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvTaskTitle" />
+                        app:layout_constraintTop_toBottomOf="@id/tvTaskTitle"
+                        tools:text="Mục tiêu hôm nay: 8/10 từ mới" />
 
                     <ProgressBar
                         android:id="@+id/progressBar"
@@ -133,7 +146,7 @@
                         android:layout_height="8dp"
                         android:layout_marginTop="8dp"
                         android:max="100"
-                        android:progress="80"
+                        android:progress="0"
                         android:progressDrawable="@drawable/progress_daily_task"
                         app:layout_constraintTop_toBottomOf="@id/tvTaskTarget" />
 
@@ -206,10 +219,11 @@
                             android:id="@+id/tvWordsCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1,240"
+                            android:text="0"
                             android:textColor="@color/text_primary"
                             android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:text="1,240" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -243,15 +257,15 @@
                             android:id="@+id/tvTimeLearned"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="45 giờ"
+                            android:text="0 phút"
                             android:textColor="@color/text_primary"
                             android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:text="45 phút" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- 🚀 THẺ CẢNH BÁO: SỔ TAY TIÊN TRI (MẶC ĐỊNH BỊ ẨN) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPredictiveWarning"
                 android:layout_width="0dp"
@@ -286,10 +300,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="AI dự đoán bạn sắp quên 5 từ này. Hãy ôn lại ngay!"
                         android:textColor="#991B1B"
                         android:textSize="14sp"
-                        app:layout_constraintTop_toBottomOf="@id/tvPredictiveBadge" />
+                        app:layout_constraintTop_toBottomOf="@id/tvPredictiveBadge"
+                        tools:text="AI dự đoán bạn sắp quên 5 từ này. Hãy ôn lại ngay!" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnReviewNow"
@@ -305,7 +319,6 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- THẺ PRO GIỮ NGUYÊN - CHỈ ĐỔI LIÊN KẾT constraintTop XUỐNG DƯỚI THẺ CẢNH BÁO -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPro"
                 android:layout_width="0dp"
@@ -319,15 +332,19 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_pro_banner" android:padding="20dp">
+                    android:background="@drawable/bg_pro_banner"
+                    android:padding="20dp">
 
                     <TextView
                         android:id="@+id/tvProBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="AI"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
-                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:background="@drawable/bg_pro_badge"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -358,8 +375,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
                         android:text="Xem Lộ trình học"
-                        app:backgroundTint="#313B4D" android:textColor="#FFFFFF"
-                        app:cornerRadius="20dp" app:layout_constraintTop_toBottomOf="@id/tvProDesc" />
+                        app:backgroundTint="#313B4D"
+                        android:textColor="#FFFFFF"
+                        app:cornerRadius="20dp"
+                        app:layout_constraintTop_toBottomOf="@id/tvProDesc" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -396,18 +415,21 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:layout_marginTop="16dp"
-                        android:src="@drawable/ic_launcher_foreground" android:background="@drawable/ic_book_light_bg" android:padding="8dp"
+                        android:src="@drawable/ic_book"
+                        android:background="@drawable/ic_book_light_bg"
+                        android:padding="10dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvNextTitle"/>
 
                     <TextView
                         android:id="@+id/tvLessonName"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
-                        android:text="Chủ đề: Tại nơi làm việc"
+                        android:text="Bài 1: Bắt đầu hành trình"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@id/ivBook"
                         app:layout_constraintTop_toTopOf="@id/ivBook"/>
 

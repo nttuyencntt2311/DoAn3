@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -74,14 +75,14 @@
                 android:id="@+id/tvStepTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="GIAO TIẾP CƠ BẢN"
+                android:layout_marginEnd="8dp"
                 android:textColor="#2563EB"
-                android:textStyle="bold"
                 android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@id/tvTag"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/tvTag"
-                android:layout_marginEnd="8dp"/>
+                tools:text="GIAO TIẾP CƠ BẢN" />
 
             <TextView
                 android:id="@+id/tvTag"
@@ -99,37 +100,38 @@
 
             <TextView
                 android:id="@+id/tvStepDesc"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Tiến trình bài học"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="12dp"
                 android:textColor="#64748B"
                 android:textSize="12sp"
+                app:layout_constraintEnd_toStartOf="@id/tvProgressText"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvStepTitle" />
+                app:layout_constraintTop_toBottomOf="@id/tvStepTitle"
+                tools:text="Tiến trình bài học &amp; giải thích XAI" />
 
             <TextView
                 android:id="@+id/tvProgressText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="15 / 40 từ"
                 android:textColor="#2563EB"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@id/tvStepDesc"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tvStepDesc" />
+                app:layout_constraintTop_toTopOf="@id/tvStepDesc"
+                tools:text="15 / 40 từ" />
 
             <ProgressBar
                 android:id="@+id/progressStep"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="10dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:max="40"
-                android:progress="15"
-                android:progressTint="#2563EB"
+                android:progress="0"
                 android:progressBackgroundTint="#E2E8F0"
+                android:progressTint="#2563EB"
                 app:layout_constraintTop_toBottomOf="@id/tvStepDesc" />
 
             <com.google.android.material.button.MaterialButton

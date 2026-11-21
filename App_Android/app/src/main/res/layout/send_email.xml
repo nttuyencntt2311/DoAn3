@@ -16,9 +16,10 @@
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_centerVertical="true"
+            android:padding="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             app:tint="#0056B3" />
@@ -177,9 +178,12 @@
                 </LinearLayout>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btnSelectTopic"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:foreground="?attr/selectableItemBackground"
                     app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="0dp"
@@ -190,6 +194,7 @@
                         android:layout_height="match_parent"
                         android:paddingHorizontal="16dp">
                         <TextView
+                            android:id="@+id/tvSelectedTopic"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerVertical="true"
@@ -243,6 +248,7 @@
                     app:strokeColor="#CBD5E1"
                     app:strokeWidth="1dp">
                     <EditText
+                        android:id="@+id/edtSupportContent"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@null"

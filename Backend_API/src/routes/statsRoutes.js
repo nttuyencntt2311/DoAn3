@@ -41,13 +41,28 @@ router.get('/learning', verifyToken, async (req, res) => {
     // Tính phần trăm thành thạo cá nhân
     const masteryPercent = totalWordsCount > 0 ? Math.round((masteredCount / totalWordsCount) * 100) : 0;
 
+    // Tính độ chính xác thực tế từ lịch sử làm Quiz (fallback sang % thành thạo nếu chưa làm quiz)
+    let totalQuizScore = 0;
+    let totalQuizQuestions = 0;
+    histories.forEach(h => {
+      totalQuizScore += Number(h.score) || 0;
+      totalQuizQuestions += Number(h.totalQuestions) || 0;
+    });
+    const realAccuracy = totalQuizQuestions > 0
+      ? Math.min(100, Math.round((totalQuizScore / totalQuizQuestions) * 100))
+      : masteryPercent;
+
+    // Chặn hiển thị số giờ bất thường nếu DB chưa chạy script dọn dữ liệu cũ
+    const rawMinutes = Number(user.timeLearnedMinutes) || 0;
+    const safeMinutes = rawMinutes > 100000 ? 0 : Math.max(0, rawMinutes);
+
     // 3. TRẢ VỀ JSON CHO ANDROID
     res.status(200).json({
       stats: {
         streakDays: user.streakDays || 0,
-        totalHours: Math.round((user.timeLearnedMinutes || 0) / 60), 
-        totalWords: totalWordsCount,          
-        accuracyPercent: masteryPercent,      
+        totalHours: Math.round(safeMinutes / 60),
+        totalWords: masteredCount,
+        accuracyPercent: realAccuracy,
         chartData: chartData
       },
       memories: [

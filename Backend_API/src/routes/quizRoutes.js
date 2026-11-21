@@ -55,17 +55,25 @@ router.post("/submit", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Không tìm thấy người dùng!" });
     }
 
-    user.xp += earnedXp || 0;
-    user.wordsLearned += learnedWords || 0;
-    user.timeLearnedMinutes += timeSpentMinutes || 0;
+    const safeEarnedXp = Math.min(Math.max(Math.round(Number(earnedXp) || 0), 0), 500);
+    const safeMinutes = Math.min(Math.max(Math.round(Number(timeSpentMinutes) || 1), 1), 180);
 
-    // TỰ ĐỘNG TĂNG LEVEL DỰA TRÊN XP (Đồng bộ công thức: Level bắt đầu từ 1)
-    const currentCalculatedLevel = Math.floor(user.xp / 100) + 1;
-    let isLevelUp = false;
-    if (currentCalculatedLevel > (user.level || 1)) {
-      user.level = currentCalculatedLevel;
-      isLevelUp = true;
+    user.xp = (user.xp || 0) + safeEarnedXp;
+    // Bảo vệ trường hợp DB cũ từng lưu nhầm timestamp (> 100,000 phút)
+    const currentMinutes = (user.timeLearnedMinutes || 0) > 100000 ? 0 : (user.timeLearnedMinutes || 0);
+    user.timeLearnedMinutes = currentMinutes + safeMinutes;
+
+    // Đồng bộ wordsLearned theo số từ thực tế đã thuộc (>= 80) trong vocabProgress
+    if (Array.isArray(user.vocabProgress) && user.vocabProgress.length > 0) {
+      user.wordsLearned = user.vocabProgress.filter((v) => (v.proficiency || 0) >= 80).length;
+    } else {
+      user.wordsLearned = (user.wordsLearned || 0) + Math.max(0, Number(learnedWords) || 0);
     }
+
+    // Công thức cấp độ lũy tiến: bắt đầu từ Cấp 1, tránh tăng cấp quá nhanh
+    const currentCalculatedLevel = Math.floor(Math.sqrt(Math.max(0, user.xp) / 100)) + 1;
+    const isLevelUp = currentCalculatedLevel > (user.level || 1);
+    user.level = currentCalculatedLevel;
 
     // TĂNG TỔNG SỐ BÀI QUIZ
     if (user.quizzesCount === undefined || user.quizzesCount === null) {

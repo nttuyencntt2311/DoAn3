@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.doan3.MainActivity
 import com.example.doan3.R
 import com.example.doan3.databinding.FragmentStatisticsBinding
 import com.example.doan3.ui.profile.MemoryItem
@@ -26,6 +27,8 @@ class StatisticsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: StatisticsViewModel by viewModels()
+    private var serverTotalWords: Int = 0
+    private var serverAccuracy: Int = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,62 +42,57 @@ class StatisticsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnBack.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            val fm = requireActivity().supportFragmentManager
+            if (fm.backStackEntryCount > 0) {
+                fm.popBackStack()
+            } else {
+                (activity as? MainActivity)?.openHomeTab()
+            }
         }
 
         setupTabs()
 
-        // Ra lệnh cho ViewModel gọi API lấy thống kê (Chuỗi ngày, tổng giờ, biểu đồ)
         viewModel.fetchRealStatistics(requireContext())
 
-        // =========================================================
-        // 1. KÉO DỮ LIỆU TỪ VỰNG & % THÀNH THẠO (GIỐNG HỆT LEARNING)
-        // =========================================================
+        viewModel.statsData.observe(viewLifecycleOwner) { stats ->
+            binding.tvStreakDays.text = stats.streakDays.toString()
+            binding.tvTotalTime.text = "${stats.totalHours} giờ"
+
+            serverTotalWords = stats.totalWords
+            serverAccuracy = stats.accuracyPercent
+
+            binding.tvTotalWords.text = stats.totalWords.toString()
+            binding.tvAccuracy.text = "${stats.accuracyPercent}%"
+
+            drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
+        }
+
+        // Chỉ fallback đếm số từ ĐÃ THUỘC (proficiency >= 80) nếu server trả 0, không bao giờ gán tổng từ hệ thống
         val apiService = RetrofitClient.getInstance(requireContext())
         apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
                 if (_binding == null || !isAdded) return
-
                 if (response.isSuccessful) {
                     val allWords = response.body() ?: emptyList()
-
-                    // Tính Tổng số từ
-                    val totalWordsCount = allWords.size
-
-                    // Tính % Thành thạo (Từ có proficiency >= 80)
                     val masteredCount = allWords.count { it.proficiency >= 80 }
-                    val accuracy = if (totalWordsCount > 0) {
-                        (masteredCount * 100) / totalWordsCount
+                    val computedAccuracy = if (allWords.isNotEmpty()) {
+                        (masteredCount * 100) / allWords.size
                     } else 0
 
-                    // Đổ dữ liệu thẳng vào ID của giao diện XML
-                    binding.tvTotalWords.text = totalWordsCount.toString()
-                    binding.tvAccuracy.text = "${accuracy}%"
+                    if (serverTotalWords == 0) {
+                        binding.tvTotalWords.text = masteredCount.toString()
+                    }
+                    if (serverAccuracy == 0) {
+                        binding.tvAccuracy.text = "${computedAccuracy}%"
+                    }
                 }
             }
 
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
-                // Xử lý lỗi nếu cần
+                // Giữ nguyên dữ liệu từ statsData
             }
         })
 
-        // =========================================================
-        // 2. LẮNG NGHE VÀ ĐỔ DỮ LIỆU CÒN LẠI VÀO GIAO DIỆN
-        // =========================================================
-        viewModel.statsData.observe(viewLifecycleOwner) { stats ->
-            // Kéo dữ liệu cho Chuỗi ngày học
-            binding.tvStreakDays.text = stats.streakDays.toString()
-
-            // Kéo dữ liệu Tổng giờ học
-            binding.tvTotalTime.text = "${stats.totalHours} giờ"
-
-            // Kéo mảng dữ liệu (List<Int>) truyền vào hàm vẽ biểu đồ
-            drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
-        }
-
-        // =========================================================
-        // 3. LẮNG NGHE DỮ LIỆU KỶ NIỆM TỪ VIEWMODEL
-        // =========================================================
         viewModel.memoriesData.observe(viewLifecycleOwner) { memories ->
             binding.containerMemories.removeAllViews()
 
@@ -116,18 +114,19 @@ class StatisticsFragment : Fragment() {
         }
     }
 
-    // Hàm hỗ trợ vẽ thẻ CardView cho mỗi Kỷ niệm
     private fun createMemoryCard(memory: MemoryItem): View {
+        val density = resources.displayMetrics.density
+        val pad = (16 * density).toInt()
         val layout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, (16 * resources.displayMetrics.density).toInt())
+                setMargins(0, 0, 0, (16 * density).toInt())
             }
             setBackgroundResource(R.drawable.bg_bar_rounded)
-            setPadding(40, 40, 40, 40)
+            setPadding(pad, pad, pad, pad)
             elevation = 4f
         }
 
@@ -142,12 +141,12 @@ class StatisticsFragment : Fragment() {
             text = memory.description
             textSize = 14f
             setTextColor(Color.parseColor("#64748B"))
-            setPadding(0, 10, 0, 10)
+            setPadding(0, (4 * density).toInt(), 0, (4 * density).toInt())
         }
 
         val tvDateAndXp = TextView(requireContext()).apply {
             text = "${memory.date} • +${memory.xp} XP"
-            textSize = 12f
+            textSize = 11f
             setTextColor(Color.parseColor("#2563EB"))
             setTypeface(null, Typeface.BOLD_ITALIC)
         }
@@ -159,7 +158,6 @@ class StatisticsFragment : Fragment() {
         return layout
     }
 
-    // Hàm thiết lập Tabs
     private fun setupTabs() {
         binding.tabStatistics.setOnClickListener {
             binding.tabStatistics.setCardBackgroundColor(Color.WHITE)
@@ -188,15 +186,12 @@ class StatisticsFragment : Fragment() {
         }
     }
 
-    // Hàm vẽ biểu đồ cột 7 ngày
-// HÀM VẼ BIỂU ĐỒ TỐI ƯU CHO DỮ LIỆU PHẦN TRĂM TỪ BACKEND
     private fun drawChart(data: List<Int>) {
         binding.chartContainer.removeAllViews()
         val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
 
-        // Backend đã chốt tối đa là 100%, nên ta dùng mốc này làm chuẩn tính tỷ lệ chiều cao
         val maxPercent = 100f
-        val maxHeightDp = 120 // Tăng chiều cao tối đa của cột (dp) để biểu đồ trông thoáng hơn
+        val maxHeightDp = 82
 
         for (i in 0 until 7) {
             val percent = if (i < data.size) data[i] else 0
@@ -207,38 +202,31 @@ class StatisticsFragment : Fragment() {
                 gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             }
 
-            // 1. Nhãn % hiển thị trên đỉnh cột (Ví dụ: 80%)
             val valueText = TextView(requireContext()).apply {
                 text = if (percent > 0) "$percent%" else ""
-                textSize = 11f
+                textSize = 10f
                 setTextColor(Color.parseColor("#0056D2"))
                 setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.CENTER
             }
 
-            // 2. Vẽ thanh biểu đồ màu xanh
             val barView = View(requireContext()).apply {
                 setBackgroundColor(if (percent > 0) Color.parseColor("#0056D2") else Color.parseColor("#E2E8F0"))
-
-                // Tính toán tỷ lệ phần trăm ra Pixel thực tế trên màn hình
                 val heightInPx = ((percent / maxPercent) * maxHeightDp * resources.displayMetrics.density).toInt()
-
-                // Chiều cao tối thiểu nếu có học là 8dp, nếu không học (0%) là 4dp (hiện vạch xám nhỏ)
                 val minHeightPx = if (percent > 0) (8 * resources.displayMetrics.density).toInt() else (4 * resources.displayMetrics.density).toInt()
 
                 layoutParams = LinearLayout.LayoutParams(
-                    (16 * resources.displayMetrics.density).toInt(), // Cột rộng 16dp
+                    (16 * resources.displayMetrics.density).toInt(),
                     kotlin.math.max(heightInPx, minHeightPx)
                 ).apply {
-                    topMargin = (4 * resources.displayMetrics.density).toInt()
-                    bottomMargin = (8 * resources.displayMetrics.density).toInt()
+                    topMargin = (2 * resources.displayMetrics.density).toInt()
+                    bottomMargin = (4 * resources.displayMetrics.density).toInt()
                 }
             }
 
-            // 3. Nhãn hiển thị thứ trong tuần (T2, T3, ...)
             val dayText = TextView(requireContext()).apply {
                 text = daysOfWeek[i]
-                textSize = 12f
+                textSize = 11f
                 setTextColor(if (percent > 0) Color.parseColor("#1A1A1A") else Color.parseColor("#888888"))
                 gravity = Gravity.CENTER
             }

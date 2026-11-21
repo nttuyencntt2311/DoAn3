@@ -2,9 +2,6 @@ package com.example.doan3.ui.profile
 
 import android.content.Intent
 import android.net.Uri
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -13,8 +10,13 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.doan3.MainActivity
 import com.example.doan3.R
 import com.example.doan3.databinding.ActivityTaoQuizBinding
+import com.example.doan3.ui.roadmap.IeltsQuizActivity
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -25,11 +27,9 @@ class TaoQuizActivity : AppCompatActivity() {
     private var selectedQuantity = 10
     private var selectedDifficulty = "Trung bình"
 
-    // 1. BỘ CHỌN TỆP: Lắng nghe kết quả khi người dùng chọn file từ điện thoại
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            // Đọc nội dung file và gán vào ô nhập liệu
-            val fileContent = readTextFromUri(it)
+            val fileContent = readTextFromUri(it).take(5000)
             binding.edtContent.setText(fileContent)
             Toast.makeText(this, "Đã tải dữ liệu từ tệp lên!", Toast.LENGTH_SHORT).show()
         }
@@ -40,12 +40,20 @@ class TaoQuizActivity : AppCompatActivity() {
         binding = ActivityTaoQuizBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Nút Back
         binding.btnBack.setOnClickListener {
             finish()
         }
 
-        // Đếm số ký tự khi nhập nội dung
+        // Mở danh sách các bộ Quiz tự tạo trong mục Bài học
+        binding.btnHistory.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("OPEN_FRAGMENT", "LEARNING")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+        }
+
         binding.edtContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -55,14 +63,10 @@ class TaoQuizActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Nút TẢI LÊN TÀI LIỆU
         binding.btnUpload.setOnClickListener {
-            // Gọi bộ chọn tệp, lọc lấy các tệp dạng văn bản (text)
             pickFileLauncher.launch("text/plain")
-            // Lưu ý: Sau này nếu muốn hỗ trợ đọc file PDF hoặc Word, ta sẽ cần thêm thư viện riêng (như iTextPDF hoặc Apache POI)
         }
 
-        // Xử lý thanh Mức độ khó (SeekBar)
         binding.sbDifficulty.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 when (progress) {
@@ -87,16 +91,18 @@ class TaoQuizActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        // Xử lý nút Số lượng câu hỏi
         binding.btnQty5.setOnClickListener { updateQuantitySelection(5) }
         binding.btnQty10.setOnClickListener { updateQuantitySelection(10) }
         binding.btnQty20.setOnClickListener { updateQuantitySelection(20) }
 
-        // Nút TẠO QUIZ NGAY
         binding.btnTaoQuiz.setOnClickListener {
             val content = binding.edtContent.text.toString().trim()
             if (content.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập nội dung hoặc tải tài liệu lên nhé!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (content.length > 5000) {
+                Toast.makeText(this, "Nội dung tối đa 5000 ký tự!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -104,15 +110,13 @@ class TaoQuizActivity : AppCompatActivity() {
                 R.id.rbTracNghiem -> "Trắc nghiệm"
                 R.id.rbDungSai -> "Đúng / Sai"
                 R.id.rbDienKhuyet -> "Điền vào chỗ trống"
-                else -> "Trắc nghiệm" // Mặc định
+                else -> "Trắc nghiệm"
             }
 
-            // Gọi quy trình: Gửi cho AI -> Lấy kết quả -> Lưu dữ liệu
             generateQuizWithAI(content, questionType, selectedDifficulty, selectedQuantity)
         }
     }
 
-    // 2. HÀM ĐỌC DỮ LIỆU TỪ TỆP VĂN BẢN
     private fun readTextFromUri(uri: Uri): String {
         val stringBuilder = StringBuilder()
         try {
@@ -131,7 +135,6 @@ class TaoQuizActivity : AppCompatActivity() {
         return stringBuilder.toString()
     }
 
-    // 3. HÀM GIAO TIẾP VỚI AI (Mô phỏng quy trình)
     private fun generateQuizWithAI(content: String, type: String, difficulty: String, quantity: Int) {
         binding.btnTaoQuiz.isEnabled = false
         binding.btnTaoQuiz.text = "AI đang xử lý..."
@@ -145,6 +148,7 @@ class TaoQuizActivity : AppCompatActivity() {
                     call: Call<GenerateCustomQuizResponse>,
                     response: Response<GenerateCustomQuizResponse>
                 ) {
+                    if (isFinishing || isDestroyed) return
                     binding.btnTaoQuiz.isEnabled = true
                     binding.btnTaoQuiz.text = "Tạo Quiz ngay"
 
@@ -152,12 +156,22 @@ class TaoQuizActivity : AppCompatActivity() {
                         val categoryName = response.body()!!.categoryName
                         Toast.makeText(
                             this@TaoQuizActivity,
-                            "Tạo bộ Quiz AI thành công!",
+                            "Tạo bộ Quiz AI thành công! Bắt đầu làm bài...",
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        val intent = Intent(this@TaoQuizActivity, KhamPhaActivity::class.java)
-                        intent.putExtra("CATEGORY_NAME", categoryName)
+                        // Chuyển thẳng sang màn hình làm bài Quiz thay vì Flashcard
+                        val difficultyLevel = when (difficulty) {
+                            "Dễ" -> 1
+                            "Khó" -> 5
+                            else -> 3
+                        }
+                        val intent = Intent(this@TaoQuizActivity, IeltsQuizActivity::class.java).apply {
+                            putExtra("STEP_TITLE", categoryName)
+                            putExtra("STEP_DESC", "[$type | Độ khó: $difficulty] ${content.take(300)}")
+                            putExtra("QUESTION_COUNT", quantity)
+                            putExtra("DIFFICULTY_LEVEL", difficultyLevel)
+                        }
                         startActivity(intent)
                         finish()
                     } else {
@@ -170,6 +184,7 @@ class TaoQuizActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<GenerateCustomQuizResponse>, t: Throwable) {
+                    if (isFinishing || isDestroyed) return
                     binding.btnTaoQuiz.isEnabled = true
                     binding.btnTaoQuiz.text = "Tạo Quiz ngay"
                     Toast.makeText(
@@ -181,7 +196,6 @@ class TaoQuizActivity : AppCompatActivity() {
             })
     }
 
-    // Hàm hỗ trợ đổi màu nút
     private fun updateQuantitySelection(qty: Int) {
         selectedQuantity = qty
 

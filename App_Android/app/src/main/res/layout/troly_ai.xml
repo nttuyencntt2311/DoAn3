@@ -106,11 +106,14 @@
                     android:layout_height="match_parent"
                     android:paddingHorizontal="16dp">
                     <EditText
+                        android:id="@+id/edtQuickAsk"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_toStartOf="@id/btnQuickSend"
                         android:background="@null"
                         android:hint="Hỏi AI bất cứ điều gì (VD: Cách dùng...)"
+                        android:singleLine="true"
+                        android:textColor="#1E293B"
                         android:textColorHint="#94A3B8"
                         android:textSize="14sp" />
                     <com.google.android.material.card.MaterialCardView
@@ -119,6 +122,8 @@
                         android:layout_height="36dp"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
+                        android:clickable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         app:cardBackgroundColor="#007BFF"
                         app:cardCornerRadius="18dp"
                         app:cardElevation="0dp">
@@ -259,36 +264,8 @@
         android:layout_height="75dp"
         android:background="@color/white"
         android:elevation="24dp"
-        android:orientation="horizontal">
-
-        <LinearLayout android:id="@+id/btnTrangChu" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" app:tint="#94A3B8" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Trang chủ" android:textColor="#94A3B8" android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/btnKhamPha" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_explore" app:tint="#94A3B8" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Khám phá" android:textColor="#94A3B8" android:textSize="11sp" />
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/btnTroLyAI" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-            <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" app:cardBackgroundColor="#EFF6FF" app:cardCornerRadius="20dp" app:cardElevation="0dp">
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingVertical="8dp">
-                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_robot" app:tint="#2563EB" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Trợ lý AI" android:textColor="#2563EB" android:textSize="11sp" android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/btnHoSo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_person" app:tint="#94A3B8"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Hồ sơ" android:textSize="11sp" android:textColor="#94A3B8"/>
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/btnTaiKhoan" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_account" app:tint="#94A3B8"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Tài khoản" android:textSize="11sp" android:textColor="#94A3B8"/>
-        </LinearLayout>
+        android:orientation="horizontal"
+        android:visibility="gone">
     </LinearLayout>
 
 </LinearLayout>

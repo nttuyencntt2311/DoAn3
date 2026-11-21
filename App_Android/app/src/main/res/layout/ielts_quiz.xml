@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8F9FE"
@@ -10,8 +11,10 @@
 
     <ImageView
         android:id="@+id/btnBack"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="12dp"
         android:src="@drawable/ic_arrow_back"
         app:tint="@color/black"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,7 +23,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="IELTS Quiz"
+        android:text="Luyện tập Quiz"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -36,8 +39,9 @@
         app:cardBackgroundColor="#FFF0F0"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@id/btnBack">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -56,7 +60,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:text="00:00"
+                android:text="15:00"
                 android:textColor="#FF4B4B"
                 android:textSize="12sp"
                 android:textStyle="bold"/>
@@ -67,35 +71,35 @@
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="ACADEMIC VOCABULARY"
+        android:layout_marginTop="20dp"
         android:textColor="#64748B"
         android:textSize="10sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnBack" />
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        tools:text="TỪ VỰNG HỌC THUẬT" />
 
     <TextView
         android:id="@+id/tvQuestionCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Question 1 / 10"
         android:textColor="@color/black"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvCategory" />
+        app:layout_constraintTop_toBottomOf="@id/tvCategory"
+        tools:text="Câu 1 / 10" />
 
     <TextView
         android:id="@+id/tvProgressPercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="10% Complete"
         android:textColor="#0056D2"
         android:textSize="12sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/tvQuestionCount" />
+        app:layout_constraintBottom_toBottomOf="@id/tvQuestionCount"
+        tools:text="10% Hoàn thành" />
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
@@ -105,7 +109,7 @@
         app:trackCornerRadius="3dp"
         app:indicatorColor="#0056D2"
         app:trackColor="#E0E4F5"
-        android:progress="10"
+        android:progress="0"
         app:layout_constraintTop_toBottomOf="@id/tvQuestionCount" />
 
     <ScrollView
@@ -123,7 +127,6 @@
             android:orientation="vertical"
             android:paddingBottom="10dp">
 
-            <!-- 🚀 BỔ SUNG 1: Thanh cảnh báo "Thử thách nhân phẩm" (Nằm trên câu hỏi) -->
             <TextView
                 android:id="@+id/tvChallengeAlert"
                 android:layout_width="match_parent"
@@ -131,14 +134,13 @@
                 android:layout_marginBottom="12dp"
                 android:background="#FEF2F2"
                 android:padding="12dp"
-                android:text="🔥 THỬ THÁCH XAI..."
                 android:textColor="#DC2626"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:visibility="gone" />
+                android:visibility="gone"
+                tools:text="🔥 THỬ THÁCH XAI..." />
 
-            <!-- 🚀 BỔ SUNG 2: Thẻ Gia sư AI (Nằm ngay dưới thử thách) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardAiTutor"
                 android:layout_width="match_parent"
@@ -156,10 +158,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="14dp"
-                    android:text="🤖 Gợi ý từ AI..."
                     android:textColor="#0056D2"
                     android:textSize="14sp"
-                    android:textStyle="italic" />
+                    android:textStyle="italic"
+                    tools:text="🤖 Gợi ý từ AI..." />
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -189,17 +191,11 @@
                             android:layout_height="wrap_content"
                             android:paddingHorizontal="8dp"
                             android:paddingVertical="4dp"
-                            android:text="FILL IN THE BLANK"
+                            android:text="CHỌN ĐÁP ÁN ĐÚNG"
                             android:textColor="#0056D2"
-                            android:textSize="8sp"
+                            android:textSize="10sp"
                             android:textStyle="bold" />
                     </com.google.android.material.card.MaterialCardView>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Choose the synonym for:"
-                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/tvQuestionKeyword"
@@ -209,10 +205,10 @@
 
                     <TextView
                         android:id="@+id/tvQuestionSentence"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Before boarding the plane..."
+                        android:text="Đang tải câu hỏi..."
                         android:textColor="#0F172A"
                         android:textSize="20sp"
                         android:lineSpacingExtra="6dp"
@@ -230,17 +226,30 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnOptionA"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
                     android:layout_marginBottom="12dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:strokeColor="#CBD5E1"
                     app:strokeWidth="1dp">
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="60dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@id/imgTickA"
+                            android:layout_marginEnd="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
                             <TextView android:id="@+id/tvLetterA" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="A" android:textColor="#0F172A" android:textStyle="bold" />
-                            <TextView android:id="@+id/tvAnswerA" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="Option A" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvAnswerA" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án A" />
                         </LinearLayout>
                         <ImageView android:id="@+id/imgTickA" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
                     </RelativeLayout>
@@ -249,17 +258,30 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnOptionB"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
                     android:layout_marginBottom="12dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:strokeColor="#CBD5E1"
                     app:strokeWidth="1dp">
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="60dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@id/imgTickB"
+                            android:layout_marginEnd="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
                             <TextView android:id="@+id/tvLetterB" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="B" android:textColor="#0F172A" android:textStyle="bold" />
-                            <TextView android:id="@+id/tvAnswerB" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="Option B" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvAnswerB" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án B" />
                         </LinearLayout>
                         <ImageView android:id="@+id/imgTickB" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
                     </RelativeLayout>
@@ -268,17 +290,30 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnOptionC"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
                     android:layout_marginBottom="12dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:strokeColor="#CBD5E1"
                     app:strokeWidth="1dp">
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="60dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@id/imgTickC"
+                            android:layout_marginEnd="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
                             <TextView android:id="@+id/tvLetterC" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="C" android:textColor="#0F172A" android:textStyle="bold" />
-                            <TextView android:id="@+id/tvAnswerC" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="Option C" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvAnswerC" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án C" />
                         </LinearLayout>
                         <ImageView android:id="@+id/imgTickC" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
                     </RelativeLayout>
@@ -287,16 +322,29 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnOptionD"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:strokeColor="#CBD5E1"
                     app:strokeWidth="1dp">
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="16dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="60dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@id/imgTickD"
+                            android:layout_marginEnd="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
                             <TextView android:id="@+id/tvLetterD" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="D" android:textColor="#0F172A" android:textStyle="bold" />
-                            <TextView android:id="@+id/tvAnswerD" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:text="Option D" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvAnswerD" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án D" />
                         </LinearLayout>
                         <ImageView android:id="@+id/imgTickD" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
                     </RelativeLayout>
@@ -313,14 +361,14 @@
         android:layout_marginBottom="16dp"
         android:background="#FEF2F2"
         android:padding="16dp"
-        android:text="Giải thích sẽ hiện ở đây..."
         android:textColor="#DC2626"
         android:textSize="15sp"
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/layoutHintSkip"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Giải thích sẽ hiện ở đây..." />
 
     <LinearLayout
         android:id="@+id/layoutHintSkip"
@@ -329,7 +377,7 @@
         android:orientation="horizontal"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/btnNopBai"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="20dp">
 
         <TextView
             android:id="@+id/tvGetHint"
@@ -337,7 +385,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="💡 Get Hint"
+            android:paddingVertical="8dp"
+            android:text="💡 Gợi ý"
             android:textColor="#001833"
             android:textSize="14sp"
             android:textStyle="bold"/>
@@ -348,7 +397,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Skip Question ⏭️"
+            android:paddingVertical="8dp"
+            android:text="Bỏ qua ⏭️"
             android:textColor="#001833"
             android:textSize="14sp"
             android:textStyle="bold"/>
@@ -358,7 +408,7 @@
         android:id="@+id/btnNopBai"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="12dp"
         android:text="KIỂM TRA"
         android:textSize="16sp"
         android:textStyle="bold"

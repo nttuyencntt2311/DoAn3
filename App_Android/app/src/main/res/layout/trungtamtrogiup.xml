@@ -15,9 +15,10 @@
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_centerVertical="true"
+            android:padding="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             app:tint="#0056B3" />
@@ -26,11 +27,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="LexiVT Help Center"
+            android:text="Trung tâm trợ giúp"
             android:textColor="#0056B3"
             android:textSize="18sp"
             android:textStyle="bold" />
-
 
     </RelativeLayout>
 
@@ -83,12 +83,14 @@
                         app:tint="#94A3B8" />
 
                     <EditText
+                        android:id="@+id/edtSearchHelp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_toEndOf="@id/icSearchBar"
                         android:layout_toStartOf="@id/btnSearchAction"
                         android:background="@null"
                         android:hint="Tìm kiếm trợ giúp..."
+                        android:textColor="#1E293B"
                         android:textColorHint="#94A3B8"
                         android:textSize="14sp"
                         android:paddingHorizontal="12dp"
@@ -101,6 +103,8 @@
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:layout_marginEnd="6dp"
+                        android:clickable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         app:cardBackgroundColor="#0056B3"
                         app:cardCornerRadius="20dp"
                         app:cardElevation="0dp">
@@ -135,6 +139,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
                         app:strokeColor="#E2E8F0"
@@ -178,10 +184,13 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnLessonSupport"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
+                        android:clickable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
                         app:strokeColor="#E2E8F0"
@@ -241,55 +250,112 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
                 <TextView
+                    android:id="@+id/tvViewAllFaq"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:text="Xem tất cả"
                     android:textColor="#0056B3"
                     android:textSize="13sp" />
             </RelativeLayout>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardFaq1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
-                <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Làm sao để hủy gói PRO?" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
-                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
-                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Làm sao để hủy gói PRO?" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
+                    </RelativeLayout>
+                    <TextView
+                        android:id="@+id/tvFaqAnswer1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Bạn có thể quản lý hoặc hủy gói PRO bất cứ lúc nào trong phần Cài đặt Google Play > Thanh toán và gói thuê bao."
+                        android:textColor="#475569"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardFaq2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
-                <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tôi quên mật khẩu" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
-                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
-                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tôi quên mật khẩu" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
+                    </RelativeLayout>
+                    <TextView
+                        android:id="@+id/tvFaqAnswer2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Tại màn hình Đăng nhập, chọn 'Quên mật khẩu?' và nhập email đã đăng ký để gửi yêu cầu khôi phục đến đội ngũ hỗ trợ LexiVT."
+                        android:textColor="#475569"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardFaq3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
-                <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cách học offline" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
-                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
-                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cách học offline" android:textColor="#1E293B" android:textSize="14sp" android:textStyle="bold"/>
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:src="@android:drawable/arrow_down_float" app:tint="#64748B" />
+                    </RelativeLayout>
+                    <TextView
+                        android:id="@+id/tvFaqAnswer3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Tiến độ các bài Quiz đang làm dở được tự động lưu trên máy. Khi có mạng trở lại, kết quả học tập của bạn sẽ được đồng bộ lên hệ thống."
+                        android:textColor="#475569"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -325,38 +391,6 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:lineSpacingExtra="4dp"/>
-
-<!--                    <com.google.android.material.card.MaterialCardView-->
-<!--                        android:id="@+id/btnChatSupport"-->
-<!--                        android:layout_width="match_parent"-->
-<!--                        android:layout_height="44dp"-->
-<!--                        android:layout_marginTop="20dp"-->
-<!--                        android:clickable="true"-->
-<!--                        android:foreground="?attr/selectableItemBackground"-->
-<!--                        app:cardBackgroundColor="#FFFFFF"-->
-<!--                        app:cardCornerRadius="22dp"-->
-<!--                        app:cardElevation="0dp">-->
-<!--                        <LinearLayout-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_gravity="center"-->
-<!--                            android:orientation="horizontal"-->
-<!--                            android:gravity="center_vertical">-->
-<!--                            <ImageView-->
-<!--                                android:layout_width="20dp"-->
-<!--                                android:layout_height="20dp"-->
-<!--                                android:src="@android:drawable/sym_action_chat"-->
-<!--                                app:tint="#0056B3" />-->
-<!--                            <TextView-->
-<!--                                android:layout_width="wrap_content"-->
-<!--                                android:layout_height="wrap_content"-->
-<!--                                android:layout_marginStart="8dp"-->
-<!--                                android:text="Chat với chúng tôi"-->
-<!--                                android:textColor="#0056B3"-->
-<!--                                android:textSize="15sp"-->
-<!--                                android:textStyle="bold" />-->
-<!--                        </LinearLayout>-->
-<!--                    </com.google.android.material.card.MaterialCardView>-->
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/btnEmailSupport"
@@ -424,7 +458,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/ic_person" /> </com.google.android.material.card.MaterialCardView>
+                            android:src="@drawable/ic_person" />
+                    </com.google.android.material.card.MaterialCardView>
 
                     <LinearLayout
                         android:layout_width="0dp"

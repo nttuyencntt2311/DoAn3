@@ -19,8 +19,7 @@
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="85dp"
-        android:paddingBottom="15dp"
+        android:layout_height="72dp"
         android:background="@color/white"
         android:elevation="24dp"
         android:orientation="horizontal"
@@ -46,7 +45,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingHorizontal="20dp"
+                    android:paddingHorizontal="16dp"
                     android:paddingVertical="8dp">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_home" app:tint="#2563EB" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Trang chủ" android:textColor="#2563EB" android:textSize="11sp" android:textStyle="bold" />

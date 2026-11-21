@@ -224,10 +224,10 @@ router.get("/stats", verifyToken, async (req, res) => {
       stats: {
         name: user.name,
         xp: user.xp || 0,
-        level: user.level || 1,
+        level: Math.floor(Math.sqrt(Math.max(0, user.xp || 0) / 100)) + 1,
         streakDays: user.streakDays || 0,
-        wordsLearned: calculatedWordsLearned, // TRẢ VỀ CON SỐ ĐÃ ĐẾM ĐƯỢC
-        timeLearnedMinutes: user.timeLearnedMinutes || 0,
+        wordsLearned: calculatedWordsLearned,
+        timeLearnedMinutes: (user.timeLearnedMinutes || 0) > 100000 ? 0 : Math.max(0, user.timeLearnedMinutes || 0),
         quizzesCount: user.quizzesCount || 0,
       },
     });

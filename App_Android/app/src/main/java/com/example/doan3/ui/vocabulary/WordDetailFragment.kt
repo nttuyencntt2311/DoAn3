@@ -1,5 +1,8 @@
 package com.example.doan3.ui.vocabulary
 
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
@@ -7,18 +10,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.doan3.R
 import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.profile.SaveWordRequest
+import com.google.android.material.button.MaterialButton
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
 
-// ==========================================
-// CÁC MODEL CHO DICTIONARY API QUỐC TẾ
-// ==========================================
 data class DictionaryResponse(val meanings: List<MeaningData>)
 data class MeaningData(
     val partOfSpeech: String,
@@ -36,15 +40,12 @@ interface DictionaryApi {
     fun getWordDetails(@retrofit2.http.Path("word") word: String): Call<List<DictionaryResponse>>
 }
 
-// ==========================================
-// FRAGMENT CHÍNH
-// ==========================================
 class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private lateinit var tts: TextToSpeech
+    private var isTtsReady = false
     private var wordTextToSpeak: String = ""
 
-    // Các biến lưu trữ dữ liệu từ điển
     private var fetchedExample = "Đang tải dữ liệu..."
     private var fetchedSynonyms = "Đang tải dữ liệu..."
     private var fetchedAntonyms = "Đang tải dữ liệu..."
@@ -55,13 +56,22 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
         private const val ARG_PRONUNCIATION = "arg_pronun"
         private const val ARG_MEANING = "arg_meaning"
 
+        private val dictionaryApi: DictionaryApi by lazy {
+            Retrofit.Builder()
+                .baseUrl("https://api.dictionaryapi.dev/api/v2/entries/en/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(DictionaryApi::class.java)
+        }
+
         fun newInstance(vocab: Vocabulary): WordDetailFragment {
             val fragment = WordDetailFragment()
-            val args = Bundle()
-            args.putString(ARG_ID, vocab.id)
-            args.putString(ARG_WORD, vocab.word)
-            args.putString(ARG_PRONUNCIATION, vocab.pronunciation)
-            args.putString(ARG_MEANING, vocab.meaning)
+            val args = Bundle().apply {
+                putString(ARG_ID, vocab.id)
+                putString(ARG_WORD, vocab.word)
+                putString(ARG_PRONUNCIATION, vocab.pronunciation)
+                putString(ARG_MEANING, vocab.meaning)
+            }
             fragment.arguments = args
             return fragment
         }
@@ -80,22 +90,19 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
         var wordIdToSave = ""
         tts = TextToSpeech(requireContext(), this)
 
-        // 1. Ánh xạ View cơ bản
         val btnBack = view.findViewById<ImageView>(R.id.btnBack)
         val tvDetailWord = view.findViewById<TextView>(R.id.tvDetailWord)
         val tvDetailPronunciation = view.findViewById<TextView>(R.id.tvDetailPronunciation)
         val tvDetailMeaning = view.findViewById<TextView>(R.id.tvDetailMeaning)
         val btnDetailSpeaker = view.findViewById<ImageView>(R.id.btnDetailSpeaker)
-        val btnSaveWord = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnSaveWord)
+        val btnSaveWord = view.findViewById<MaterialButton>(R.id.btnSaveWord)
         val btnShare = view.findViewById<ImageView>(R.id.btnShare)
 
-        // 2. Ánh xạ 3 Tabs và Nội dung động (Đảm bảo bên file XML em đã đặt ID cho 4 thành phần này)
         val tabExample = view.findViewById<TextView>(R.id.tabExample)
         val tabSynonyms = view.findViewById<TextView>(R.id.tabSynonyms)
         val tabAntonyms = view.findViewById<TextView>(R.id.tabAntonyms)
         val tvDynamicContent = view.findViewById<TextView>(R.id.tvDynamicContent)
 
-        // Đổ dữ liệu tĩnh vào Giao diện
         arguments?.let {
             wordIdToSave = it.getString(ARG_ID) ?: ""
             wordTextToSpeak = it.getString(ARG_WORD) ?: ""
@@ -104,34 +111,21 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
             tvDetailMeaning.text = it.getString(ARG_MEANING) ?: ""
         }
 
-        // ==========================================
-        // 3. GỌI API DICTIONARY QUỐC TẾ
-        // ==========================================
-        val retrofitDict = retrofit2.Retrofit.Builder()
-            .baseUrl("https://api.dictionaryapi.dev/api/v2/entries/en/")
-            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
-            .build()
-
-        val dictApi = retrofitDict.create(DictionaryApi::class.java)
-
-        dictApi.getWordDetails(wordTextToSpeak).enqueue(object : Callback<List<DictionaryResponse>> {
+        dictionaryApi.getWordDetails(wordTextToSpeak).enqueue(object : Callback<List<DictionaryResponse>> {
             override fun onResponse(call: Call<List<DictionaryResponse>>, response: Response<List<DictionaryResponse>>) {
+                if (!isAdded || getView() == null) return
                 if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                     val meaning = response.body()!![0].meanings.firstOrNull()
                     val definition = meaning?.definitions?.firstOrNull()
 
-                    // Bóc tách logic dữ liệu an toàn
                     fetchedExample = definition?.example ?: "Không tìm thấy ví dụ cụ thể."
-
                     fetchedSynonyms = if (!meaning?.synonyms.isNullOrEmpty()) {
                         meaning!!.synonyms.take(5).joinToString(", ")
                     } else "Không có từ đồng nghĩa."
-
                     fetchedAntonyms = if (!meaning?.antonyms.isNullOrEmpty()) {
                         meaning!!.antonyms.take(5).joinToString(", ")
                     } else "Không có từ trái nghĩa."
 
-                    // Tự động load Tab Ví dụ đầu tiên khi có dữ liệu
                     tabExample.performClick()
                 } else {
                     tvDynamicContent.text = "Không tìm thấy dữ liệu mở rộng cho từ này."
@@ -139,72 +133,81 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
             }
 
             override fun onFailure(call: Call<List<DictionaryResponse>>, t: Throwable) {
+                if (!isAdded || getView() == null) return
                 tvDynamicContent.text = "Lỗi kết nối từ điển quốc tế."
             }
         })
 
-        // ==========================================
-        // 4. SỰ KIỆN CLICK CHUYỂN TAB
-        // ==========================================
         tabExample.setOnClickListener {
             tvDynamicContent.text = fetchedExample
-            tabExample.setTextColor(android.graphics.Color.parseColor("#0056D2"))
-            tabSynonyms.setTextColor(android.graphics.Color.parseColor("#888888"))
-            tabAntonyms.setTextColor(android.graphics.Color.parseColor("#888888"))
+            tabExample.setTextColor(Color.parseColor("#0056D2"))
+            tabSynonyms.setTextColor(Color.parseColor("#888888"))
+            tabAntonyms.setTextColor(Color.parseColor("#888888"))
         }
 
         tabSynonyms.setOnClickListener {
             tvDynamicContent.text = fetchedSynonyms
-            tabSynonyms.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
-            tabExample.setTextColor(android.graphics.Color.parseColor("#888888"))
-            tabAntonyms.setTextColor(android.graphics.Color.parseColor("#888888"))
+            tabSynonyms.setTextColor(Color.parseColor("#4CAF50"))
+            tabExample.setTextColor(Color.parseColor("#888888"))
+            tabAntonyms.setTextColor(Color.parseColor("#888888"))
         }
 
         tabAntonyms.setOnClickListener {
             tvDynamicContent.text = fetchedAntonyms
-            tabAntonyms.setTextColor(android.graphics.Color.parseColor("#F44336"))
-            tabExample.setTextColor(android.graphics.Color.parseColor("#888888"))
-            tabSynonyms.setTextColor(android.graphics.Color.parseColor("#888888"))
+            tabAntonyms.setTextColor(Color.parseColor("#F44336"))
+            tabExample.setTextColor(Color.parseColor("#888888"))
+            tabSynonyms.setTextColor(Color.parseColor("#888888"))
         }
 
-        // --- CÁC NÚT CŨ GIỮ NGUYÊN HOẠT ĐỘNG ---
         btnBack.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
-        btnDetailSpeaker.setOnClickListener { if (wordTextToSpeak.isNotEmpty()) tts.speak(wordTextToSpeak, TextToSpeech.QUEUE_FLUSH, null, "") }
+        btnDetailSpeaker.setOnClickListener {
+            if (isTtsReady && wordTextToSpeak.isNotEmpty()) {
+                tts.speak(wordTextToSpeak, TextToSpeech.QUEUE_FLUSH, null, "")
+            }
+        }
 
         btnShare.setOnClickListener {
             val shareText = "Học từ vựng cùng LexiVT!\nTừ: $wordTextToSpeak\nPhiên âm: ${tvDetailPronunciation.text}\nNghĩa: ${tvDetailMeaning.text}"
-            val shareIntent = android.content.Intent().apply {
-                action = android.content.Intent.ACTION_SEND
-                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, shareText)
                 type = "text/plain"
             }
-            startActivity(android.content.Intent.createChooser(shareIntent, "Chia sẻ từ vựng qua..."))
+            startActivity(Intent.createChooser(shareIntent, "Chia sẻ từ vựng qua..."))
         }
 
         btnSaveWord.setOnClickListener {
+            val ctx = context ?: return@setOnClickListener
+            val sharedPref = ctx.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            val currentUserId = sharedPref.getString("USER_ID", "") ?: ""
+            if (currentUserId.isEmpty()) {
+                Toast.makeText(ctx, "Vui lòng đăng nhập lại để lưu từ!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             btnSaveWord.text = "ĐANG LƯU..."
             btnSaveWord.isEnabled = false
-            val apiService = RetrofitClient.getInstance(requireContext())
-            val sharedPref = requireContext().getSharedPreferences("DoAn3Prefs", android.content.Context.MODE_PRIVATE)
-            val currentUserId = sharedPref.getString("USER_ID", "6a4d1424ee8dceac3f4c668c") ?: "6a4d1424ee8dceac3f4c668c"
             val request = SaveWordRequest(userId = currentUserId, wordId = wordIdToSave)
 
-            apiService.saveWord(request).enqueue(object : Callback<Any> {
+            RetrofitClient.getInstance(ctx).saveWord(request).enqueue(object : Callback<Any> {
                 override fun onResponse(call: Call<Any>, response: Response<Any>) {
+                    if (!isAdded || getView() == null) return
                     if (response.isSuccessful) {
                         btnSaveWord.text = "ĐÃ LƯU"
-                        btnSaveWord.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"))
-                        android.widget.Toast.makeText(requireContext(), "Đã thêm '$wordTextToSpeak' vào sổ tay!", android.widget.Toast.LENGTH_SHORT).show()
+                        btnSaveWord.setBackgroundColor(Color.parseColor("#4CAF50"))
+                        Toast.makeText(requireContext(), "Đã thêm '$wordTextToSpeak' vào sổ tay!", Toast.LENGTH_SHORT).show()
                     } else {
                         btnSaveWord.text = "LƯU TỪ"
                         btnSaveWord.isEnabled = true
-                        android.widget.Toast.makeText(requireContext(), "Lỗi server, chưa lưu được!", android.widget.Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Lỗi server, chưa lưu được!", Toast.LENGTH_SHORT).show()
                     }
                 }
+
                 override fun onFailure(call: Call<Any>, t: Throwable) {
+                    if (!isAdded || getView() == null) return
                     btnSaveWord.text = "LƯU TỪ"
                     btnSaveWord.isEnabled = true
-                    android.widget.Toast.makeText(requireContext(), "Lỗi kết nối mạng", android.widget.Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show()
                 }
             })
         }
@@ -213,6 +216,7 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             tts.language = Locale.US
+            isTtsReady = true
         }
     }
 

@@ -30,15 +30,14 @@ import java.util.Locale
 class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private var isFront = true
+    private var isSubmittingScore = false
 
-    // --- CÁC BIẾN LOGIC DỮ LIỆU ---
     private var studyList: List<Vocabulary> = emptyList()
     private var currentIndex = 0
     private var currentCategory: String = "Tổng hợp"
     private var predictiveWords: ArrayList<String>? = null
     private val BATCH_SIZE = 10
 
-    // --- CÁC BIẾN ĐẾM THỜI GIAN ---
     private var secondsElapsed = 0
     private var isTimerRunning = false
     private val timerHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -54,15 +53,12 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var tts: TextToSpeech
 
-    // Khai báo views
     private lateinit var tvWord: TextView
     private lateinit var tvPronunciation: TextView
     private lateinit var tvMeaning: TextView
     private lateinit var cardTuVung: MaterialCardView
     private lateinit var btnSpeaker: ImageView
     private lateinit var tagIelts: MaterialCardView
-
-    // Ánh xạ đồng hồ
     private lateinit var tvTimer: TextView
 
     @SuppressLint("ClickableViewAccessibility")
@@ -73,7 +69,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         tts = TextToSpeech(this, this)
 
-        // Ánh xạ View
         tvWord = findViewById(R.id.tvWord)
         tvPronunciation = findViewById(R.id.tvPronunciation)
         tvMeaning = findViewById(R.id.tvMeaning)
@@ -82,7 +77,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tagIelts = findViewById(R.id.tagIelts)
         tvTimer = findViewById(R.id.tvTimer)
 
-        // 1. Lấy thông tin Chủ đề truyền sang
         val categoryFromIntent = intent.getStringExtra("CATEGORY_NAME")
         if (categoryFromIntent != null) {
             currentCategory = categoryFromIntent
@@ -90,10 +84,8 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tvTag?.text = currentCategory.uppercase()
         }
 
-        // 2. Lấy danh sách từ vựng AI gửi sang (Nằm ngay đây là đẹp nhất)
         predictiveWords = intent.getStringArrayListExtra("PREDICTIVE_WORDS")
 
-        // 3. Khởi tạo các thành phần giao diện
         setupWindowInsets()
         setupBottomNav()
         setupFlashcardAnimation()
@@ -101,18 +93,13 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         setupBreathingEffect()
         setupAudioButton()
 
-        // 4. Bắt đầu gọi API lấy dữ liệu từ vựng
         fetchStudyWords()
     }
 
-    // ====================================================================
-    // CÁC HÀM XỬ LÝ ĐỒNG HỒ
-    // ====================================================================
     private fun updateTimerUI() {
         val minutes = secondsElapsed / 60
         val seconds = secondsElapsed % 60
-        val timeString = String.format("%02d:%02d", minutes, seconds)
-        tvTimer.text = timeString
+        tvTimer.text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 
     private fun startTimer() {
@@ -139,7 +126,6 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val sharedPref = getSharedPreferences("StudyData", MODE_PRIVATE)
         val savedSeconds = sharedPref.getInt("totalSeconds", 0)
         sharedPref.edit().putInt("totalSeconds", savedSeconds + secondsElapsed).apply()
-
         secondsElapsed = 0
     }
 
@@ -160,20 +146,18 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun fetchStudyWords() {
         val apiService = RetrofitClient.getInstance(this)
-
         apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
+                if (isFinishing || isDestroyed) return
                 if (response.isSuccessful) {
                     val allWords = response.body() ?: emptyList()
 
-                    // 🚀 KIỂM TRA LUỒNG: Nếu có dữ liệu từ AI gửi sang thì học các từ đó
-                    if (predictiveWords != null && predictiveWords!!.isNotEmpty()) {
+                    if (!predictiveWords.isNullOrEmpty()) {
                         studyList = allWords.filter { predictiveWords!!.contains(it.word) }
                     } else {
-                        // Nếu không có, học bình thường theo chủ đề như cũ
                         studyList = allWords
                             .filter { it.proficiency < 80 && it.category == currentCategory }
-                            .take(BATCH_SIZE) // BATCH_SIZE là 10 từ mỗi phiên
+                            .take(BATCH_SIZE)
                     }
 
                     if (studyList.isNotEmpty()) {
@@ -187,11 +171,14 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     }
                 }
             }
+
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
+                if (isFinishing || isDestroyed) return
                 Toast.makeText(this@KhamPhaActivity, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show()
             }
         })
     }
+
     private fun loadWordToUI() {
         if (currentIndex < studyList.size) {
             val currentWord = studyList[currentIndex]
@@ -205,22 +192,28 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun showSessionCompleteDialog() {
+        if (isFinishing || isDestroyed) return
         try {
             val dialog = Dialog(this)
             dialog.setContentView(R.layout.dialog_session_complete)
-
             dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             dialog.setCancelable(false)
 
+            val uniqueWordCount = studyList.map { it.id }.distinct().size
             val tvMessage = dialog.findViewById<TextView>(R.id.tvDialogMessage)
-            // 🚀 Đã thay cứng số 10 thành "studyList.size" để hiển thị chính xác số từ vừa học
-            tvMessage?.text = "Bạn đã hoàn thành ${studyList.size} từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
+            tvMessage?.text = "Bạn đã hoàn thành $uniqueWordCount từ vựng của phiên này. Bạn muốn tiếp tục nạp thêm kiến thức hay nghỉ ngơi một chút?"
 
             val btnHocTiep = dialog.findViewById<View>(R.id.btnHocTiep)
             btnHocTiep?.setOnClickListener {
                 dialog.dismiss()
-                fetchStudyWords()
+                if (!predictiveWords.isNullOrEmpty()) {
+                    // Đã ôn xong danh sách AI dự đoán -> chuyển về học chủ đề thường hoặc thoát
+                    predictiveWords = null
+                    finish()
+                } else {
+                    fetchStudyWords()
+                }
             }
 
             val btnNghiNgoi = dialog.findViewById<View>(R.id.btnNghiNgoi)
@@ -235,10 +228,10 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             finish()
         }
     }
-    private fun handleScore(scoreType: String) {
-        try {
-            if (currentIndex >= studyList.size) return
 
+    private fun handleScore(scoreType: String) {
+        if (isSubmittingScore || currentIndex >= studyList.size) return
+        try {
             val currentWord = studyList[currentIndex]
             var newProficiency = currentWord.proficiency
 
@@ -248,51 +241,44 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 "EASY" -> newProficiency = 100
             }
 
-            val apiService = RetrofitClient.getInstance(this)
-
             val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
             val currentUserId = sharedPreferences.getString("USER_ID", "") ?: ""
-
             if (currentUserId.isEmpty()) {
                 Toast.makeText(this, "Lỗi: Không tìm thấy ID người dùng!", Toast.LENGTH_LONG).show()
                 return
             }
 
-            val request = ProficiencyRequest(
-                proficiency = newProficiency,
-                userId = currentUserId
-            )
-            apiService.updateProficiency(currentWord.id, request).enqueue(object : Callback<ProficiencyResponse> {
-                override fun onResponse(call: Call<ProficiencyResponse>, response: Response<ProficiencyResponse>) {
-                    if (response.isSuccessful) {
-                        if (scoreType == "AGAIN") {
-                            studyList = studyList + currentWord
+            isSubmittingScore = true
+            val request = ProficiencyRequest(proficiency = newProficiency, userId = currentUserId)
+            RetrofitClient.getInstance(this).updateProficiency(currentWord.id, request)
+                .enqueue(object : Callback<ProficiencyResponse> {
+                    override fun onResponse(call: Call<ProficiencyResponse>, response: Response<ProficiencyResponse>) {
+                        isSubmittingScore = false
+                        if (isFinishing || isDestroyed) return
+                        if (response.isSuccessful) {
+                            currentIndex++
+                            loadWordToUI()
+                        } else {
+                            Toast.makeText(this@KhamPhaActivity, "Lỗi server: Code ${response.code()}", Toast.LENGTH_LONG).show()
                         }
-                        currentIndex++
-                        loadWordToUI()
-                    } else {
-                        Toast.makeText(this@KhamPhaActivity, "Lỗi server: Code ${response.code()}", Toast.LENGTH_LONG).show()
                     }
-                }
 
-                override fun onFailure(call: Call<ProficiencyResponse>, t: Throwable) {
-                    Toast.makeText(this@KhamPhaActivity, "Lỗi mạng: ${t.message}", Toast.LENGTH_LONG).show()
-                }
-            })
+                    override fun onFailure(call: Call<ProficiencyResponse>, t: Throwable) {
+                        isSubmittingScore = false
+                        if (isFinishing || isDestroyed) return
+                        Toast.makeText(this@KhamPhaActivity, "Lỗi mạng: ${t.message}", Toast.LENGTH_LONG).show()
+                    }
+                })
         } catch (e: Exception) {
+            isSubmittingScore = false
             Toast.makeText(this, "Lỗi code Android: ${e.message}", Toast.LENGTH_LONG).show()
-            e.printStackTrace()
         }
     }
 
     private fun setupActionButtons() {
-        val btnAgain = findViewById<MaterialCardView>(R.id.btnAgain)
-        val btnGood = findViewById<MaterialCardView>(R.id.btnGood)
-        val btnEasy = findViewById<MaterialCardView>(R.id.btnEasy)
-
-        btnAgain.setOnClickListener { handleScore("AGAIN") }
-        btnGood.setOnClickListener { handleScore("GOOD") }
-        btnEasy.setOnClickListener { handleScore("EASY") }
+        findViewById<MaterialCardView>(R.id.btnAgain).setOnClickListener { handleScore("AGAIN") }
+        findViewById<MaterialCardView>(R.id.btnGood).setOnClickListener { handleScore("GOOD") }
+        findViewById<MaterialCardView>(R.id.btnEasy).setOnClickListener { handleScore("EASY") }
     }
 
     private fun setupFlashcardAnimation() {
@@ -338,50 +324,26 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun setupBottomNav() {
-        findViewById<LinearLayout?>(R.id.btnTrangChu)?.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            })
-            overridePendingTransition(0, 0)
+    private fun navigateToMainTab(tabName: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("OPEN_FRAGMENT", tabName)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        updateActiveTab()
+        startActivity(intent)
+        overridePendingTransition(0, 0)
+        finish()
     }
 
-    // 🚀 ĐÃ CẬP NHẬT: HÀM NÀY SẼ DỌN DẸP SẠCH MÀU CỦA NÚT TRANG CHỦ VÀ BẬT MÀU NÚT KHÁM PHÁ
-    private fun updateActiveTab() {
-        val btnTrangChu = findViewById<LinearLayout>(R.id.btnTrangChu)
-        val btnKhamPha = findViewById<LinearLayout>(R.id.btnKhamPha)
-
-        val activeColor = Color.parseColor("#0056D2")
-        val inactiveColor = Color.parseColor("#94A3B8")
-
-        // 1. TẨY MÀU NÚT TRANG CHỦ TRIỆT ĐỂ
-        btnTrangChu?.let {
-            it.setBackgroundResource(android.R.color.transparent)
-
-            val icon = it.getChildAt(0) as? ImageView
-            val text = it.getChildAt(1) as? TextView
-
-            icon?.clearColorFilter()
-            icon?.setColorFilter(inactiveColor, android.graphics.PorterDuff.Mode.SRC_IN)
-            text?.setTextColor(inactiveColor)
-        }
-
-        // 2. BẬT MÀU NÚT KHÁM PHÁ
-        btnKhamPha?.let {
-            it.setBackgroundResource(R.drawable.bg_tab_active)
-
-            val icon = it.getChildAt(0) as? ImageView
-            val text = it.getChildAt(1) as? TextView
-
-            icon?.clearColorFilter()
-            icon?.setColorFilter(activeColor, android.graphics.PorterDuff.Mode.SRC_IN)
-            text?.setTextColor(activeColor)
-        }
+    private fun setupBottomNav() {
+        findViewById<View>(R.id.btnTrangChu)?.setOnClickListener { navigateToMainTab("HOME") }
+        findViewById<View>(R.id.btnKhamPha)?.setOnClickListener { navigateToMainTab("LEARNING") }
+        findViewById<View>(R.id.btnTroLyAI)?.setOnClickListener { navigateToMainTab("AI_ASSISTANT") }
+        findViewById<View>(R.id.btnHoSo)?.setOnClickListener { navigateToMainTab("PROFILE") }
+        findViewById<View>(R.id.btnTaiKhoan)?.setOnClickListener { navigateToMainTab("ACCOUNT") }
     }
 
     override fun onDestroy() {
+        stopTimer()
         if (this::tts.isInitialized) {
             tts.stop()
             tts.shutdown()

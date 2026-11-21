@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -29,8 +30,8 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_launcher_foreground"
-                    app:tint="@color/text_gray" />
+                    android:src="@drawable/ic_person"
+                    app:tint="@color/primary_dark_blue" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -118,15 +119,18 @@
                             android:layout_height="wrap_content"
                             android:paddingHorizontal="12dp"
                             android:paddingVertical="6dp"
-                            android:text="IELTS VOCABULARY"
+                            android:text="TỪ VỰNG"
                             android:textColor="@color/primary_dark_blue"
                             android:textSize="10sp"
                             android:textStyle="bold" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <ImageView
-                        android:id="@+id/btnSpeaker"  android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:id="@+id/btnSpeaker"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="12dp"
                         android:src="@drawable/ic_volume"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -136,25 +140,27 @@
                         android:id="@+id/tvWord"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="40dp"
-                        android:text="Persistence"
+                        android:layout_marginTop="32dp"
+                        android:text="Đang tải..."
                         android:textColor="@color/primary_dark_blue"
                         android:textSize="32sp"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tagIelts" />
+                        app:layout_constraintTop_toBottomOf="@id/tagIelts"
+                        tools:text="Persistence" />
 
                     <TextView
                         android:id="@+id/tvPronunciation"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="/pə'sɪs.təns/"
+                        android:text=""
                         android:textColor="@color/text_gray"
                         android:textSize="16sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvWord" />
+                        app:layout_constraintTop_toBottomOf="@id/tvWord"
+                        tools:text="/pə'sɪs.təns/" />
 
                     <View
                         android:id="@+id/dividerView"
@@ -171,14 +177,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Sự kiên trì"
+                        android:text=""
                         android:textColor="@color/text_dark"
                         android:textSize="24sp"
                         android:textStyle="bold"
                         android:visibility="gone"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/dividerView" />
+                        app:layout_constraintTop_toBottomOf="@id/dividerView"
+                        tools:text="Sự kiên trì" />
 
                     <TextView
                         android:id="@+id/tvHint"
@@ -260,7 +267,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Again"
+                            android:text="Học lại"
                             android:textColor="#475569"
                             android:textStyle="bold"
                             android:textSize="14sp"/>
@@ -294,7 +301,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Good"
+                            android:text="Khá tốt"
                             android:textColor="#475569"
                             android:textStyle="bold"
                             android:textSize="14sp"/>
@@ -328,7 +335,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="Easy"
+                            android:text="Rất dễ"
                             android:textColor="#475569"
                             android:textStyle="bold"
                             android:textSize="14sp"/>
@@ -338,7 +345,7 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="32dp" />
+                android:layout_height="24dp" />
 
         </LinearLayout>
     </ScrollView>
@@ -346,10 +353,10 @@
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="72dp"
         android:background="@color/white"
         android:orientation="horizontal"
-        android:elevation="8dp"
+        android:elevation="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -366,14 +373,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_home"
-                app:tint="@color/text_gray"/>
+                app:tint="#94A3B8"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:text="Trang chủ"
-                android:textSize="10sp"
-                android:textColor="@color/text_gray"/>
+                android:textSize="11sp"
+                android:textColor="#94A3B8"/>
         </LinearLayout>
 
         <LinearLayout
@@ -387,7 +394,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/bg_light_blue"
+                app:cardBackgroundColor="#EFF6FF"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="0dp">
 
@@ -403,15 +410,15 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_explore"
-                        app:tint="@color/primary_dark_blue" />
+                        app:tint="#2563EB" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="4dp"
                         android:text="Khám phá"
-                        android:textColor="@color/primary_dark_blue"
-                        android:textSize="10sp"
+                        android:textColor="#2563EB"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -430,15 +437,15 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_robot"
-                app:tint="@color/text_gray"/>
+                app:tint="#94A3B8"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:text="Trợ lý AI"
-                android:textSize="10sp"
-                android:textColor="@color/text_gray"/>
+                android:textSize="11sp"
+                android:textColor="#94A3B8"/>
         </LinearLayout>
 
         <LinearLayout
@@ -454,15 +461,15 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_person"
-                app:tint="@color/text_gray"/>
+                app:tint="#94A3B8"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:text="Hồ sơ"
-                android:textSize="10sp"
-                android:textColor="@color/text_gray"/>
+                android:textSize="11sp"
+                android:textColor="#94A3B8"/>
         </LinearLayout>
 
         <LinearLayout
@@ -478,15 +485,15 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_account"
-                app:tint="@color/text_gray"/>
+                app:tint="#94A3B8"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:text="Tài khoản"
-                android:textSize="10sp"
-                android:textColor="@color/text_gray"/>
+                android:textSize="11sp"
+                android:textColor="#94A3B8"/>
         </LinearLayout>
 
     </LinearLayout>

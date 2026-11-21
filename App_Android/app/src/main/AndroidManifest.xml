@@ -18,10 +18,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.profile.hoso"
-            android:exported="false" />
-
-        <activity
             android:name=".ui.profile.dangnhap"
             android:exported="true">
             <intent-filter>
@@ -34,9 +30,6 @@
             android:name=".ui.profile.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.profile.TaiKhoanActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.profile.ThongTinCaNhanActivity"
             android:exported="false" />
         <activity
@@ -44,9 +37,6 @@
             android:exported="false" />
         <activity
             android:name=".ui.profile.KhamPhaActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.profile.IeltsQuizActivity"
             android:exported="false" />
         <activity
             android:name=".ui.profile.HelpCenterActivity"
@@ -57,10 +47,6 @@
         <activity
             android:name=".ui.profile.DieuKhoanActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.profile.TroLyAIActivity"
-            android:exported="false" />
-
         <activity
             android:name=".ui.profile.TaoQuizActivity"
             android:exported="false" />
