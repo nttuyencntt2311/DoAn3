@@ -4,40 +4,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC"
+    android:background="#F6F8FC"
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="#FFFFFF"
+        android:layout_height="56dp"
+        android:background="#F6F8FC"
         android:paddingHorizontal="20dp">
 
+        <!-- Ẩn mũi tên Back thừa trên tab gốc (giữ ID để không lỗi findViewById) -->
         <ImageView
             android:id="@+id/btnBack"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_centerVertical="true"
             android:padding="12dp"
+            android:visibility="gone"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#0056B3" />
+            app:tint="#0F172A" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
             android:text="Tài khoản"
-            android:textColor="#0056B3"
-            android:textSize="18sp"
+            android:textColor="#0F172A"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
     </RelativeLayout>
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#E2E8F0"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -50,16 +48,17 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingTop="20dp"
-            android:paddingBottom="40dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="32dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -75,8 +74,9 @@
                             android:layout_width="68dp"
                             android:layout_height="68dp"
                             app:cardCornerRadius="34dp"
+                            app:cardElevation="0dp"
                             android:layout_centerInParent="true"
-                            app:strokeColor="#0056B3"
+                            app:strokeColor="#2563EB"
                             app:strokeWidth="2dp">
                             <ImageView
                                 android:layout_width="match_parent"
@@ -108,7 +108,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="Đang tải..."
-                        android:textColor="#1E293B"
+                        android:textColor="#0F172A"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -127,20 +127,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="22dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp"
-                android:text="Thông tin &amp; Bảo mật"
-                android:textColor="#475569"
-                android:textSize="13sp"
+                android:text="THÔNG TIN &amp; BẢO MẬT"
+                android:letterSpacing="0.04"
+                android:textColor="#64748B"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
 
@@ -158,35 +159,36 @@
                         android:padding="16dp">
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/icInfo"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:layout_centerVertical="true"
-                            app:cardBackgroundColor="#F0F9FF"
-                            app:cardCornerRadius="8dp"
+                            app:cardBackgroundColor="#EFF6FF"
+                            app:cardCornerRadius="10dp"
                             app:cardElevation="0dp">
                             <ImageView
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:layout_gravity="center"
                                 android:src="@android:drawable/ic_menu_myplaces"
-                                app:tint="#0284C7" />
+                                app:tint="#2563EB" />
                         </com.google.android.material.card.MaterialCardView>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_toEndOf="@id/icInfo"
                             android:text="Thông tin cá nhân"
-                            android:textColor="#1E293B"
-                            android:textSize="15sp" />
+                            android:textColor="#0F172A"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                         <ImageView
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:src="@drawable/ic_arrow"
-                            app:tint="#CBD5E1" />
+                            app:tint="#94A3B8" />
                     </RelativeLayout>
 
                     <View
@@ -204,35 +206,36 @@
                         android:padding="16dp">
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/icPass2"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:layout_centerVertical="true"
-                            app:cardBackgroundColor="#F0F9FF"
-                            app:cardCornerRadius="8dp"
+                            app:cardBackgroundColor="#EFF6FF"
+                            app:cardCornerRadius="10dp"
                             app:cardElevation="0dp">
                             <ImageView
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:layout_gravity="center"
                                 android:src="@android:drawable/ic_lock_idle_lock"
-                                app:tint="#0284C7" />
+                                app:tint="#2563EB" />
                         </com.google.android.material.card.MaterialCardView>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_toEndOf="@id/icPass2"
                             android:text="Đổi mật khẩu"
-                            android:textColor="#1E293B"
-                            android:textSize="15sp" />
+                            android:textColor="#0F172A"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                         <ImageView
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:src="@drawable/ic_arrow"
-                            app:tint="#CBD5E1" />
+                            app:tint="#94A3B8" />
                     </RelativeLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -240,20 +243,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="22dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp"
-                android:text="Tùy chỉnh"
-                android:textColor="#475569"
-                android:textSize="13sp"
+                android:text="TÙY CHỈNH"
+                android:letterSpacing="0.04"
+                android:textColor="#64748B"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
 
@@ -268,11 +272,11 @@
                         android:padding="16dp">
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/icBell2"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:layout_centerVertical="true"
                             app:cardBackgroundColor="#ECFDF5"
-                            app:cardCornerRadius="8dp"
+                            app:cardCornerRadius="10dp"
                             app:cardElevation="0dp">
                             <ImageView
                                 android:layout_width="18dp"
@@ -285,11 +289,12 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_toEndOf="@id/icBell2"
                             android:text="Cài đặt thông báo"
-                            android:textColor="#1E293B"
-                            android:textSize="15sp" />
+                            android:textColor="#0F172A"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                         <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchNotificationsAccount"
                             android:layout_width="wrap_content"
@@ -316,11 +321,11 @@
                         android:padding="16dp">
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/icLang"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
                             android:layout_centerVertical="true"
                             app:cardBackgroundColor="#ECFDF5"
-                            app:cardCornerRadius="8dp"
+                            app:cardCornerRadius="10dp"
                             app:cardElevation="0dp">
                             <ImageView
                                 android:layout_width="18dp"
@@ -334,21 +339,22 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_toEndOf="@id/icLang"
                             android:orientation="vertical">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Ngôn ngữ ứng dụng"
-                                android:textColor="#1E293B"
-                                android:textSize="15sp" />
+                                android:textColor="#0F172A"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
                             <TextView
                                 android:id="@+id/tvCurrentLanguage"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Tiếng Việt"
-                                android:textColor="#94A3B8"
+                                android:textColor="#64748B"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -359,7 +365,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:src="@drawable/ic_arrow"
-                            app:tint="#CBD5E1" />
+                            app:tint="#94A3B8" />
                     </RelativeLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -367,20 +373,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="22dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp"
-                android:text="Hỗ trợ &amp; Pháp lý"
-                android:textColor="#475569"
-                android:textSize="13sp"
+                android:text="HỖ TRỢ &amp; PHÁP LÝ"
+                android:letterSpacing="0.04"
+                android:textColor="#64748B"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
                 app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
 
@@ -393,48 +400,51 @@
                     android:padding="16dp">
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/icTerms"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
                         android:layout_centerVertical="true"
                         app:cardBackgroundColor="#F1F5F9"
-                        app:cardCornerRadius="8dp"
+                        app:cardCornerRadius="10dp"
                         app:cardElevation="0dp">
                         <ImageView
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:layout_gravity="center"
                             android:src="@android:drawable/ic_menu_info_details"
-                            app:tint="#64748B" />
+                            app:tint="#475569" />
                     </com.google.android.material.card.MaterialCardView>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="14dp"
                         android:layout_toEndOf="@id/icTerms"
                         android:text="Điều khoản &amp; Chính sách"
-                        android:textColor="#1E293B"
-                        android:textSize="15sp" />
+                        android:textColor="#0F172A"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:src="@drawable/ic_arrow"
-                        app:tint="#CBD5E1" />
+                        app:tint="#94A3B8" />
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="32dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
                 android:clickable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardBackgroundColor="#FEF2F2"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp">
+                app:cardBackgroundColor="#FFF1F2"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#FECDD3"
+                app:strokeWidth="1dp">
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -445,13 +455,13 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_logout_outline"
-                        app:tint="#EF4444" />
+                        app:tint="#E11D48" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="Đăng xuất"
-                        android:textColor="#EF4444"
+                        android:textColor="#E11D48"
                         android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -460,11 +470,11 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:text="LexiVT Phiên bản 2.4.0 (Build 88)"
+                android:text="LexiVT Phiên bản 2.4.0"
                 android:textColor="#94A3B8"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
 
         </LinearLayout>
     </ScrollView>

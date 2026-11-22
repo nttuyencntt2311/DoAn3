@@ -1,6 +1,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="LexiVT.ActivityAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+
     <style name="Base.Theme.DoAn3" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#2563EB</item>
+        <item name="colorPrimaryVariant">#1D4ED8</item>
+        <item name="colorSecondary">#4F46E5</item>
+        <item name="android:statusBarColor">#F6F8FC</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="android:windowAnimationStyle">@style/LexiVT.ActivityAnimation</item>
     </style>
 
     <style name="Theme.DoAn3" parent="Base.Theme.DoAn3" />

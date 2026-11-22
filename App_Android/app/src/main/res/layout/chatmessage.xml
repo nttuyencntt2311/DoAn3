@@ -4,35 +4,44 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="6dp">
 
     <LinearLayout
         android:id="@+id/layoutAI"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="top"
         android:orientation="horizontal"
         android:visibility="visible">
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             app:cardBackgroundColor="#EFF6FF"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="0dp">
-            <ImageView android:layout_width="14dp" android:layout_height="14dp" android:layout_gravity="center" android:src="@drawable/ic_lexi_book" app:tint="#2563EB"/>
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#DBEAFE"
+            app:strokeWidth="1dp">
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_lexi_book"
+                app:tint="#2563EB"/>
         </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:id="@+id/tvAIMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="40dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="36dp"
             android:background="@drawable/chat_bubble_ai"
             android:paddingHorizontal="16dp"
             android:paddingVertical="12dp"
             android:text="Nội dung AI"
-            android:textColor="#334155"
+            android:textColor="#1E293B"
             android:textSize="14sp"
             android:lineSpacingExtra="4dp"/>
     </LinearLayout>
@@ -42,15 +51,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end"
+        android:gravity="end|top"
         android:visibility="gone">
 
         <TextView
             android:id="@+id/tvUserMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="40dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="42dp"
+            android:layout_marginEnd="10dp"
             android:background="@drawable/chat_bubble_user"
             android:paddingHorizontal="16dp"
             android:paddingVertical="12dp"
@@ -60,11 +69,17 @@
             android:lineSpacingExtra="4dp"/>
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            app:cardCornerRadius="14dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:cardBackgroundColor="#E0E7FF"
+            app:cardCornerRadius="16dp"
             app:cardElevation="0dp">
-            <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:src="@drawable/ic_person"/>
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_person"
+                app:tint="#4F46E5"/>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </LinearLayout>

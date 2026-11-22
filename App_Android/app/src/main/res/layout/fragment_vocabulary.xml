@@ -4,22 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app"
+    android:background="#F6F8FC"
     android:fitsSystemWindows="true">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="28dp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp">
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp">
 
                 <ImageView
                     android:id="@+id/btnBack"
@@ -28,15 +31,16 @@
                     android:padding="12dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_arrow_back" />
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="#0F172A" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:text="LexiVT"
-                    android:textColor="@color/lexivt_primary_blue"
-                    android:textSize="20sp"
+                    android:text="Kho từ vựng"
+                    android:textColor="#0F172A"
+                    android:textSize="19sp"
                     android:textStyle="bold" />
 
                 <ImageView
@@ -47,38 +51,30 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_notifications" />
+                    android:src="@drawable/ic_notifications"
+                    app:tint="#475569" />
             </RelativeLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="4dp"
-                android:text="Kho từ vựng của tôi"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp" />
 
             <EditText
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/bg_search_bar"
                 android:drawableStart="@drawable/ic_search"
                 android:drawablePadding="12dp"
-                android:hint="Tìm kiếm từ vựng..."
+                android:hint="Tìm kiếm từ vựng, nghĩa tiếng Việt..."
                 android:paddingHorizontal="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
+                android:textColor="#0F172A"
+                android:textColorHint="#94A3B8"
                 android:textSize="14sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:orientation="horizontal"
                 android:baselineAligned="false">
 
@@ -86,33 +82,37 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    app:cardBackgroundColor="@color/card_blue_bg"
-                    app:cardCornerRadius="16dp"
-                    app:contentPadding="16dp">
+                    android:layout_marginEnd="6dp"
+                    app:cardBackgroundColor="#2563EB"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:background="@drawable/bg_indigo_gradient_card"
+                        android:orientation="vertical"
+                        android:padding="18dp">
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_sparkle" />
+                            android:src="@drawable/ic_sparkle"
+                            app:tint="#FFFFFF" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="Tổng số từ"
-                            android:textColor="@android:color/white"
+                            android:textColor="#E0E7FF"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvTotalWords"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="0"
-                            android:textColor="@android:color/white"
+                            android:textColor="#FFFFFF"
                             android:textSize="28sp"
                             android:textStyle="bold"
                             tools:text="1,240" />
@@ -123,33 +123,38 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    app:cardBackgroundColor="@color/card_green_bg"
-                    app:cardCornerRadius="16dp"
-                    app:contentPadding="16dp">
+                    android:layout_marginStart="6dp"
+                    app:cardBackgroundColor="#ECFDF5"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#A7F3D0"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="18dp">
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_check_badge" />
+                            android:src="@drawable/ic_check_badge"
+                            app:tint="#059669" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="Thành thạo"
-                            android:textColor="@color/card_green_text_dark"
+                            android:textColor="#047857"
                             android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tvMasteryPercent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="0%"
-                            android:textColor="@color/card_green_text_dark"
+                            android:textColor="#065F46"
                             android:textSize="28sp"
                             android:textStyle="bold"
                             tools:text="85%" />
@@ -160,7 +165,7 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 android:clipToPadding="false"
                 android:paddingHorizontal="20dp"
                 android:scrollbars="none">
@@ -176,32 +181,37 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_chip_active"
                         android:paddingHorizontal="20dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="9dp"
                         android:text="Tất cả"
-                        android:textColor="@android:color/white"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvFilterWork"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="10dp"
                         android:background="@drawable/bg_chip_inactive"
                         android:paddingHorizontal="20dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="9dp"
                         android:text="Công việc"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="#334155"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvFilterTravel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="10dp"
                         android:background="@drawable/bg_chip_inactive"
                         android:paddingHorizontal="20dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="9dp"
                         android:text="Du lịch"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="#334155"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </HorizontalScrollView>
 
@@ -209,33 +219,38 @@
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginHorizontal="12dp"
                 android:background="@android:color/transparent"
-                app:tabIndicatorColor="@color/lexivt_primary_blue"
-                app:tabSelectedTextColor="@color/lexivt_primary_blue"
-                app:tabTextColor="@color/text_secondary">
+                app:tabIndicatorColor="#2563EB"
+                app:tabIndicatorHeight="3dp"
+                app:tabSelectedTextColor="#2563EB"
+                app:tabTextColor="#64748B">
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đã thuộc\n(0)" />
+                    android:text="Đã thuộc
+(0)" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đang học\n(0)" />
+                    android:text="Đang học
+(0)" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Từ mới\n(0)" />
+                    android:text="Từ mới
+(0)" />
             </com.google.android.material.tabs.TabLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginHorizontal="20dp"
-                android:background="@color/divider_color" />
+                android:background="#E2E8F0" />
 
             <ProgressBar
                 android:id="@+id/progressLoading"
@@ -243,13 +258,14 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="24dp"
+                android:indeterminateTint="#2563EB"
                 android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvVocabulary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="14dp"
                 android:nestedScrollingEnabled="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
@@ -257,12 +273,12 @@
                 android:id="@+id/tvEmptyMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="36dp"
                 android:layout_marginBottom="32dp"
                 android:text="Chưa có từ vựng phù hợp"
                 android:textAlignment="center"
-                android:textColor="@color/text_secondary"
-                android:textSize="16sp"
+                android:textColor="#64748B"
+                android:textSize="15sp"
                 android:visibility="gone" />
 
         </LinearLayout>

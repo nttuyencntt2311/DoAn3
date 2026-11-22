@@ -5,8 +5,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FE"
-    android:padding="20dp"
+    android:background="#F6F8FC"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp"
     android:fitsSystemWindows="true">
 
     <ImageView
@@ -16,7 +18,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="12dp"
         android:src="@drawable/ic_arrow_back"
-        app:tint="@color/black"
+        app:tint="#0F172A"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,9 +26,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Luyện tập Quiz"
-        android:textSize="16sp"
+        android:textSize="17sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
+        android:textColor="#0F172A"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintEnd_toStartOf="@id/timerPill"
         app:layout_constraintTop_toTopOf="@id/btnBack"
@@ -36,9 +38,11 @@
         android:id="@+id/timerPill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#FFF0F0"
+        app:cardBackgroundColor="#FEF2F2"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
+        app:strokeColor="#FECACA"
+        app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnBack">
@@ -54,15 +58,15 @@
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:src="@android:drawable/ic_menu_recent_history"
-                app:tint="#FF4B4B"/>
+                app:tint="#DC2626"/>
             <TextView
                 android:id="@+id/tvTimer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="5dp"
                 android:text="15:00"
-                android:textColor="#FF4B4B"
-                android:textSize="12sp"
+                android:textColor="#DC2626"
+                android:textSize="13sp"
                 android:textStyle="bold"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -71,9 +75,10 @@
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
+        android:letterSpacing="0.06"
         android:textColor="#64748B"
-        android:textSize="10sp"
+        android:textSize="11sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack"
@@ -83,8 +88,9 @@
         android:id="@+id/tvQuestionCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:textSize="18sp"
+        android:layout_marginTop="2dp"
+        android:textColor="#0F172A"
+        android:textSize="19sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvCategory"
@@ -94,7 +100,10 @@
         android:id="@+id/tvProgressPercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#0056D2"
+        android:background="@drawable/bg_pill_soft_blue"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:textColor="#2563EB"
         android:textSize="12sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -104,11 +113,12 @@
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
-        android:layout_height="6dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        app:trackCornerRadius="3dp"
-        app:indicatorColor="#0056D2"
-        app:trackColor="#E0E4F5"
+        app:trackThickness="8dp"
+        app:trackCornerRadius="4dp"
+        app:indicatorColor="#2563EB"
+        app:trackColor="#E2E8F0"
         android:progress="0"
         app:layout_constraintTop_toBottomOf="@id/tvQuestionCount" />
 
@@ -116,7 +126,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/progressBar"
         app:layout_constraintBottom_toTopOf="@+id/tvExplanation">
@@ -132,7 +142,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                android:background="#FEF2F2"
+                android:background="@drawable/bg_pill_red_soft"
                 android:padding="12dp"
                 android:textColor="#DC2626"
                 android:textSize="13sp"
@@ -147,10 +157,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:visibility="gone"
-                app:cardBackgroundColor="#F0F7FF"
+                app:cardBackgroundColor="#EFF6FF"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
-                app:strokeColor="#0056D2"
+                app:strokeColor="#BFDBFE"
                 app:strokeWidth="1dp">
 
                 <TextView
@@ -158,9 +168,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="14dp"
-                    android:textColor="#0056D2"
+                    android:textColor="#1D4ED8"
                     android:textSize="14sp"
-                    android:textStyle="italic"
+                    android:lineSpacingExtra="3dp"
                     tools:text="🤖 Gợi ý từ AI..." />
             </com.google.android.material.card.MaterialCardView>
 
@@ -168,32 +178,33 @@
                 android:id="@+id/cardQuestion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
-                app:strokeColor="#CBD5E1"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#E2E8F0"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="22dp">
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:cardBackgroundColor="#E6F0FF"
-                        app:cardCornerRadius="8dp"
+                        app:cardBackgroundColor="#EFF6FF"
+                        app:cardCornerRadius="10dp"
                         app:cardElevation="0dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="4dp"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="5dp"
                             android:text="CHỌN ĐÁP ÁN ĐÚNG"
-                            android:textColor="#0056D2"
+                            android:textColor="#2563EB"
                             android:textSize="10sp"
+                            android:letterSpacing="0.05"
                             android:textStyle="bold" />
                     </com.google.android.material.card.MaterialCardView>
 
@@ -221,23 +232,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="20dp">
+                android:layout_marginTop="18dp">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnOptionA"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="60dp"
+                    android:minHeight="62dp"
                     android:layout_marginBottom="12dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#CBD5E1"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1.5dp">
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="60dp"
+                        android:minHeight="62dp"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="12dp">
                         <LinearLayout
@@ -248,10 +260,10 @@
                             android:layout_marginEnd="12dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
-                            <TextView android:id="@+id/tvLetterA" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="A" android:textColor="#0F172A" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvLetterA" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="A" android:textColor="#0F172A" android:textSize="14sp" android:textStyle="bold" />
                             <TextView android:id="@+id/tvAnswerA" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án A" />
                         </LinearLayout>
-                        <ImageView android:id="@+id/imgTickA" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
+                        <ImageView android:id="@+id/imgTickA" android:layout_width="22dp" android:layout_height="22dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#2563EB" android:visibility="invisible" />
                     </RelativeLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -259,17 +271,18 @@
                     android:id="@+id/btnOptionB"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="60dp"
+                    android:minHeight="62dp"
                     android:layout_marginBottom="12dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#CBD5E1"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1.5dp">
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="60dp"
+                        android:minHeight="62dp"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="12dp">
                         <LinearLayout
@@ -280,10 +293,10 @@
                             android:layout_marginEnd="12dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
-                            <TextView android:id="@+id/tvLetterB" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="B" android:textColor="#0F172A" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvLetterB" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="B" android:textColor="#0F172A" android:textSize="14sp" android:textStyle="bold" />
                             <TextView android:id="@+id/tvAnswerB" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án B" />
                         </LinearLayout>
-                        <ImageView android:id="@+id/imgTickB" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
+                        <ImageView android:id="@+id/imgTickB" android:layout_width="22dp" android:layout_height="22dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#2563EB" android:visibility="invisible" />
                     </RelativeLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -291,17 +304,18 @@
                     android:id="@+id/btnOptionC"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="60dp"
+                    android:minHeight="62dp"
                     android:layout_marginBottom="12dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#CBD5E1"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1.5dp">
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="60dp"
+                        android:minHeight="62dp"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="12dp">
                         <LinearLayout
@@ -312,10 +326,10 @@
                             android:layout_marginEnd="12dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
-                            <TextView android:id="@+id/tvLetterC" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="C" android:textColor="#0F172A" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvLetterC" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="C" android:textColor="#0F172A" android:textSize="14sp" android:textStyle="bold" />
                             <TextView android:id="@+id/tvAnswerC" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án C" />
                         </LinearLayout>
-                        <ImageView android:id="@+id/imgTickC" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
+                        <ImageView android:id="@+id/imgTickC" android:layout_width="22dp" android:layout_height="22dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#2563EB" android:visibility="invisible" />
                     </RelativeLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -323,16 +337,17 @@
                     android:id="@+id/btnOptionD"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="60dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
+                    android:minHeight="62dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#CBD5E1"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1.5dp">
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="60dp"
+                        android:minHeight="62dp"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="12dp">
                         <LinearLayout
@@ -343,10 +358,10 @@
                             android:layout_marginEnd="12dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
-                            <TextView android:id="@+id/tvLetterD" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="D" android:textColor="#0F172A" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvLetterD" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_circle_gray" android:gravity="center" android:text="D" android:textColor="#0F172A" android:textSize="14sp" android:textStyle="bold" />
                             <TextView android:id="@+id/tvAnswerD" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:textColor="#0F172A" android:textSize="16sp" android:textStyle="bold" tools:text="Đáp án D" />
                         </LinearLayout>
-                        <ImageView android:id="@+id/imgTickD" android:layout_width="20dp" android:layout_height="20dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#0056D2" android:visibility="invisible" />
+                        <ImageView android:id="@+id/imgTickD" android:layout_width="22dp" android:layout_height="22dp" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:src="@drawable/ic_check" app:tint="#2563EB" android:visibility="invisible" />
                     </RelativeLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -358,12 +373,13 @@
         android:id="@+id/tvExplanation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:background="#FEF2F2"
-        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_pill_red_soft"
+        android:padding="14dp"
         android:textColor="#DC2626"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:textStyle="bold"
+        android:lineSpacingExtra="3dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/layoutHintSkip"
         app:layout_constraintStart_toStartOf="parent"
@@ -377,29 +393,31 @@
         android:orientation="horizontal"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/btnNopBai"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="12dp">
 
         <TextView
             android:id="@+id/tvGetHint"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_button_outline"
             android:gravity="center"
-            android:paddingVertical="8dp"
-            android:text="💡 Gợi ý"
-            android:textColor="#001833"
+            android:text="💡 Gợi ý AI"
+            android:textColor="#2563EB"
             android:textSize="14sp"
             android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/tvSkipQuestion"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_button_outline"
             android:gravity="center"
-            android:paddingVertical="8dp"
             android:text="Bỏ qua ⏭️"
-            android:textColor="#001833"
+            android:textColor="#475569"
             android:textSize="14sp"
             android:textStyle="bold"/>
     </LinearLayout>
@@ -408,11 +426,13 @@
         android:id="@+id/btnNopBai"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginBottom="12dp"
         android:text="KIỂM TRA"
+        android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:cornerRadius="12dp"
+        app:backgroundTint="#2563EB"
+        app:cornerRadius="16dp"
+        app:elevation="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

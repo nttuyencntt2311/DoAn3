@@ -4,10 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="16dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
-    app:strokeColor="#E2E7ED"
+    app:strokeColor="#E2E8F0"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -17,14 +18,14 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="150dp">
+            android:layout_height="148dp">
 
             <ImageView
                 android:id="@+id/ivThumbnail"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:background="#EDF2FA" />
+                android:background="#EFF6FF" />
 
             <TextView
                 android:id="@+id/tvDifficulty"
@@ -32,12 +33,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/bg_circle_light_blue"
-                android:backgroundTint="#A3E4D7"
+                android:background="@drawable/bg_pill_soft_blue"
+                android:backgroundTint="#D1FAE5"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
                 android:text="DỄ"
-                android:textColor="#0E6655"
+                android:textColor="#047857"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -48,14 +49,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="18dp">
 
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Chào hỏi &amp; Giới thiệu"
-                android:textColor="#222222"
+                android:textColor="#0F172A"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
@@ -65,13 +66,13 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Giao tiếp cơ bản • Bài 1"
-                android:textColor="#666666"
+                android:textColor="#64748B"
                 android:textSize="13sp" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="14dp">
 
                 <TextView
                     android:id="@+id/tvProgressLabel"
@@ -79,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:text="Tiến độ"
-                    android:textColor="#0056D2"
+                    android:textColor="#2563EB"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -89,8 +90,9 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:text="45%"
-                    android:textColor="#555555"
-                    android:textSize="13sp" />
+                    android:textColor="#475569"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
             </RelativeLayout>
 
             <ProgressBar
@@ -106,7 +108,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="14dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -114,32 +116,42 @@
                     android:id="@+id/tvVocabCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_pill_soft_blue"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
                     android:text="15 từ vựng"
-                    android:textColor="#555555"
-                    android:textSize="13sp" />
+                    android:textColor="#2563EB"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvExerciseCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_pill_amber"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
                     android:text="3 bài tập"
-                    android:textColor="#555555"
-                    android:textSize="13sp" />
+                    android:textColor="#D97706"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAction"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="46dp"
                 android:layout_marginTop="16dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:paddingVertical="10dp"
                 android:text="Tiếp tục học"
                 android:textAllCaps="false"
+                android:textColor="#FFFFFF"
                 android:textSize="15sp"
-                app:cornerRadius="24dp" />
+                android:textStyle="bold"
+                app:backgroundTint="#2563EB"
+                app:cornerRadius="14dp" />
 
         </LinearLayout>
     </LinearLayout>

@@ -1174,8 +1174,13 @@ exports.getPredictiveFlashcards = async (req, res) => {
     // Giới hạn top 15 từ ưu tiên nhất để tối ưu độ trễ gọi XAI
     const topCandidates = candidates.slice(0, 15);
 
-    const finalFlashcards = await Promise.all(
-      topCandidates.map(async (item) => {
+    // Chạy theo từng lô 3 từ để tránh bắn 15 request cùng lúc làm nghẽn Python FastAPI (socket hang up)
+    const BATCH_SIZE = 3;
+    const finalFlashcards = [];
+    for (let i = 0; i < topCandidates.length; i += BATCH_SIZE) {
+      const batch = topCandidates.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (item) => {
         let wordDetail = null;
         try {
           if (item.wordId && item.wordId.toString().length === 24) {
@@ -1237,7 +1242,9 @@ exports.getPredictiveFlashcards = async (req, res) => {
           xai_reason: xaiReason,
         };
       })
-    );
+      );
+      finalFlashcards.push(...batchResults);
+    }
 
     // Sắp xếp từ có nguy cơ quên cao nhất (predicted_accuracy thấp nhất) lên đầu
     finalFlashcards.sort((a, b) => a.predicted_accuracy - b.predicted_accuracy);

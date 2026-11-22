@@ -4,12 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app"
+    android:background="#F6F8FC"
     android:fitsSystemWindows="true">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -18,14 +19,16 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="20dp">
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="28dp">
 
             <TextView
                 android:id="@+id/tvAppLogo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="LexiVT"
-                android:textColor="@color/primary_button"
+                android:textColor="#2563EB"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
@@ -33,19 +36,21 @@
 
             <ImageView
                 android:id="@+id/ivAvatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:layout_marginStart="12dp"
+                android:background="@drawable/bg_icon_blue_soft"
+                android:padding="6dp"
                 android:src="@drawable/ic_account"
+                app:tint="#2563EB"
                 app:layout_constraintBottom_toBottomOf="@id/tvAppLogo"
                 app:layout_constraintStart_toEndOf="@id/tvAppLogo"
                 app:layout_constraintTop_toTopOf="@id/tvAppLogo" />
 
-            <!-- Neo End_toStartOf tvStreakDays để tên người dùng dài không đè lên chip chuỗi ngày -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="10dp"
                 android:layout_marginEnd="8dp"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="@id/ivAvatar"
@@ -60,9 +65,10 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text="Đang tải..."
-                    android:textColor="@color/text_primary"
+                    android:textColor="#0F172A"
+                    android:textSize="15sp"
                     android:textStyle="bold"
-                    tools:text="Minh Nguyễn" />
+                    tools:text="tuyen" />
 
                 <TextView
                     android:id="@+id/tvUserLevel"
@@ -71,9 +77,9 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:text=""
-                    android:textColor="@color/primary_button"
+                    android:textColor="#64748B"
                     android:textSize="12sp"
-                    tools:text="Cấp 1 • 120 XP" />
+                    tools:text="Cấp 9 • 8020 XP" />
             </LinearLayout>
 
             <com.google.android.material.chip.Chip
@@ -81,21 +87,27 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0 ngày"
-                android:textColor="@color/badge_text"
-                app:chipBackgroundColor="@color/badge_bg"
+                android:textColor="#C2410C"
+                android:textStyle="bold"
+                app:chipBackgroundColor="#FFF7ED"
+                app:chipStrokeColor="#FED7AA"
+                app:chipStrokeWidth="1dp"
                 app:chipIcon="@drawable/ic_fire"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="15 ngày" />
+                tools:text="2 ngày" />
 
+            <!-- Thẻ Nhiệm vụ hàng ngày hiện đại -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardDailyTask"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardBackgroundColor="@android:color/white"
+                android:layout_marginTop="20dp"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ivAvatar">
@@ -103,65 +115,81 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="20dp">
+                    android:padding="18dp">
 
                     <TextView
                         android:id="@+id/tvTaskTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Nhiệm vụ hàng\nngày"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:layout_marginEnd="12dp"
+                        android:text="Nhiệm vụ hàng ngày"
+                        android:textColor="#0F172A"
+                        android:textSize="17sp"
                         android:textStyle="bold"
+                        app:layout_constraintEnd_toStartOf="@id/tvTaskPercent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintWidth_percent="0.6" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/tvTaskPercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0% Hoàn\nthành"
-                        android:textColor="@color/primary_button"
+                        android:background="@drawable/bg_icon_blue_soft"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="0% Hoàn thành"
+                        android:textColor="#2563EB"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        tools:text="80% Hoàn\nthành" />
+                        tools:text="30% Hoàn thành" />
 
                     <TextView
                         android:id="@+id/tvTaskTarget"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="10dp"
                         android:text="Mục tiêu hôm nay: 0/10 từ mới"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
+                        android:textColor="#64748B"
+                        android:textSize="13sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvTaskTitle"
-                        tools:text="Mục tiêu hôm nay: 8/10 từ mới" />
+                        tools:text="Mục tiêu hôm nay: 3/10 từ mới" />
 
                     <ProgressBar
                         android:id="@+id/progressBar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="12dp"
                         android:max="100"
                         android:progress="0"
-                        android:progressDrawable="@drawable/progress_daily_task"
+                        android:progressTint="#2563EB"
+                        android:progressBackgroundTint="#E2E8F0"
                         app:layout_constraintTop_toBottomOf="@id/tvTaskTarget" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Nút CTA chính Indigo-Blue hiện đại -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartLearning"
                 android:layout_width="0dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="32dp"
-                app:backgroundTint="@color/primary_button"
-                android:text="Bắt đầu học"
-                android:textSize="18sp"
-                app:cornerRadius="35dp"
+                android:layout_height="58dp"
+                android:layout_marginTop="18dp"
+                android:text="Bắt đầu học ngay"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="#2563EB"
+                app:cornerRadius="18dp"
+                app:elevation="2dp"
+                app:icon="@drawable/ic_play"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"
+                app:iconTint="#FFFFFF"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cardDailyTask" />
@@ -171,59 +199,70 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="✨ Dựa trên lộ trình AI &amp; Spaced Repetition"
-                android:textColor="@color/text_secondary"
+                android:text="✨ Cá nhân hóa theo AI &amp; Spaced Repetition"
+                android:textColor="#64748B"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/btnStartLearning" />
 
+            <!-- 2 thẻ thống kê nhanh với icon badge pastel -->
             <LinearLayout
                 android:id="@+id/layoutStats"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
+                android:layout_marginTop="18dp"
                 android:orientation="horizontal"
                 android:weightSum="2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/btnStartLearning">
+                app:layout_constraintTop_toBottomOf="@id/tvSpacedRepetition">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardLearnedVocab"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    app:cardBackgroundColor="@android:color/white"
+                    android:clickable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="20dp"
-                    app:contentPadding="20dp">
+                    app:cardElevation="1dp"
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1dp"
+                    app:contentPadding="18dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_book" />
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_icon_blue_soft"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_book"
+                            app:tint="#2563EB" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="14dp"
                             android:text="TỪ VỰNG ĐÃ THUỘC"
                             android:textSize="10sp"
-                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.04"
+                            android:textColor="#64748B"
                             android:textStyle="bold" />
                         <TextView
                             android:id="@+id/tvWordsCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="0"
-                            android:textColor="@color/text_primary"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            tools:text="1,240" />
+                            tools:text="24" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -231,50 +270,62 @@
                     android:id="@+id/cardTimeLearned"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    app:cardBackgroundColor="@android:color/white"
+                    android:clickable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="#FFFFFF"
                     app:cardCornerRadius="20dp"
-                    app:contentPadding="20dp">
+                    app:cardElevation="1dp"
+                    app:strokeColor="#E2E8F0"
+                    app:strokeWidth="1dp"
+                    app:contentPadding="18dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_clock" />
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_icon_amber_soft"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_clock"
+                            app:tint="#D97706" />
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="20dp"
+                            android:layout_marginTop="14dp"
                             android:text="THỜI GIAN HỌC"
                             android:textSize="10sp"
-                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.04"
+                            android:textColor="#64748B"
                             android:textStyle="bold" />
                         <TextView
                             android:id="@+id/tvTimeLearned"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="0 phút"
-                            android:textColor="@color/text_primary"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            tools:text="45 phút" />
+                            tools:text="180 phút" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
+            <!-- Thẻ Cảnh báo Sổ tay Tiên tri XAI -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPredictiveWarning"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:visibility="gone"
-                app:cardBackgroundColor="#FEF2F2"
+                app:cardBackgroundColor="#FFF1F2"
                 app:cardCornerRadius="20dp"
-                app:strokeColor="#FCA5A5"
+                app:cardElevation="0dp"
+                app:strokeColor="#FECDD3"
                 app:strokeWidth="1dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -283,14 +334,15 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="20dp">
+                    android:padding="18dp">
 
                     <TextView
                         android:id="@+id/tvPredictiveBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="⚠️ BÁO ĐỘNG ĐỎ"
-                        android:textColor="#DC2626"
+                        android:text="⚠️ Sổ tay Tiên tri XAI"
+                        android:textColor="#E11D48"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
@@ -299,32 +351,39 @@
                         android:id="@+id/tvPredictiveDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="#991B1B"
-                        android:textSize="14sp"
+                        android:layout_marginTop="6dp"
+                        android:textColor="#881337"
+                        android:textSize="13.5sp"
+                        android:lineSpacingExtra="2dp"
                         app:layout_constraintTop_toBottomOf="@id/tvPredictiveBadge"
-                        tools:text="AI dự đoán bạn sắp quên 5 từ này. Hãy ôn lại ngay!" />
+                        tools:text="Phát hiện 15 từ vựng có nguy cơ quên cao. Hãy ôn lại ngay!" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnReviewNow"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="14dp"
                         android:text="Ôn lại ngay"
-                        app:backgroundTint="#DC2626"
+                        android:textAllCaps="false"
                         android:textColor="#FFFFFF"
-                        app:cornerRadius="20dp"
+                        android:textStyle="bold"
+                        app:backgroundTint="#E11D48"
+                        app:cornerRadius="14dp"
+                        app:elevation="0dp"
                         app:layout_constraintTop_toBottomOf="@id/tvPredictiveDesc" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Banner Lộ trình AI gradient Indigo-Violet -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPro"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardCornerRadius="20dp"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cardPredictiveWarning">
@@ -341,9 +400,10 @@
                         android:layout_height="wrap_content"
                         android:text="AI"
                         android:textColor="#FFFFFF"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="2dp"
+                        android:paddingHorizontal="9dp"
+                        android:paddingVertical="3dp"
                         android:background="@drawable/bg_pro_badge"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
@@ -355,6 +415,7 @@
                         android:layout_marginStart="10dp"
                         android:text="Lộ trình cá nhân hóa"
                         android:textColor="#FFFFFF"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="@id/tvProBadge"
                         app:layout_constraintStart_toEndOf="@id/tvProBadge"
@@ -364,33 +425,44 @@
                         android:id="@+id/tvProDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Phân tích điểm mạnh/yếu của bạn bằng công nghệ AI tối tân nhất."
-                        android:textColor="#DDFFFFFF"
+                        android:layout_marginTop="10dp"
+                        android:text="Phân tích điểm mạnh/yếu của bạn bằng XAI để gợi ý bài học tối ưu."
+                        android:textColor="#E0E7FF"
+                        android:textSize="13.5sp"
+                        android:lineSpacingExtra="2dp"
                         app:layout_constraintTop_toBottomOf="@id/tvProBadge" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnViewPro"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:text="Xem Lộ trình học"
-                        app:backgroundTint="#313B4D"
-                        android:textColor="#FFFFFF"
-                        app:cornerRadius="20dp"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Xem lộ trình học"
+                        android:textAllCaps="false"
+                        android:textColor="#1E3A8A"
+                        android:textStyle="bold"
+                        app:backgroundTint="#FFFFFF"
+                        app:cornerRadius="14dp"
+                        app:elevation="0dp"
                         app:layout_constraintTop_toBottomOf="@id/tvProDesc" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Thẻ Bài học tiếp theo -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardNextLesson"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardBackgroundColor="@android:color/white"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="20dp"
-                app:contentPadding="20dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp"
+                app:contentPadding="18dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cardPro">
@@ -404,20 +476,22 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BÀI HỌC TIẾP THEO"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.04"
+                        android:textColor="#64748B"
                         android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"/>
 
                     <ImageView
                         android:id="@+id/ivBook"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_marginTop="12dp"
                         android:src="@drawable/ic_book"
-                        android:background="@drawable/ic_book_light_bg"
-                        android:padding="10dp"
+                        android:background="@drawable/bg_icon_blue_soft"
+                        android:padding="11dp"
+                        app:tint="#2563EB"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvNextTitle"/>
 
@@ -425,9 +499,10 @@
                         android:id="@+id/tvLessonName"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="14dp"
                         android:text="Bài 1: Bắt đầu hành trình"
-                        android:textColor="@color/text_primary"
+                        android:textColor="#0F172A"
+                        android:textSize="15sp"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@id/ivBook"
@@ -439,8 +514,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="@string/_50_xp_ti_m_n_ng"
-                        android:textColor="@color/glacier_primary"
+                        android:textColor="#2563EB"
                         android:textSize="12sp"
+                        android:textStyle="bold"
                         app:layout_constraintStart_toStartOf="@id/tvLessonName"
                         app:layout_constraintTop_toBottomOf="@id/tvLessonName"/>
 

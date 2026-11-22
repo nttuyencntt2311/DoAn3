@@ -4,36 +4,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#F6F8FC"
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:paddingHorizontal="20dp">
+        android:background="#FFFFFF"
+        android:paddingHorizontal="12dp">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_centerVertical="true"
+            android:padding="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#475569" />
+            app:tint="#0F172A" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Đổi mật khẩu"
-            android:textColor="#1E293B"
+            android:textColor="#0F172A"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-
     </RelativeLayout>
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E2E8F0"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -45,19 +45,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
+            android:paddingHorizontal="20dp"
             android:paddingTop="20dp"
-            android:paddingBottom="40dp">
+            android:paddingBottom="36dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="#2563EB"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp">
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_indigo_gradient_card"
                     android:padding="20dp">
 
                     <TextView
@@ -75,157 +76,167 @@
                         android:layout_below="@id/tvBannerTitle"
                         android:layout_marginTop="6dp"
                         android:layout_marginEnd="60dp"
-                        android:text="Mật khẩu mạnh giúp ngăn chặn truy cập trái phép vào tài khoản LexiVT của bạn."
+                        android:text="Mật khẩu mạnh giúp bảo vệ tiến độ học tập và dữ liệu cá nhân của bạn trên LexiVT."
                         android:textColor="#E0E7FF"
                         android:textSize="13sp"
                         android:lineSpacingExtra="2dp"/>
 
                     <ImageView
-                        android:layout_width="70dp"
-                        android:layout_height="70dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:src="@drawable/ic_person"
-                        app:tint="#1E3A8A"
-                        android:alpha="0.2"
-                        android:layout_marginEnd="-15dp"/>
+                        android:src="@drawable/ic_lock"
+                        app:tint="#FFFFFF"
+                        android:alpha="0.18"/>
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="32dp">
+                android:layout_marginTop="18dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilCurrentPassword"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="#CBD5E1"
-                    app:hintTextColor="#2563EB"
-                    app:startIconDrawable="@drawable/ic_lock"
-                    app:startIconTint="#64748B"
-                    app:passwordToggleEnabled="true"
-                    app:passwordToggleTint="#94A3B8">
+                    android:orientation="vertical"
+                    android:padding="18dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etCurrentPassword"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilCurrentPassword"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Mật khẩu hiện tại"
-                        android:inputType="textPassword"
-                        android:textColor="#1E293B"
-                        android:textSize="15sp" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        app:boxCornerRadiusBottomEnd="14dp"
+                        app:boxCornerRadiusBottomStart="14dp"
+                        app:boxCornerRadiusTopEnd="14dp"
+                        app:boxCornerRadiusTopStart="14dp"
+                        app:boxStrokeColor="#CBD5E1"
+                        app:hintTextColor="#2563EB"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="#64748B"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="#94A3B8">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilNewPassword"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="#CBD5E1"
-                    app:hintTextColor="#2563EB"
-                    app:startIconDrawable="@drawable/ic_lock"
-                    app:startIconTint="#64748B"
-                    app:passwordToggleEnabled="true"
-                    app:passwordToggleTint="#94A3B8">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etCurrentPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Mật khẩu hiện tại"
+                            android:inputType="textPassword"
+                            android:textColor="#0F172A"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etNewPassword"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilNewPassword"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Mật khẩu mới"
-                        android:inputType="textPassword"
-                        android:textColor="#1E293B"
-                        android:textSize="15sp" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginTop="14dp"
+                        app:boxCornerRadiusBottomEnd="14dp"
+                        app:boxCornerRadiusBottomStart="14dp"
+                        app:boxCornerRadiusTopEnd="14dp"
+                        app:boxCornerRadiusTopStart="14dp"
+                        app:boxStrokeColor="#CBD5E1"
+                        app:hintTextColor="#2563EB"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="#64748B"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="#94A3B8">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilConfirmPassword"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="#CBD5E1"
-                    app:hintTextColor="#2563EB"
-                    app:startIconDrawable="@drawable/ic_lock"
-                    app:startIconTint="#64748B"
-                    app:passwordToggleEnabled="true"
-                    app:passwordToggleTint="#94A3B8">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNewPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Mật khẩu mới"
+                            android:inputType="textPassword"
+                            android:textColor="#0F172A"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etConfirmPassword"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilConfirmPassword"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Xác nhận mật khẩu mới"
-                        android:inputType="textPassword"
-                        android:textColor="#1E293B"
-                        android:textSize="15sp" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginTop="14dp"
+                        app:boxCornerRadiusBottomEnd="14dp"
+                        app:boxCornerRadiusBottomStart="14dp"
+                        app:boxCornerRadiusTopEnd="14dp"
+                        app:boxCornerRadiusTopStart="14dp"
+                        app:boxStrokeColor="#CBD5E1"
+                        app:hintTextColor="#2563EB"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="#64748B"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="#94A3B8">
 
-            </LinearLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etConfirmPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Xác nhận mật khẩu mới"
+                            android:inputType="textPassword"
+                            android:textColor="#0F172A"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="24dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_pill_soft_blue"
+                        android:orientation="vertical"
+                        android:padding="14dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mật khẩu phải bao gồm:"
-                    android:textColor="#64748B"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Yêu cầu mật khẩu:"
+                            android:textColor="#1E3A8A"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
 
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp">
-                    <ImageView android:id="@+id/icReqMin8" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
-                    <TextView android:id="@+id/tvReqMin8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Tối thiểu 8 ký tự." android:textColor="#64748B" android:textSize="13sp"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp">
+                            <ImageView android:id="@+id/icReqMin8" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
+                            <TextView android:id="@+id/tvReqMin8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Tối thiểu 8 ký tự." android:textColor="#475569" android:textSize="13sp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                            <ImageView android:id="@+id/icReqUpper" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
+                            <TextView android:id="@+id/tvReqUpper" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ viết hoa (A-Z)." android:textColor="#475569" android:textSize="13sp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                            <ImageView android:id="@+id/icReqLower" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
+                            <TextView android:id="@+id/tvReqLower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ viết thường (a-z)." android:textColor="#475569" android:textSize="13sp"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                            <ImageView android:id="@+id/icReqNumber" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
+                            <TextView android:id="@+id/tvReqNumber" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ số (0-9)." android:textColor="#475569" android:textSize="13sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
-
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
-                    <ImageView android:id="@+id/icReqUpper" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
-                    <TextView android:id="@+id/tvReqUpper" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ cái viết hoa (A-Z)." android:textColor="#64748B" android:textSize="13sp"/>
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
-                    <ImageView android:id="@+id/icReqLower" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
-                    <TextView android:id="@+id/tvReqLower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ cái viết thường (a-z)." android:textColor="#64748B" android:textSize="13sp"/>
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
-                    <ImageView android:id="@+id/icReqNumber" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_check" app:tint="#94A3B8"/>
-                    <TextView android:id="@+id/tvReqNumber" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Ít nhất một chữ số (0-9)." android:textColor="#64748B" android:textSize="13sp"/>
-                </LinearLayout>
-
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnUpdatePassword"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="40dp"
+                android:layout_height="54dp"
+                android:layout_marginTop="24dp"
                 android:clickable="true"
                 android:foreground="?attr/selectableItemBackground"
-                app:cardBackgroundColor="#0056B3"
-                app:cardCornerRadius="26dp"
-                app:cardElevation="0dp">
+                app:cardBackgroundColor="#2563EB"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
