@@ -3,9 +3,12 @@ package com.example.doan3
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -23,11 +26,11 @@ import com.example.doan3.ui.profile.TroLyAIFragment
 import com.example.doan3.ui.roadmap.RoadmapFragment
 import com.example.doan3.ui.statistics.StatisticsFragment
 import com.example.doan3.ui.vocabulary.VocabularyFragment
-import com.google.android.material.card.MaterialCardView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private var currentActiveTab: LinearLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -39,11 +42,23 @@ class MainActivity : AppCompatActivity() {
         val savedToken = sharedPreferences.getString("JWT_TOKEN", "") ?: ""
         RetrofitClient.token = savedToken
 
-        if (savedInstanceState == null) {
-            switchRootTab(HomeFragment(), binding.btnTrangChu)
+        // Căn kích thước viên thuốc trượt khớp chính xác với chiều rộng 1 tab khi layout xong
+        binding.bottomNav.post {
+            val tabWidth = binding.bottomNav.width / 5
+            if (tabWidth > 0) {
+                val insetPx = (4 * resources.displayMetrics.density).toInt()
+                val lp = binding.navSlidingPill.layoutParams
+                lp.width = (tabWidth - insetPx * 2).coerceAtLeast(1)
+                binding.navSlidingPill.layoutParams = lp
+                val active = currentActiveTab ?: binding.btnTrangChu
+                moveSlidingPill(active, animate = false)
+            }
         }
 
-        // Cả 5 tab Bottom Nav đều dùng Fragment trong cùng MainActivity
+        if (savedInstanceState == null) {
+            switchRootTab(HomeFragment(), binding.btnTrangChu, animate = false)
+        }
+
         binding.btnTrangChu.setOnClickListener {
             switchRootTab(HomeFragment(), binding.btnTrangChu)
         }
@@ -96,23 +111,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Chuyển sang 1 trong 5 tab gốc và xóa sạch BackStack con để tránh kẹt khi bấm Back */
-    fun switchRootTab(fragment: Fragment, activeTab: LinearLayout) {
+    fun switchRootTab(fragment: Fragment, activeTab: LinearLayout, animate: Boolean = true) {
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.nav_host_fragment, fragment)
-            .commit()
-        updateBottomNavUI(activeTab)
+        val tx = supportFragmentManager.beginTransaction()
+        if (animate) {
+            tx.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+        tx.replace(R.id.nav_host_fragment, fragment).commit()
+        updateBottomNavUI(activeTab, animate)
     }
 
-    /** Mở Fragment con (Vocabulary, Roadmap, Statistics...) có hỗ trợ BackStack */
     fun openSubFragment(fragment: Fragment, activeTab: LinearLayout? = null) {
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)
             .commit()
         if (activeTab != null) {
-            updateBottomNavUI(activeTab)
+            updateBottomNavUI(activeTab, animate = true)
         }
     }
 
@@ -132,9 +153,7 @@ class MainActivity : AppCompatActivity() {
     private fun <T : View> findChildViewByType(root: ViewGroup, clazz: Class<T>): T? {
         for (i in 0 until root.childCount) {
             val child = root.getChildAt(i)
-            if (clazz.isInstance(child)) {
-                return clazz.cast(child)
-            }
+            if (clazz.isInstance(child)) return clazz.cast(child)
             if (child is ViewGroup) {
                 val found = findChildViewByType(child, clazz)
                 if (found != null) return found
@@ -143,7 +162,34 @@ class MainActivity : AppCompatActivity() {
         return null
     }
 
-    fun updateBottomNavUI(activeTab: LinearLayout) {
+    private fun moveSlidingPill(activeTab: LinearLayout, animate: Boolean) {
+        val tabs = listOf(
+            binding.btnTrangChu,
+            binding.btnKhamPha,
+            binding.btnTroLyAI,
+            binding.btnHoSo,
+            binding.btnTaiKhoan
+        )
+        val index = tabs.indexOf(activeTab).coerceAtLeast(0)
+        val tabWidth = binding.bottomNav.width / 5f
+        if (tabWidth <= 0f) return
+
+        val insetPx = 4f * resources.displayMetrics.density
+        val targetX = index * tabWidth + insetPx
+
+        if (animate) {
+            binding.navSlidingPill.animate()
+                .translationX(targetX)
+                .setDuration(260L)
+                .setInterpolator(DecelerateInterpolator(1.8f))
+                .start()
+        } else {
+            binding.navSlidingPill.translationX = targetX
+        }
+    }
+
+    fun updateBottomNavUI(activeTab: LinearLayout, animate: Boolean = true) {
+        currentActiveTab = activeTab
         val tabs = listOf(
             binding.btnTrangChu,
             binding.btnKhamPha,
@@ -152,44 +198,18 @@ class MainActivity : AppCompatActivity() {
             binding.btnTaiKhoan
         )
 
-        val activeColor = Color.parseColor("#0056D2")
+        val activeColor = Color.parseColor("#2563EB")
         val inactiveColor = Color.parseColor("#94A3B8")
 
         for (tab in tabs) {
-            val pLeft = tab.paddingLeft
-            val pTop = tab.paddingTop
-            val pRight = tab.paddingRight
-            val pBottom = tab.paddingBottom
-
-            tab.setBackgroundResource(0)
-            tab.background = null
-            tab.setPadding(pLeft, pTop, pRight, pBottom)
-
-            val cardView = findChildViewByType(tab, MaterialCardView::class.java)
             val icon = findChildViewByType(tab, ImageView::class.java)
             val text = findChildViewByType(tab, TextView::class.java)
-
-            cardView?.setCardBackgroundColor(Color.TRANSPARENT)
-            cardView?.cardElevation = 0f
 
             icon?.clearColorFilter()
             icon?.setColorFilter(inactiveColor, android.graphics.PorterDuff.Mode.SRC_IN)
             text?.setTextColor(inactiveColor)
+            text?.setTypeface(null, Typeface.NORMAL)
         }
-
-        val activePLeft = activeTab.paddingLeft
-        val activePTop = activeTab.paddingTop
-        val activePRight = activeTab.paddingRight
-        val activePBottom = activeTab.paddingBottom
-
-        val activeCard = findChildViewByType(activeTab, MaterialCardView::class.java)
-        if (activeCard != null) {
-            activeCard.setCardBackgroundColor(Color.parseColor("#EFF6FF"))
-            activeCard.cardElevation = 0f
-        } else {
-            activeTab.setBackgroundResource(R.drawable.bg_tab_active)
-        }
-        activeTab.setPadding(activePLeft, activePTop, activePRight, activePBottom)
 
         val activeIcon = findChildViewByType(activeTab, ImageView::class.java)
         val activeText = findChildViewByType(activeTab, TextView::class.java)
@@ -197,5 +217,23 @@ class MainActivity : AppCompatActivity() {
         activeIcon?.clearColorFilter()
         activeIcon?.setColorFilter(activeColor, android.graphics.PorterDuff.Mode.SRC_IN)
         activeText?.setTextColor(activeColor)
+        activeText?.setTypeface(null, Typeface.BOLD)
+
+        // Hiệu ứng nảy nhẹ icon khi chọn tab
+        if (animate && activeIcon != null) {
+            activeIcon.scaleX = 0.85f
+            activeIcon.scaleY = 0.85f
+            activeIcon.animate()
+                .scaleX(1.08f)
+                .scaleY(1.08f)
+                .setDuration(140L)
+                .setInterpolator(OvershootInterpolator(2.2f))
+                .withEndAction {
+                    activeIcon.animate().scaleX(1f).scaleY(1f).setDuration(100L).start()
+                }
+                .start()
+        }
+
+        moveSlidingPill(activeTab, animate)
     }
 }

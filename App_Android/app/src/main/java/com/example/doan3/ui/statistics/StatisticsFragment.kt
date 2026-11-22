@@ -2,6 +2,7 @@ package com.example.doan3.ui.statistics
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -12,7 +13,6 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.doan3.MainActivity
-import com.example.doan3.R
 import com.example.doan3.databinding.FragmentStatisticsBinding
 import com.example.doan3.ui.profile.MemoryItem
 import com.example.doan3.ui.profile.RetrofitClient
@@ -51,7 +51,6 @@ class StatisticsFragment : Fragment() {
         }
 
         setupTabs()
-
         viewModel.fetchRealStatistics(requireContext())
 
         viewModel.statsData.observe(viewLifecycleOwner) { stats ->
@@ -67,7 +66,6 @@ class StatisticsFragment : Fragment() {
             drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
         }
 
-        // Chỉ fallback đếm số từ ĐÃ THUỘC (proficiency >= 80) nếu server trả 0, không bao giờ gán tổng từ hệ thống
         val apiService = RetrofitClient.getInstance(requireContext())
         apiService.getAllVocabularies().enqueue(object : Callback<List<Vocabulary>> {
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
@@ -88,9 +86,7 @@ class StatisticsFragment : Fragment() {
                 }
             }
 
-            override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
-                // Giữ nguyên dữ liệu từ statsData
-            }
+            override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {}
         })
 
         viewModel.memoriesData.observe(viewLifecycleOwner) { memories ->
@@ -100,60 +96,84 @@ class StatisticsFragment : Fragment() {
                 val emptyText = TextView(requireContext()).apply {
                     text = "Bạn chưa có kỷ niệm nào. Hãy học chăm chỉ hơn nhé!"
                     textSize = 14f
-                    setTextColor(Color.parseColor("#888888"))
-                    setPadding(0, 50, 0, 0)
+                    setTextColor(Color.parseColor("#64748B"))
+                    setPadding(0, (32 * resources.displayMetrics.density).toInt(), 0, 0)
                     gravity = Gravity.CENTER
                 }
                 binding.containerMemories.addView(emptyText)
             } else {
                 for (memory in memories) {
-                    val cardView = createMemoryCard(memory)
-                    binding.containerMemories.addView(cardView)
+                    binding.containerMemories.addView(createMemoryCard(memory))
                 }
             }
         }
     }
 
+    private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
+
     private fun createMemoryCard(memory: MemoryItem): View {
-        val density = resources.displayMetrics.density
-        val pad = (16 * density).toInt()
-        val layout = LinearLayout(requireContext()).apply {
+        val ctx = requireContext()
+        val layout = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, (16 * density).toInt())
+                bottomMargin = 12.dp()
             }
-            setBackgroundResource(R.drawable.bg_bar_rounded)
-            setPadding(pad, pad, pad, pad)
-            elevation = 4f
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadius = 18.dp().toFloat()
+                setStroke(1.dp(), Color.parseColor("#E2E8F0"))
+            }
+            setPadding(18.dp(), 16.dp(), 18.dp(), 16.dp())
+            elevation = 2f
         }
 
-        val tvTitle = TextView(requireContext()).apply {
+        val tvTitle = TextView(ctx).apply {
             text = memory.title
             textSize = 16f
-            setTextColor(Color.parseColor("#1A1A1A"))
+            setTextColor(Color.parseColor("#0F172A"))
             setTypeface(null, Typeface.BOLD)
         }
 
-        val tvDesc = TextView(requireContext()).apply {
+        val tvDesc = TextView(ctx).apply {
             text = memory.description
-            textSize = 14f
-            setTextColor(Color.parseColor("#64748B"))
-            setPadding(0, (4 * density).toInt(), 0, (4 * density).toInt())
+            textSize = 13.5f
+            setTextColor(Color.parseColor("#475569"))
+            setPadding(0, 6.dp(), 0, 12.dp())
         }
 
-        val tvDateAndXp = TextView(requireContext()).apply {
-            text = "${memory.date} • +${memory.xp} XP"
-            textSize = 11f
-            setTextColor(Color.parseColor("#2563EB"))
-            setTypeface(null, Typeface.BOLD_ITALIC)
+        val footerRow = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
+
+        val tvDate = TextView(ctx).apply {
+            text = memory.date
+            textSize = 12f
+            setTextColor(Color.parseColor("#64748B"))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val tvXpBadge = TextView(ctx).apply {
+            text = "+${memory.xp} XP"
+            textSize = 12f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#2563EB"))
+            setPadding(10.dp(), 4.dp(), 10.dp(), 4.dp())
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#EFF6FF"))
+                cornerRadius = 10.dp().toFloat()
+            }
+        }
+
+        footerRow.addView(tvDate)
+        footerRow.addView(tvXpBadge)
 
         layout.addView(tvTitle)
         layout.addView(tvDesc)
-        layout.addView(tvDateAndXp)
+        layout.addView(footerRow)
 
         return layout
     }
@@ -161,11 +181,11 @@ class StatisticsFragment : Fragment() {
     private fun setupTabs() {
         binding.tabStatistics.setOnClickListener {
             binding.tabStatistics.setCardBackgroundColor(Color.WHITE)
-            binding.tvTabStatistics.setTextColor(Color.parseColor("#1A1A1A"))
-            binding.tabStatistics.cardElevation = 8f
+            binding.tvTabStatistics.setTextColor(Color.parseColor("#0F172A"))
+            binding.tabStatistics.cardElevation = 2f
 
             binding.tabMemories.setCardBackgroundColor(Color.TRANSPARENT)
-            binding.tvTabMemories.setTextColor(Color.parseColor("#888888"))
+            binding.tvTabMemories.setTextColor(Color.parseColor("#64748B"))
             binding.tabMemories.cardElevation = 0f
 
             binding.groupStatistics.visibility = View.VISIBLE
@@ -174,11 +194,11 @@ class StatisticsFragment : Fragment() {
 
         binding.tabMemories.setOnClickListener {
             binding.tabMemories.setCardBackgroundColor(Color.WHITE)
-            binding.tvTabMemories.setTextColor(Color.parseColor("#1A1A1A"))
-            binding.tabMemories.cardElevation = 8f
+            binding.tvTabMemories.setTextColor(Color.parseColor("#0F172A"))
+            binding.tabMemories.cardElevation = 2f
 
             binding.tabStatistics.setCardBackgroundColor(Color.TRANSPARENT)
-            binding.tvTabStatistics.setTextColor(Color.parseColor("#888888"))
+            binding.tvTabStatistics.setTextColor(Color.parseColor("#64748B"))
             binding.tabStatistics.cardElevation = 0f
 
             binding.layoutMemories.visibility = View.VISIBLE
@@ -191,7 +211,8 @@ class StatisticsFragment : Fragment() {
         val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
 
         val maxPercent = 100f
-        val maxHeightDp = 82
+        val maxHeightDp = 92
+        val radiusPx = 7.dp().toFloat()
 
         for (i in 0 until 7) {
             val percent = if (i < data.size) data[i] else 0
@@ -205,29 +226,33 @@ class StatisticsFragment : Fragment() {
             val valueText = TextView(requireContext()).apply {
                 text = if (percent > 0) "$percent%" else ""
                 textSize = 10f
-                setTextColor(Color.parseColor("#0056D2"))
+                setTextColor(Color.parseColor("#2563EB"))
                 setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.CENTER
             }
 
             val barView = View(requireContext()).apply {
-                setBackgroundColor(if (percent > 0) Color.parseColor("#0056D2") else Color.parseColor("#E2E8F0"))
+                background = GradientDrawable().apply {
+                    setColor(if (percent > 0) Color.parseColor("#2563EB") else Color.parseColor("#E2E8F0"))
+                    cornerRadii = floatArrayOf(radiusPx, radiusPx, radiusPx, radiusPx, 2f, 2f, 2f, 2f)
+                }
                 val heightInPx = ((percent / maxPercent) * maxHeightDp * resources.displayMetrics.density).toInt()
-                val minHeightPx = if (percent > 0) (8 * resources.displayMetrics.density).toInt() else (4 * resources.displayMetrics.density).toInt()
+                val minHeightPx = if (percent > 0) 8.dp() else 4.dp()
 
                 layoutParams = LinearLayout.LayoutParams(
-                    (16 * resources.displayMetrics.density).toInt(),
+                    18.dp(),
                     kotlin.math.max(heightInPx, minHeightPx)
                 ).apply {
-                    topMargin = (2 * resources.displayMetrics.density).toInt()
-                    bottomMargin = (4 * resources.displayMetrics.density).toInt()
+                    topMargin = 4.dp()
+                    bottomMargin = 6.dp()
                 }
             }
 
             val dayText = TextView(requireContext()).apply {
                 text = daysOfWeek[i]
-                textSize = 11f
-                setTextColor(if (percent > 0) Color.parseColor("#1A1A1A") else Color.parseColor("#888888"))
+                textSize = 11.5f
+                setTextColor(if (percent > 0) Color.parseColor("#0F172A") else Color.parseColor("#94A3B8"))
+                setTypeface(null, if (percent > 0) Typeface.BOLD else Typeface.NORMAL)
                 gravity = Gravity.CENTER
             }
 

@@ -1,34 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_button_outline"
+    android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:paddingVertical="12dp"
-    android:background="?attr/selectableItemBackground">
+    android:orientation="horizontal"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="12dp">
 
     <TextView
         android:id="@+id/tvRank"
-        android:layout_width="30dp"
-        android:layout_height="wrap_content"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/bg_pill_soft_blue"
+        android:gravity="center"
         android:text="1"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#1E293B"
-        android:gravity="center" />
+        android:textColor="#2563EB"
+        android:textSize="15sp"
+        android:textStyle="bold" />
 
     <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_circle_light_blue"
+        android:padding="8dp"
         android:src="@drawable/ic_person"
-        android:background="@drawable/bg_circle_gray" />
+        app:tint="#2563EB" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_marginStart="12dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -36,25 +43,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tên học viên"
+            android:textColor="#0F172A"
             android:textSize="15sp"
-            android:textColor="#1E293B"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvPlayerLevel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text="Cấp độ 5"
-            android:textSize="12sp"
-            android:textColor="#64748B" />
+            android:textColor="#64748B"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/tvPlayerXP"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_pill_amber"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="5dp"
         android:text="1500 XP"
-        android:textSize="14sp"
-        android:textColor="#F59E0B"
+        android:textColor="#D97706"
+        android:textSize="12sp"
         android:textStyle="bold" />
 </LinearLayout>

@@ -69,11 +69,11 @@ router.post("/login", async (req, res) => {
 
     const userRole = user.role || "student";
 
-    // 1. Tạo Access Token (Thời hạn 15 phút)
+    // 1. Tạo Access Token (Mặc định 7 ngày, có thể cấu hình qua JWT_EXPIRES_IN)
     const token = jwt.sign(
       { userId: user._id, role: userRole },
       process.env.JWT_SECRET || "your_jwt_secret_key",
-      { expiresIn: "15m" },
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
     );
 
     // 2. Tạo Refresh Token (Thời hạn 30 ngày)
@@ -302,7 +302,7 @@ router.post("/refresh-token", async (req, res) => {
         const newAccessToken = jwt.sign(
           { userId: user._id, role: user.role || "student" },
           process.env.JWT_SECRET || "your_jwt_secret_key",
-          { expiresIn: "15m" },
+          { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
         );
 
         res.status(200).json({ token: newAccessToken });
