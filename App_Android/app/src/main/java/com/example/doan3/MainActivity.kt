@@ -20,6 +20,7 @@ import com.example.doan3.databinding.ActivityMainBinding
 import com.example.doan3.ui.home.HomeFragment
 import com.example.doan3.ui.learning.LearningFragment
 import com.example.doan3.ui.profile.HoSoFragment
+import com.example.doan3.ui.profile.ReminderScheduler
 import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.profile.TaiKhoanFragment
 import com.example.doan3.ui.profile.TroLyAIFragment
@@ -42,7 +43,11 @@ class MainActivity : AppCompatActivity() {
         val savedToken = sharedPreferences.getString("JWT_TOKEN", "") ?: ""
         RetrofitClient.token = savedToken
 
-        // Căn kích thước viên thuốc trượt khớp chính xác với chiều rộng 1 tab khi layout xong
+        // Kích hoạt lịch nhắc học 20:00 mỗi ngày nếu người dùng đang bật thông báo
+        if (sharedPreferences.getBoolean("PREF_NOTIFICATIONS", true)) {
+            ReminderScheduler.scheduleDailyReminder(this)
+        }
+
         binding.bottomNav.post {
             val tabWidth = binding.bottomNav.width / 5
             if (tabWidth > 0) {
@@ -67,16 +72,16 @@ class MainActivity : AppCompatActivity() {
             switchRootTab(LearningFragment(), binding.btnKhamPha)
         }
 
+        binding.btnTuVung.setOnClickListener {
+            switchRootTab(VocabularyFragment(), binding.btnTuVung)
+        }
+
         binding.btnTroLyAI.setOnClickListener {
             switchRootTab(TroLyAIFragment(), binding.btnTroLyAI)
         }
 
         binding.btnHoSo.setOnClickListener {
             switchRootTab(HoSoFragment(), binding.btnHoSo)
-        }
-
-        binding.btnTaiKhoan.setOnClickListener {
-            switchRootTab(TaiKhoanFragment(), binding.btnTaiKhoan)
         }
 
         handleIntentData(intent)
@@ -100,10 +105,10 @@ class MainActivity : AppCompatActivity() {
             when (openFragment) {
                 "HOME" -> switchRootTab(HomeFragment(), binding.btnTrangChu)
                 "LEARNING" -> switchRootTab(LearningFragment(), binding.btnKhamPha)
+                "VOCABULARY" -> switchRootTab(VocabularyFragment(), binding.btnTuVung)
                 "AI_ASSISTANT" -> switchRootTab(TroLyAIFragment(), binding.btnTroLyAI)
                 "PROFILE" -> switchRootTab(HoSoFragment(), binding.btnHoSo)
-                "ACCOUNT" -> switchRootTab(TaiKhoanFragment(), binding.btnTaiKhoan)
-                "VOCABULARY" -> openSubFragment(VocabularyFragment(), binding.btnKhamPha)
+                "ACCOUNT" -> openSubFragment(TaiKhoanFragment(), binding.btnHoSo)
                 "ROADMAP" -> openSubFragment(RoadmapFragment(), binding.btnKhamPha)
                 "STATISTICS" -> openSubFragment(StatisticsFragment(), binding.btnHoSo)
             }
@@ -139,11 +144,12 @@ class MainActivity : AppCompatActivity() {
 
     fun openHomeTab() = switchRootTab(HomeFragment(), binding.btnTrangChu)
     fun openLearningTab() = switchRootTab(LearningFragment(), binding.btnKhamPha)
+    fun openVocabularyScreen() = switchRootTab(VocabularyFragment(), binding.btnTuVung)
     fun openAiTab() = switchRootTab(TroLyAIFragment(), binding.btnTroLyAI)
     fun openProfileTab() = switchRootTab(HoSoFragment(), binding.btnHoSo)
-    fun openAccountTab() = switchRootTab(TaiKhoanFragment(), binding.btnTaiKhoan)
+    // Tài khoản mở dưới dạng màn hình Cài đặt từ icon bánh răng của Hồ sơ
+    fun openAccountTab() = openSubFragment(TaiKhoanFragment(), binding.btnHoSo)
 
-    fun openVocabularyScreen() = openSubFragment(VocabularyFragment(), binding.btnKhamPha)
     fun openRoadmapScreen(args: Bundle? = null) {
         val fragment = RoadmapFragment().apply { arguments = args }
         openSubFragment(fragment, binding.btnKhamPha)
@@ -166,9 +172,9 @@ class MainActivity : AppCompatActivity() {
         val tabs = listOf(
             binding.btnTrangChu,
             binding.btnKhamPha,
+            binding.btnTuVung,
             binding.btnTroLyAI,
-            binding.btnHoSo,
-            binding.btnTaiKhoan
+            binding.btnHoSo
         )
         val index = tabs.indexOf(activeTab).coerceAtLeast(0)
         val tabWidth = binding.bottomNav.width / 5f
@@ -193,9 +199,9 @@ class MainActivity : AppCompatActivity() {
         val tabs = listOf(
             binding.btnTrangChu,
             binding.btnKhamPha,
+            binding.btnTuVung,
             binding.btnTroLyAI,
-            binding.btnHoSo,
-            binding.btnTaiKhoan
+            binding.btnHoSo
         )
 
         val activeColor = Color.parseColor("#2563EB")
@@ -219,7 +225,6 @@ class MainActivity : AppCompatActivity() {
         activeText?.setTextColor(activeColor)
         activeText?.setTypeface(null, Typeface.BOLD)
 
-        // Hiệu ứng nảy nhẹ icon khi chọn tab
         if (animate && activeIcon != null) {
             activeIcon.scaleX = 0.85f
             activeIcon.scaleY = 0.85f

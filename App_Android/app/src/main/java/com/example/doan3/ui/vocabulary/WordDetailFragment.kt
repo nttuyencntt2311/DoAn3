@@ -4,7 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.app.Activity
+import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
+import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,6 +52,18 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
     private var fetchedExample = "Đang tải dữ liệu..."
     private var fetchedSynonyms = "Đang tải dữ liệu..."
     private var fetchedAntonyms = "Đang tải dữ liệu..."
+    private var tvPronunciationResult: TextView? = null
+
+    private val speechLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (!isAdded) return@registerForActivityResult
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spoken = matches?.firstOrNull()?.trim() ?: ""
+            evaluatePronunciation(spoken)
+        }
+    }
 
     companion object {
         private const val ARG_ID = "arg_id"
@@ -90,6 +105,10 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
         var wordIdToSave = ""
         tts = TextToSpeech(requireContext(), this)
 
+        tvPronunciationResult = view.findViewById(R.id.tvPronunciationResult)
+        view.findViewById<MaterialButton>(R.id.btnMicPractice)?.setOnClickListener {
+            startPronunciationPractice()
+        }
         val btnBack = view.findViewById<ImageView>(R.id.btnBack)
         val tvDetailWord = view.findViewById<TextView>(R.id.tvDetailWord)
         val tvDetailPronunciation = view.findViewById<TextView>(R.id.tvDetailPronunciation)
@@ -226,5 +245,58 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
             tts.shutdown()
         }
         super.onDestroyView()
+    }
+
+    private fun startPronunciationPractice() {
+        if (wordTextToSpeak.isBlank()) return
+        try {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Hãy đọc to từ: $wordTextToSpeak")
+            }
+            speechLauncher.launch(intent)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Thiết bị chưa hỗ trợ nhận diện giọng nói Google", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun evaluatePronunciation(spoken: String) {
+        val target = wordTextToSpeak.lowercase(Locale.US).replace(Regex("[^a-z ]"), "").trim()
+        val actual = spoken.lowercase(Locale.US).replace(Regex("[^a-z ]"), "").trim()
+        if (actual.isEmpty() || target.isEmpty()) return
+
+        val dist = levenshtein(target, actual)
+        val maxLen = maxOf(target.length, actual.length).coerceAtLeast(1)
+        val score = (((1.0 - dist.toDouble() / maxLen) * 100.0).toInt()).coerceIn(0, 100)
+
+        tvPronunciationResult?.visibility = View.VISIBLE
+        when {
+            score >= 80 -> {
+                tvPronunciationResult?.setTextColor(Color.parseColor("#047857"))
+                tvPronunciationResult?.text = "🎯 Chuẩn $score%! Bạn đọc: '$spoken' — Phát âm rất rõ!"
+            }
+            score >= 50 -> {
+                tvPronunciationResult?.setTextColor(Color.parseColor("#B45309"))
+                tvPronunciationResult?.text = "👍 Đạt $score% — Bạn đọc: '$spoken'. Nghe lại loa và thử thêm lần nữa nhé!"
+            }
+            else -> {
+                tvPronunciationResult?.setTextColor(Color.parseColor("#DC2626"))
+                tvPronunciationResult?.text = "🔄 Chưa khớp ($score%) — Máy nghe được: '$spoken'. Hãy thử đọc chậm lại từ '$wordTextToSpeak'."
+            }
+        }
+    }
+
+    private fun levenshtein(a: String, b: String): Int {
+        val dp = Array(a.length + 1) { IntArray(b.length + 1) }
+        for (i in 0..a.length) dp[i][0] = i
+        for (j in 0..b.length) dp[0][j] = j
+        for (i in 1..a.length) {
+            for (j in 1..b.length) {
+                val cost = if (a[i - 1] == b[j - 1]) 0 else 1
+                dp[i][j] = minOf(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
+            }
+        }
+        return dp[a.length][b.length]
     }
 }

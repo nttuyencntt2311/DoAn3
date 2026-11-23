@@ -54,7 +54,16 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
         observeViewModel()
 
         binding.btnBack.setOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            } else {
+                (activity as? com.example.doan3.MainActivity)?.openHomeTab()
+            }
+        }
+        binding.btnRetryVocab.setOnClickListener {
+            binding.btnRetryVocab.visibility = View.GONE
+            viewModel.fetchVocabularyList()
+            viewModel.fetchStats()
         }
 
         binding.btnNotification.setOnClickListener {
@@ -202,16 +211,18 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
         if (currentSearchQuery.isNotEmpty()) {
             filteredList = filteredList.filter {
                 it.word.contains(currentSearchQuery, ignoreCase = true) ||
-                        it.meaning.contains(currentSearchQuery, ignoreCase = true)
+                    it.meaning.contains(currentSearchQuery, ignoreCase = true)
             }
         }
 
         if (filteredList.isEmpty()) {
             binding.rvVocabulary.visibility = View.GONE
             binding.tvEmptyMessage.visibility = View.VISIBLE
+            binding.btnRetryVocab.visibility = View.VISIBLE
         } else {
             binding.rvVocabulary.visibility = View.VISIBLE
             binding.tvEmptyMessage.visibility = View.GONE
+            binding.btnRetryVocab.visibility = View.GONE
         }
 
         adapter.updateData(filteredList)

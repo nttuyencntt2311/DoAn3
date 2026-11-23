@@ -13,6 +13,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.doan3.MainActivity
 import com.example.doan3.R
@@ -46,7 +50,7 @@ class TaiKhoanFragment : Fragment() {
 
         // Khi nằm trong tab Bottom Nav của MainActivity, bấm Back sẽ về Trang chủ
         view.findViewById<ImageView>(R.id.btnBack)?.setOnClickListener {
-            (activity as? MainActivity)?.openHomeTab()
+            parentFragmentManager.popBackStack()
         }
 
         view.findViewById<View>(R.id.btnPersonalInfo)?.setOnClickListener {
@@ -96,8 +100,18 @@ class TaiKhoanFragment : Fragment() {
         switchNotifications?.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("PREF_NOTIFICATIONS", isChecked).apply()
             updateSwitchColor(isChecked)
-            val status = if (isChecked) "Đã bật" else "Đã tắt"
-            Toast.makeText(requireContext(), "$status thông báo nhắc học", Toast.LENGTH_SHORT).show()
+            if (isChecked) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+                }
+                ReminderScheduler.scheduleDailyReminder(requireContext())
+                Toast.makeText(requireContext(), "Đã bật nhắc học lúc 20:00 mỗi ngày 🔔", Toast.LENGTH_SHORT).show()
+            } else {
+                ReminderScheduler.cancelDailyReminder(requireContext())
+                Toast.makeText(requireContext(), "Đã tắt thông báo nhắc học", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

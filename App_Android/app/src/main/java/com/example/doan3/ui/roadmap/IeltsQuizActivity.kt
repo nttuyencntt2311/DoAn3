@@ -824,7 +824,10 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             setPadding(0, 12.dp(), 0, 12.dp())
             setOnClickListener {
                 bottomSheet.dismiss()
-                finish()
+                val fb = listOfNotNull(aiReport.counterfactual?.summaryVi, aiReport.pedagogicalFeedback)
+                    .filter { it.isNotBlank() }
+                    .joinToString("\n\n")
+                openQuizSummary(finalXp, fb)
             }
         }
         val btnParams = android.widget.LinearLayout.LayoutParams(
@@ -840,18 +843,22 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         bottomSheet.show()
     }
 
-    private fun showBasicResultDialog(finalXp: Int) {
+    private fun openQuizSummary(finalXp: Int, xaiFeedback: String = "") {
         if (isFinishing || isDestroyed) return
-        AlertDialog.Builder(this)
-            .setTitle("Hoàn Thành Bài Học! 🎉")
-            .setMessage("Chúc mừng bạn đã hoàn thành xuất sắc.\nSố câu đúng: $score / ${quizList.size}\nBạn nhận được: +$finalXp XP!")
-            .setCancelable(false)
-            .setPositiveButton("Tuyệt vời") { dialog, _ ->
-                dialog.dismiss()
-                finish()
-            }
-            .create()
-            .show()
+        val summaryIntent = android.content.Intent(this, QuizSummaryActivity::class.java).apply {
+            putExtra("SCORE", score)
+            putExtra("TOTAL", quizList.size)
+            putExtra("EARNED_XP", finalXp)
+            putExtra("STEP_TITLE", currentStepTitle.ifBlank { "Bài luyện tập Quiz" })
+            putExtra("XAI_FEEDBACK", xaiFeedback)
+            putStringArrayListExtra("WRONG_WORDS", ArrayList(wrongWordsList.distinct()))
+        }
+        startActivity(summaryIntent)
+        finish()
+    }
+
+    private fun showBasicResultDialog(finalXp: Int) {
+        openQuizSummary(finalXp)
     }
 
     override fun onInit(status: Int) {

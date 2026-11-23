@@ -23,7 +23,6 @@
         android:background="#E2E8F0"
         app:layout_constraintBottom_toTopOf="@id/bottomNavContainer" />
 
-    <!-- Container chứa thanh trượt pill mượt mà nằm dưới 5 tab đồng nhất -->
     <FrameLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
@@ -36,7 +35,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Viên thuốc trượt mượt mà theo tab đang chọn -->
         <View
             android:id="@+id/navSlidingPill"
             android:layout_width="68dp"
@@ -98,6 +96,29 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/btnTuVung"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_book"
+                    app:tint="#94A3B8" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Từ vựng"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/btnTroLyAI"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -139,29 +160,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:text="Hồ sơ"
-                    android:textColor="#94A3B8"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnTaiKhoan"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:clickable="true"
-                android:focusable="true">
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_account"
-                    app:tint="#94A3B8" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Tài khoản"
                     android:textColor="#94A3B8"
                     android:textSize="11sp" />
             </LinearLayout>

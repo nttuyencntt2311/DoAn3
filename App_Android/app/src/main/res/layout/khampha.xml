@@ -132,16 +132,39 @@
                             android:textStyle="bold" />
                     </com.google.android.material.card.MaterialCardView>
 
-                    <ImageView
-                        android:id="@+id/btnSpeaker"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_icon_blue_soft"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_volume"
+                    <LinearLayout
+                        android:id="@+id/layoutAudioControls"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:tint="#2563EB" />
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/btnSpeakerSlow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_pill_amber"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="🐢 0.7x"
+                            android:textColor="#D97706"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/btnSpeaker"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_icon_blue_soft"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_volume"
+                            app:tint="#2563EB" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvWord"
@@ -384,6 +407,11 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
+        <LinearLayout android:id="@+id/btnTuVung" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
+            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_book" app:tint="#94A3B8"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Từ vựng" android:textSize="11sp" android:textColor="#94A3B8"/>
+        </LinearLayout>
+
         <LinearLayout android:id="@+id/btnTroLyAI" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
             <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_robot" app:tint="#94A3B8"/>
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Trợ lý AI" android:textSize="11sp" android:textColor="#94A3B8"/>
@@ -392,11 +420,6 @@
         <LinearLayout android:id="@+id/btnHoSo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
             <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_person" app:tint="#94A3B8"/>
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Hồ sơ" android:textSize="11sp" android:textColor="#94A3B8"/>
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/btnTaiKhoan" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_account" app:tint="#94A3B8"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Tài khoản" android:textSize="11sp" android:textColor="#94A3B8"/>
         </LinearLayout>
     </LinearLayout>
 

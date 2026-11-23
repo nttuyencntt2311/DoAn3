@@ -107,7 +107,9 @@ class dangnhap : AppCompatActivity() {
                         ChatAIActivity.clearActiveSession()
 
                         Toast.makeText(this@dangnhap, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@dangnhap, MainActivity::class.java).apply {
+                        val isOnboardingDone = sharedPreferences.getBoolean("ONBOARDING_DONE_$userId", false)
+                        val targetClass = if (isOnboardingDone) MainActivity::class.java else OnboardingActivity::class.java
+                        val intent = Intent(this@dangnhap, targetClass).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         }
                         startActivity(intent)

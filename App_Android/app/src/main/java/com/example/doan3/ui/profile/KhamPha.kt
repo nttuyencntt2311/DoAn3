@@ -135,12 +135,19 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun speakCurrentWord(rate: Float = 1.0f) {
+        if (currentIndex < studyList.size) {
+            val wordToSpeak = studyList[currentIndex].word
+            tts.setSpeechRate(rate)
+            tts.speak(wordToSpeak, TextToSpeech.QUEUE_FLUSH, null, "")
+        }
+    }
+
     private fun setupAudioButton() {
-        btnSpeaker.setOnClickListener {
-            if (currentIndex < studyList.size) {
-                val wordToSpeak = studyList[currentIndex].word
-                tts.speak(wordToSpeak, TextToSpeech.QUEUE_FLUSH, null, "")
-            }
+        btnSpeaker.setOnClickListener { speakCurrentWord(1.0f) }
+        findViewById<TextView>(R.id.btnSpeakerSlow)?.setOnClickListener {
+            speakCurrentWord(0.7f)
+            Toast.makeText(this, "Đang đọc chậm (0.7x)", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -153,7 +160,8 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     val allWords = response.body() ?: emptyList()
 
                     if (!predictiveWords.isNullOrEmpty()) {
-                        studyList = allWords.filter { predictiveWords!!.contains(it.word) }
+                        val targetSet = predictiveWords!!.map { it.trim().lowercase(Locale.ROOT) }.toSet()
+                        studyList = allWords.filter { targetSet.contains(it.word.trim().lowercase(Locale.ROOT)) }
                     } else {
                         studyList = allWords
                             .filter { it.proficiency < 80 && it.category == currentCategory }
