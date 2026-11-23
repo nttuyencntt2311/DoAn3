@@ -225,6 +225,7 @@ class MainActivity : AppCompatActivity() {
         activeText?.setTextColor(activeColor)
         activeText?.setTypeface(null, Typeface.BOLD)
 
+        if (animate) com.example.doan3.ui.profile.SoundHapticHelper.playTap(activeTab)
         if (animate && activeIcon != null) {
             activeIcon.scaleX = 0.85f
             activeIcon.scaleY = 0.85f

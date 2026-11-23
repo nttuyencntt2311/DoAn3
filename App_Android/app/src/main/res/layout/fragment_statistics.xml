@@ -305,6 +305,243 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- 1. Bộ mô phỏng What-If XAI tương tác (Counterfactual Simulator) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardWhatIfSimulator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#BFDBFE"
+                app:strokeWidth="1.2dp"
+                app:layout_constraintTop_toBottomOf="@id/cardChart">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🔮 Mô phỏng What-If XAI"
+                            android:textColor="#0F172A"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvWhatIfBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_pill_soft_blue"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
+                            android:text="Counterfactual"
+                            android:textColor="#2563EB"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Kéo thanh trượt để xem xác suất ghi nhớ thay đổi ra sao nếu bạn điều chỉnh thói quen học."
+                        android:textColor="#64748B"
+                        android:textSize="12.5sp" />
+
+                    <!-- Thanh trượt 1: Chu kỳ ôn lại -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Chu kỳ ôn lại"
+                            android:textColor="#334155"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvWhatIfDaysVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2 ngày / lần"
+                            android:textColor="#2563EB"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                    <SeekBar
+                        android:id="@+id/sbWhatIfDays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="13"
+                        android:progress="1"
+                        android:progressTint="#2563EB"
+                        android:thumbTint="#2563EB" />
+
+                    <!-- Thanh trượt 2: Độ chính xác mục tiêu -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Độ chính xác mục tiêu"
+                            android:textColor="#334155"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvWhatIfAccVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="80%"
+                            android:textColor="#059669"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                    <SeekBar
+                        android:id="@+id/sbWhatIfAccuracy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="70"
+                        android:progress="50"
+                        android:progressTint="#059669"
+                        android:thumbTint="#059669" />
+
+                    <!-- Thanh trượt 3: Tốc độ trả lời TB -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Tốc độ phản xạ trung bình"
+                            android:textColor="#334155"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvWhatIfSpeedVal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="14 giây / câu"
+                            android:textColor="#D97706"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                    <SeekBar
+                        android:id="@+id/sbWhatIfSpeed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="35"
+                        android:progress="9"
+                        android:progressTint="#D97706"
+                        android:thumbTint="#D97706" />
+
+                    <!-- Hộp kết quả dự đoán realtime -->
+                    <LinearLayout
+                        android:id="@+id/boxWhatIfResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_pill_soft_blue"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:id="@+id/tvWhatIfRiskResult"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Nguy cơ quên dự kiến: 18%"
+                            android:textColor="#1E3A8A"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvWhatIfRecommendation"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="💡 Kéo thanh trượt để mô phỏng phương án tối ưu trí nhớ."
+                            android:textColor="#334155"
+                            android:textSize="12.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 3. Hồ sơ nhận thức XAI (Global + Local SHAP Feature Importance) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardXaiCognitiveProfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="1dp"
+                app:strokeColor="#E2E8F0"
+                app:strokeWidth="1dp"
+                app:layout_constraintTop_toBottomOf="@id/cardWhatIfSimulator">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧬 Hồ sơ nhận thức XAI (SHAP)"
+                        android:textColor="#0F172A"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Mức độ ảnh hưởng của từng yếu tố đến khả năng ghi nhớ dài hạn của bạn:"
+                        android:textColor="#64748B"
+                        android:textSize="12.5sp" />
+
+                    <LinearLayout
+                        android:id="@+id/containerXaiShapBars"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/tvXaiDiagnosis"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_pill_amber"
+                        android:padding="12dp"
+                        android:text="🔍 Đang phân tích hồ sơ SHAP cá nhân..."
+                        android:textColor="#92400E"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

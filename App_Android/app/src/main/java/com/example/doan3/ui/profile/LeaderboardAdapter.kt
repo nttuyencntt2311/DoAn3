@@ -38,7 +38,7 @@ class LeaderboardAdapter(
         if (user.name == currentUserName) {
             holder.itemView.setBackgroundColor(android.graphics.Color.parseColor("#EBF4FF")) // Nền xanh nhạt
             holder.tvPlayerName.text = "${user.name} (Bạn)" // Thêm chữ (Bạn)
-            holder.tvPlayerName.setTextColor(android.graphics.Color.parseColor("#007BFF")) // Chữ xanh đậm
+            holder.tvPlayerName.setTextColor(android.graphics.Color.parseColor("#2563EB")) // Chữ xanh đậm
         } else {
             holder.itemView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             holder.tvPlayerName.text = user.name // ĐÃ SỬA: Gán lại tên gốc để tránh lỗi tái chế View của RecyclerView

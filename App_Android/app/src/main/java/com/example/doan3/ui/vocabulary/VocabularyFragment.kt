@@ -16,7 +16,17 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.doan3.R
 import com.example.doan3.databinding.FragmentVocabularyBinding
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
+import com.example.doan3.ui.profile.PersonalVocabRequest
+import com.example.doan3.ui.profile.PersonalVocabResponse
+import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.profile.SoundHapticHelper
 import com.google.android.material.tabs.TabLayout
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.Locale
 
 class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
@@ -65,6 +75,8 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
             viewModel.fetchVocabularyList()
             viewModel.fetchStats()
         }
+
+        binding.btnAddPersonalWord.setOnClickListener { showAddPersonalWordDialog() }
 
         binding.btnNotification.setOnClickListener {
             Toast.makeText(requireContext(), "Không có thông báo mới", Toast.LENGTH_SHORT).show()
@@ -251,5 +263,61 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
         }
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun showAddPersonalWordDialog() {
+        val ctx = requireContext()
+        val container = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 12)
+        }
+        val edtWord = EditText(ctx).apply { hint = "Từ tiếng Anh (VD: resilient)" }
+        val edtIpa = EditText(ctx).apply { hint = "Phiên âm IPA (không bắt buộc, VD: /rɪˈzɪl.jənt/)" }
+        val edtMeaning = EditText(ctx).apply { hint = "Nghĩa tiếng Việt (VD: Kiên cường)" }
+        val edtCat = EditText(ctx).apply {
+            hint = "Chủ đề (VD: Công việc, IELTS, Du lịch)"
+            setText("Cá nhân")
+        }
+        container.addView(edtWord)
+        container.addView(edtIpa)
+        container.addView(edtMeaning)
+        container.addView(edtCat)
+
+        AlertDialog.Builder(ctx)
+            .setTitle("Thêm từ vựng cá nhân ✨")
+            .setMessage("Từ mới sẽ được đưa thẳng vào Sổ tay Tiên tri XAI để nhắc ôn đúng lúc.")
+            .setView(container)
+            .setPositiveButton("Lưu từ mới") { _, _ ->
+                val word = edtWord.text.toString().trim()
+                val ipa = edtIpa.text.toString().trim()
+                val meaning = edtMeaning.text.toString().trim()
+                val cat = edtCat.text.toString().trim().ifBlank { "Cá nhân" }
+                if (word.isEmpty() || meaning.isEmpty()) {
+                    Toast.makeText(ctx, "Vui lòng nhập từ tiếng Anh và nghĩa!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                RetrofitClient.getInstance(ctx)
+                    .addPersonalVocab(PersonalVocabRequest(word, ipa, meaning, cat))
+                    .enqueue(object : Callback<PersonalVocabResponse> {
+                        override fun onResponse(call: Call<PersonalVocabResponse>, response: Response<PersonalVocabResponse>) {
+                            if (!isAdded) return
+                            if (response.isSuccessful) {
+                                SoundHapticHelper.playCorrect(view)
+                                Toast.makeText(ctx, "✅ Đã thêm '$word' vào kho từ & vòng lặp XAI!", Toast.LENGTH_SHORT).show()
+                                viewModel.fetchVocabularyList()
+                                viewModel.fetchStats()
+                            } else {
+                                Toast.makeText(ctx, "Không thể thêm từ (${response.code()})", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+
+                        override fun onFailure(call: Call<PersonalVocabResponse>, t: Throwable) {
+                            if (!isAdded) return
+                            Toast.makeText(ctx, "Lỗi mạng: ${t.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 }

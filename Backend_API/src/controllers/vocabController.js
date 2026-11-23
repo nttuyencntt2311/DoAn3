@@ -1259,3 +1259,60 @@ exports.getPredictiveFlashcards = async (req, res) => {
     res.status(500).json({ message: "Lỗi hệ thống!" });
   }
 };
+
+// =========================================================
+// HỌC VIÊN TỰ THÊM TỪ VỰNG CÁ NHÂN -> ĐƯA THẲNG VÀO VÒNG LẶP XAI
+// =========================================================
+exports.addPersonalVocab = async (req, res) => {
+  try {
+    const userId = req.user && req.user.userId;
+    if (!userId) return res.status(401).json({ error: "Vui lòng đăng nhập!" });
+
+    const rawWord = (req.body.word || "").trim();
+    const meaning = (req.body.meaning || "").trim();
+    const pronunciation = (req.body.pronunciation || "").trim();
+    const category = (req.body.category || "Cá nhân").trim();
+
+    if (!rawWord || !meaning) {
+      return res.status(400).json({ error: "Vui lòng nhập đầy đủ từ tiếng Anh và nghĩa tiếng Việt!" });
+    }
+
+    let vocab = await Vocabulary.findOne({ word: new RegExp(`^${rawWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+    if (!vocab) {
+      vocab = new Vocabulary({
+        word: rawWord,
+        pronunciation: pronunciation || "",
+        meaning,
+        category,
+        proficiency: 20,
+      });
+      await vocab.save();
+    }
+
+    const user = await User.findById(userId);
+    if (user) {
+      const exists = (user.vocabProgress || []).some(
+        (p) => (p.word || "").toLowerCase() === vocab.word.toLowerCase()
+      );
+      if (!exists) {
+        user.vocabProgress.push({
+          wordId: vocab._id.toString(),
+          word: vocab.word,
+          proficiency: 20,
+          mistakeCount: 0,
+          reviewCount: 1,
+          lastReviewedDate: new Date(),
+        });
+        await user.save();
+      }
+    }
+
+    res.status(201).json({
+      message: "Đã thêm từ mới vào kho cá nhân & kích hoạt theo dõi XAI!",
+      vocabulary: vocab,
+    });
+  } catch (error) {
+    console.error("Lỗi addPersonalVocab:", error);
+    res.status(500).json({ error: "Lỗi máy chủ khi thêm từ vựng cá nhân" });
+  }
+};

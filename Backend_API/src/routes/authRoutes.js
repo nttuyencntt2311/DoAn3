@@ -383,4 +383,167 @@ router.post("/save-word", verifyToken, async (req, res) => {
   }
 });
 
+
+// =====================================
+// 8. QUÊN MẬT KHẨU (GỬI MÃ OTP 6 SỐ) & ĐẶT LẠI MẬT KHẨU
+// =====================================
+const otpStore = new Map(); // email -> { otp, expiresAt }
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const email = (req.body.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "Vui lòng nhập địa chỉ email!" });
+    }
+
+    const user = await UserModel.findOne({ email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+    if (!user) {
+      return res.status(404).json({ error: "Email này chưa được đăng ký trong hệ thống!" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore.set(user.email.toLowerCase(), {
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000, // Hết hạn sau 10 phút
+    });
+
+    let emailSent = false;
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const nodemailer = require("nodemailer");
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+        await transporter.sendMail({
+          from: `"LexiVT Support" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: "Mã OTP khôi phục mật khẩu LexiVT",
+          text: `Mã OTP khôi phục mật khẩu của bạn là: ${otp}. Mã có hiệu lực trong 10 phút.`,
+        });
+        emailSent = true;
+      } catch (mailErr) {
+        console.warn("Không gửi được email thật (dùng chế độ OTP console):", mailErr.message);
+      }
+    }
+
+    console.log(`🔑 [LexiVT OTP] Email: ${user.email} | Mã OTP: ${otp} (hiệu lực 10 phút)`);
+
+    res.status(200).json({
+      message: emailSent
+        ? "Đã gửi mã OTP 6 số tới email của bạn!"
+        : "Đã tạo mã OTP 6 số (chế độ dev/demo)!",
+      demoOtp: emailSent ? undefined : otp,
+    });
+  } catch (error) {
+    console.error("Lỗi forgot-password:", error);
+    res.status(500).json({ error: "Lỗi máy chủ khi tạo mã OTP" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const email = (req.body.email || "").trim().toLowerCase();
+    const otp = (req.body.otp || "").trim();
+    const newPassword = (req.body.newPassword || "").trim();
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: "Vui lòng nhập đầy đủ email, mã OTP và mật khẩu mới!" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Mật khẩu mới phải từ 6 ký tự trở lên!" });
+    }
+
+    const record = otpStore.get(email);
+    if (!record || record.otp !== otp) {
+      return res.status(400).json({ error: "Mã OTP không chính xác!" });
+    }
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(email);
+      return res.status(400).json({ error: "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới!" });
+    }
+
+    const user = await UserModel.findOne({ email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+    if (!user) {
+      return res.status(404).json({ error: "Không tìm thấy tài khoản!" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+    otpStore.delete(email);
+
+    res.status(200).json({ message: "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay." });
+  } catch (error) {
+    console.error("Lỗi reset-password:", error);
+    res.status(500).json({ error: "Lỗi máy chủ khi đặt lại mật khẩu" });
+  }
+});
+
+
+// =====================================
+// 9. ĐĂNG NHẬP / ĐĂNG KÝ NHANH BẰNG GOOGLE
+// =====================================
+router.post("/google-login", async (req, res) => {
+  try {
+    const email = (req.body.email || "").trim().toLowerCase();
+    const displayName = (req.body.name || "").trim();
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Email tài khoản Google không hợp lệ!" });
+    }
+
+    let user = await UserModel.findOne({ email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const randomPass = await bcrypt.hash("google_oauth_" + Date.now() + "_" + Math.random(), salt);
+      user = new UserModel({
+        name: displayName || email.split("@")[0],
+        email,
+        password: randomPass,
+        gender: "Nam",
+      });
+      await user.save();
+    }
+
+    if (user.status === "Banned") {
+      return res.status(403).json({ error: "Tài khoản của bạn đã bị khóa bởi quản trị viên!" });
+    }
+
+    const userRole = user.role || "student";
+    const token = jwt.sign(
+      { userId: user._id, role: userRole },
+      process.env.JWT_SECRET || "your_jwt_secret_key",
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
+    const refreshToken = jwt.sign(
+      { userId: user._id, role: userRole },
+      process.env.REFRESH_SECRET || "your_refresh_secret_key",
+      { expiresIn: "30d" }
+    );
+
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    res.status(200).json({
+      message: "Đăng nhập bằng Google thành công!",
+      token,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: userRole,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi google-login:", error);
+    res.status(500).json({ error: "Lỗi máy chủ khi đăng nhập Google" });
+  }
+});
+
 module.exports = router;
+
+

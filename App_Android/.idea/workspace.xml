@@ -300,19 +300,25 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAIActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/ai/ChatAIActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/home/HomeFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/HoSo.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/KhamPha.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaiKhoan.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TaiKhoan.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/LeaderboardAdapter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/LeaderboardAdapter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ThongTinCaNhan.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/ThongTinCaNhan.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/TroLyAI.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/dangnhap.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/profile/dangnhap.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/roadmap/IeltsQuizActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/statistics/StatisticsFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/statistics/StatisticsFragment.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/VocabularyViewModel.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/WordDetailFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/doan3/ui/vocabulary/WordDetailFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_chat_ai.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_statistics.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_statistics.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_vocabulary.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_vocabulary.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_word_detail.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_word_detail.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/khampha.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/khampha.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/thongtincanhan.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/thongtincanhan.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/troly_ai.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/troly_ai.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -408,7 +414,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
-    "git-widget-placeholder": "chore/don-file-xml-thua",
+    "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/macbook/Documents/DoAn3/App_Android",
     "project.structure.last.edited": "Modules",

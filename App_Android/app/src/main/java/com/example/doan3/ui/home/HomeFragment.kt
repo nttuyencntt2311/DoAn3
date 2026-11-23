@@ -104,6 +104,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        com.example.doan3.ui.profile.AvatarHelper.applyAvatarToImageView(requireContext(), binding.ivAvatar)
         refreshAllData()
     }
 

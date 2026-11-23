@@ -312,10 +312,10 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val ticks = listOf(binding.imgTickA, binding.imgTickB, binding.imgTickC, binding.imgTickD)
 
         cards[index].setCardBackgroundColor(Color.parseColor("#F0F7FF"))
-        cards[index].strokeColor = Color.parseColor("#0056D2")
+        cards[index].strokeColor = Color.parseColor("#2563EB")
         letters[index].setBackgroundResource(R.drawable.bg_circle_blue)
         letters[index].setTextColor(Color.WHITE)
-        answers[index].setTextColor(Color.parseColor("#0056D2"))
+        answers[index].setTextColor(Color.parseColor("#2563EB"))
         ticks[index].visibility = View.VISIBLE
     }
 
@@ -481,7 +481,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
 
         binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#F0F7FF"))
-        binding.tvAiTutorMessage.setTextColor(Color.parseColor("#0056D2"))
+        binding.tvAiTutorMessage.setTextColor(Color.parseColor("#2563EB"))
 
         isAnswerChecked = true
         questionLogsList.add(
@@ -492,6 +492,33 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 elapsedTimeMs = timeSpent
             )
         )
+
+        // Nhãn giải thích tốc độ phản xạ trực tiếp (Live XAI Tag)
+        val secSpent = String.format(Locale.US, "%.1f", timeSpent / 1000.0)
+        when {
+            timeSpent < 2500L -> {
+                binding.cardAiTutor.visibility = View.VISIBLE
+                binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#FFFBEB"))
+                binding.tvAiTutorMessage.setTextColor(Color.parseColor("#B45309"))
+                binding.tvAiTutorMessage.text = if (isCorrect) {
+                    "⚡ XAI Live: Phản xạ siêu nhanh (${secSpent}s) và chính xác! Bạn đã ghi nhớ rất chắc từ này."
+                } else {
+                    "⚡ XAI Live: Bạn chọn khá vội (${secSpent}s) — dấu hiệu đoán nhanh. Đã đánh dấu từ này để ôn lại sớm!"
+                }
+            }
+            timeSpent > 25000L -> {
+                binding.cardAiTutor.visibility = View.VISIBLE
+                binding.cardAiTutor.setCardBackgroundColor(Color.parseColor("#EFF6FF"))
+                binding.tvAiTutorMessage.setTextColor(Color.parseColor("#1D4ED8"))
+                binding.tvAiTutorMessage.text =
+                    "⏱️ XAI Live: Bạn suy nghĩ ${secSpent}s ở câu này (dấu hiệu còn do dự) ➝ ưu tiên đưa vào Sổ tay Tiên tri để củng cố phản xạ."
+            }
+        }
+        if (isCorrect) {
+            com.example.doan3.ui.profile.SoundHapticHelper.playCorrect(binding.btnNopBai)
+        } else {
+            com.example.doan3.ui.profile.SoundHapticHelper.playWrong(binding.btnNopBai)
+        }
         val correctIndex = currentQuiz.options.indexOf(currentQuiz.correctAnswer)
 
         val cards = listOf(binding.btnOptionA, binding.btnOptionB, binding.btnOptionC, binding.btnOptionD)
@@ -819,7 +846,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         val btnClose = Button(this).apply {
             text = "NHẬN +$finalXp XP & HOÀN THÀNH"
-            setBackgroundColor(Color.parseColor("#0056D2"))
+            setBackgroundColor(Color.parseColor("#2563EB"))
             setTextColor(Color.WHITE)
             setPadding(0, 12.dp(), 0, 12.dp())
             setOnClickListener {

@@ -38,6 +38,14 @@ class ThongTinCaNhanActivity : AppCompatActivity() {
         setContentView(R.layout.thongtincanhan)
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        val imgAvatar = findViewById<ImageView>(R.id.imgPersonalAvatar)
+        AvatarHelper.applyAvatarToImageView(this, imgAvatar)
+        imgAvatar?.setOnClickListener {
+            AvatarHelper.showAvatarPickerDialog(this) {
+                AvatarHelper.applyAvatarToImageView(this, imgAvatar)
+                Toast.makeText(this, "Đã cập nhật Avatar mới ✨", Toast.LENGTH_SHORT).show()
+            }
+        }
         tvUserId = findViewById(R.id.tvUserId)
         edtName = findViewById(R.id.edtName)
         edtEmail = findViewById(R.id.edtEmail)

@@ -2,7 +2,10 @@ package com.example.doan3.ui.profile
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.accounts.AccountManager
+import android.app.Activity
 import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -32,6 +35,17 @@ class dangnhap : AppCompatActivity() {
     private val floatingAnimators = mutableListOf<ObjectAnimator>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    private val googleAccountPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)?.trim() ?: ""
+            if (email.isNotEmpty()) {
+                performGoogleLogin(email, email.substringBefore("@"))
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         super.onCreate(savedInstanceState)
@@ -56,11 +70,7 @@ class dangnhap : AppCompatActivity() {
 
         val btnGoogleLogin = findViewById<MaterialButton>(R.id.btnGoogleLogin)
         btnGoogleLogin.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Đăng nhập bằng Google")
-                .setMessage("Tính năng đăng nhập bằng Google đang được tích hợp. Vui lòng sử dụng Email và Mật khẩu để tiếp tục học cùng LexiVT.")
-                .setPositiveButton("Đã hiểu", null)
-                .show()
+            launchGoogleAccountChooser()
         }
 
         val edtEmailLogin = findViewById<TextInputEditText>(R.id.edtEmailLogin)
@@ -255,36 +265,169 @@ class dangnhap : AppCompatActivity() {
     }
 
     private fun showForgotPasswordDialog() {
-        val inputEmail = EditText(this).apply {
-            hint = "Nhập email đã đăng ký"
+        val emailInput = EditText(this).apply {
+            hint = "Nhập email đã đăng ký tài khoản"
             inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
             setPadding(48, 32, 48, 32)
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Quên mật khẩu")
-            .setMessage("Nhập email tài khoản để gửi yêu cầu hỗ trợ khôi phục mật khẩu:")
-            .setView(inputEmail)
-            .setNegativeButton("Hủy", null)
-            .setPositiveButton("Gửi hỗ trợ") { _, _ ->
-                val email = inputEmail.text.toString().trim()
+            .setTitle("Quên mật khẩu?")
+            .setMessage("Nhập email của bạn để nhận mã OTP 6 số khôi phục mật khẩu.")
+            .setView(emailInput)
+            .setPositiveButton("Gửi mã OTP") { _, _ ->
+                val email = emailInput.text.toString().trim()
                 if (email.isEmpty()) {
-                    Toast.makeText(this, "Vui lòng nhập email của bạn!", Toast.LENGTH_SHORT).show()
-                } else {
-                    val intent = Intent(this, SendEmailActivity::class.java).apply {
-                        putExtra("PREFILL_TOPIC", "Tài khoản & Đăng nhập")
-                        putExtra("PREFILL_CONTENT", "Yêu cầu khôi phục mật khẩu cho tài khoản email: $email")
-                    }
-                    startActivity(intent)
+                    Toast.makeText(this, "Vui lòng nhập địa chỉ email!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
                 }
+                Toast.makeText(this, "Đang gửi mã OTP...", Toast.LENGTH_SHORT).show()
+                RetrofitClient.getInstance(this).forgotPassword(ForgotPasswordRequest(email))
+                    .enqueue(object : Callback<ForgotPasswordResponse> {
+                        override fun onResponse(call: Call<ForgotPasswordResponse>, response: Response<ForgotPasswordResponse>) {
+                            if (response.isSuccessful && response.body() != null) {
+                                val demoOtp = response.body()?.demoOtp
+                                val hintMsg = if (!demoOtp.isNullOrBlank()) {
+                                    "Mã OTP của bạn là: $demoOtp (chế độ demo)"
+                                } else {
+                                    response.body()?.message ?: "Đã gửi mã OTP tới email của bạn!"
+                                }
+                                showResetPasswordOtpDialog(email, hintMsg, demoOtp)
+                            } else {
+                                Toast.makeText(this@dangnhap, "Email không tồn tại trong hệ thống!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+                        override fun onFailure(call: Call<ForgotPasswordResponse>, t: Throwable) {
+                            Toast.makeText(this@dangnhap, "Lỗi kết nối máy chủ: ${t.message}", Toast.LENGTH_LONG).show()
+                        }
+                    })
             }
+            .setNegativeButton("Hủy", null)
             .show()
     }
 
-    override fun onDestroy() {
-        mainHandler.removeCallbacksAndMessages(null)
-        floatingAnimators.forEach { it.cancel() }
-        floatingAnimators.clear()
-        super.onDestroy()
+    private fun showResetPasswordOtpDialog(email: String, infoMsg: String, prefillOtp: String?) {
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 16)
+        }
+        val edtOtp = EditText(this).apply {
+            hint = "Nhập mã OTP 6 số"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            if (!prefillOtp.isNullOrBlank()) setText(prefillOtp)
+        }
+        val edtNewPass = EditText(this).apply {
+            hint = "Mật khẩu mới (tối thiểu 6 ký tự)"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        container.addView(edtOtp)
+        container.addView(edtNewPass)
+
+        AlertDialog.Builder(this)
+            .setTitle("Đặt lại mật khẩu 🔐")
+            .setMessage(infoMsg)
+            .setView(container)
+            .setPositiveButton("Xác nhận đổi") { _, _ ->
+                val otp = edtOtp.text.toString().trim()
+                val newPass = edtNewPass.text.toString().trim()
+                if (otp.length != 6 || newPass.length < 6) {
+                    Toast.makeText(this, "Vui lòng nhập đủ OTP 6 số và mật khẩu >= 6 ký tự!", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                RetrofitClient.getInstance(this).resetPassword(ResetPasswordRequest(email, otp, newPass))
+                    .enqueue(object : Callback<ResetPasswordResponse> {
+                        override fun onResponse(call: Call<ResetPasswordResponse>, response: Response<ResetPasswordResponse>) {
+                            if (response.isSuccessful) {
+                                SoundHapticHelper.playCorrect()
+                                Toast.makeText(this@dangnhap, "✅ Đặt lại mật khẩu thành công! Hãy đăng nhập lại.", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(this@dangnhap, "Mã OTP không đúng hoặc đã hết hạn!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+                        override fun onFailure(call: Call<ResetPasswordResponse>, t: Throwable) {
+                            Toast.makeText(this@dangnhap, "Lỗi mạng: ${t.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    private fun launchGoogleAccountChooser() {
+        try {
+            val intent = AccountManager.newChooseAccountIntent(
+                null, null, arrayOf("com.google"), null, null, null, null
+            )
+            googleAccountPickerLauncher.launch(intent)
+        } catch (_: Exception) {
+            showManualGoogleDialog()
+        }
+    }
+
+    private fun showManualGoogleDialog() {
+        val edtGoogleEmail = EditText(this).apply {
+            hint = "Nhập địa chỉ Gmail của bạn (VD: ten@gmail.com)"
+            inputType = android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            setPadding(48, 32, 48, 32)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Tiếp tục với Google")
+            .setMessage("Chọn hoặc nhập Gmail để đăng nhập nhanh vào LexiVT:")
+            .setView(edtGoogleEmail)
+            .setPositiveButton("Tiếp tục") { _, _ ->
+                val email = edtGoogleEmail.text.toString().trim()
+                if (email.contains("@")) {
+                    performGoogleLogin(email, email.substringBefore("@"))
+                } else {
+                    Toast.makeText(this, "Vui lòng nhập Gmail hợp lệ!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    private fun performGoogleLogin(email: String, displayName: String) {
+        Toast.makeText(this, "Đang xác thực tài khoản Google ($email)...", Toast.LENGTH_SHORT).show()
+        val sharedPreferences = getSharedPreferences("DoAn3Prefs", MODE_PRIVATE)
+        RetrofitClient.getInstance(this).googleLogin(GoogleLoginRequest(email, displayName))
+            .enqueue(object : Callback<LoginResponse> {
+                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val loginData = response.body()
+                        val token = loginData?.token ?: ""
+                        val userId = loginData?.user?.id ?: ""
+                        val userName = loginData?.user?.name ?: displayName
+                        val refreshToken = loginData?.refreshToken ?: ""
+
+                        sharedPreferences.edit().apply {
+                            putString("JWT_TOKEN", token)
+                            putString("USER_ID", userId)
+                            putString("REFRESH_TOKEN", refreshToken)
+                            putString("USER_NAME", userName)
+                            putString("USER_EMAIL", loginData?.user?.email ?: email)
+                            apply()
+                        }
+                        RetrofitClient.token = token
+                        ChatAIActivity.clearActiveSession()
+                        SoundHapticHelper.playCorrect()
+
+                        val isOnboardingDone = sharedPreferences.getBoolean("ONBOARDING_DONE_$userId", false)
+                        val targetClass = if (isOnboardingDone) MainActivity::class.java else OnboardingActivity::class.java
+                        val intent = Intent(this@dangnhap, targetClass).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this@dangnhap, "Đăng nhập Google thất bại (${response.code()})", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    Toast.makeText(this@dangnhap, "Lỗi kết nối máy chủ: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            })
     }
 }

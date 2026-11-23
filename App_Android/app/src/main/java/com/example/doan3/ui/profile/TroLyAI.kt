@@ -13,8 +13,13 @@ import com.example.doan3.MainActivity
 import com.example.doan3.R
 import com.example.doan3.databinding.DialogCreateRoadmapBinding
 import com.example.doan3.ui.ai.ChatAIActivity
+import com.example.doan3.ui.roadmap.DictationActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.card.MaterialCardView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import kotlin.math.roundToInt
 
 class TroLyAIFragment : Fragment() {
 
@@ -33,6 +38,7 @@ class TroLyAIFragment : Fragment() {
         view.findViewById<View>(R.id.bottomNav)?.visibility = View.GONE
 
         setupQuickAsk(view)
+        setupXaiSmartChips(view)
         setupAICardsNavigation(view)
     }
 
@@ -75,6 +81,10 @@ class TroLyAIFragment : Fragment() {
 
         cardLoTrinhHoc?.setOnClickListener {
             showRoadmapFormDialog()
+        }
+
+        view.findViewById<MaterialCardView>(R.id.cardDictation)?.setOnClickListener {
+            startActivity(Intent(requireContext(), DictationActivity::class.java))
         }
 
         cardTroChuyenTrucTiep?.setOnClickListener {
@@ -122,5 +132,58 @@ class TroLyAIFragment : Fragment() {
         }
 
         dialog.show()
+    }
+
+    private fun setupXaiSmartChips(view: View) {
+        view.findViewById<View>(R.id.chipXaiAnalyzeWeakness)?.setOnClickListener {
+            launchXaiAwareChat(mode = "ANALYZE")
+        }
+        view.findViewById<View>(R.id.chipXaiPracticeForgotten)?.setOnClickListener {
+            launchXaiAwareChat(mode = "PRACTICE")
+        }
+    }
+
+    private fun launchXaiAwareChat(mode: String) {
+        val ctx = context ?: return
+        Toast.makeText(ctx, "🧠 Đang tổng hợp dữ liệu bệnh án XAI của bạn...", Toast.LENGTH_SHORT).show()
+
+        RetrofitClient.getInstance(ctx).getPredictiveFlashcards().enqueue(object : Callback<PredictForgettingResponse> {
+            override fun onResponse(call: Call<PredictForgettingResponse>, response: Response<PredictForgettingResponse>) {
+                if (!isAdded) return
+                val cards = response.body()?.predictiveFlashcards ?: emptyList()
+                val topWordsSummary = if (cards.isNotEmpty()) {
+                    cards.take(5).joinToString(", ") { c ->
+                        val risk = ((1.0 - c.predicted_accuracy.coerceIn(0.0, 1.0)) * 100).roundToInt()
+                        "${c.wordText} (${c.meaning} - nguy cơ quên $risk%)"
+                    }
+                } else {
+                    "chưa có từ nào ở mức nguy cơ quên cao"
+                }
+
+                val prompt = if (mode == "ANALYZE") {
+                    "Dựa trên dữ liệu XAI của tôi hiện tại, các từ tôi có nguy cơ quên cao nhất là: $topWordsSummary. Hãy phân tích điểm yếu từ vựng của tôi và đề xuất mẹo ghi nhớ nhanh cho từng từ này nhé!"
+                } else {
+                    "Dựa trên Sổ tay Tiên tri XAI, tôi đang sắp quên các từ: $topWordsSummary. Hãy tạo giúp tôi 5 câu bài tập điền từ vào ngữ cảnh thực tế để tôi ôn lại ngay nhé!"
+                }
+
+                val intent = Intent(requireContext(), ChatAIActivity::class.java).apply {
+                    putExtra("INITIAL_MESSAGE", prompt)
+                }
+                startActivity(intent)
+            }
+
+            override fun onFailure(call: Call<PredictForgettingResponse>, t: Throwable) {
+                if (!isAdded) return
+                val fallbackPrompt = if (mode == "ANALYZE") {
+                    "Hãy phân tích điểm yếu tiếng Anh và gợi ý lộ trình ôn tập từ vựng hiệu quả cho tôi."
+                } else {
+                    "Hãy tạo giúp tôi 5 câu bài tập trắc nghiệm từ vựng IELTS để luyện phản xạ nhanh."
+                }
+                val intent = Intent(requireContext(), ChatAIActivity::class.java).apply {
+                    putExtra("INITIAL_MESSAGE", fallbackPrompt)
+                }
+                startActivity(intent)
+            }
+        })
     }
 }

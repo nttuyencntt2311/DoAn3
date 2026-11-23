@@ -24,5 +24,6 @@ router.delete("/vocabularies/:id", verifyToken, requireAdmin, vocabController.de
 // Yêu cầu đăng nhập cho các hành động của học viên
 router.put("/vocabularies/:id/proficiency", verifyToken, vocabController.updateProficiency);
 router.post("/vocabularies/custom-quiz", verifyToken, vocabController.generateCustomQuiz);
+router.post("/vocabularies/personal", verifyToken, vocabController.addPersonalVocab);
 
 module.exports = router;

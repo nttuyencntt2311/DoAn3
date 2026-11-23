@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
@@ -71,6 +72,7 @@ class HoSoFragment : Fragment() {
 
         setupUserActions()
         setupPacingAlertSwitch()
+        setupAvatarDisplay(view)
         loadUserStats()
     }
 
@@ -122,6 +124,7 @@ class HoSoFragment : Fragment() {
                     tvProfileName?.text = stats.name
                     tvHeaderStreak?.text = "${stats.streakDays} 🔥"
                     tvStatLevel?.text = "${stats.level}"
+                    AvatarHelper.saveUserLevel(ctx, stats.level)
                     tvStatDays?.text = stats.streakDays.toString()
 
                     val danhHieu = when (stats.level) {
@@ -188,5 +191,32 @@ class HoSoFragment : Fragment() {
         tvStatVocab?.text = "0"
         tvStatDays?.text = "0"
         tvAccountType?.text = "🌱 Tân binh ngôn ngữ"
+    }
+
+    private fun setupAvatarDisplay(view: View) {
+        val ctx = context ?: return
+        val imgHeader = view.findViewById<ImageView>(R.id.imgHeaderAvatar)
+        val imgMain = view.findViewById<ImageView>(R.id.imgProfileAvatar)
+        AvatarHelper.applyAvatarToImageView(ctx, imgHeader)
+        AvatarHelper.applyAvatarToImageView(ctx, imgMain)
+
+        val openPicker = View.OnClickListener {
+            AvatarHelper.showAvatarPickerDialog(ctx) {
+                AvatarHelper.applyAvatarToImageView(ctx, imgHeader)
+                AvatarHelper.applyAvatarToImageView(ctx, imgMain)
+                Toast.makeText(ctx, "Đã đổi Avatar mới ✨", Toast.LENGTH_SHORT).show()
+            }
+        }
+        imgMain?.setOnClickListener(openPicker)
+        imgHeader?.setOnClickListener(openPicker)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val ctx = context ?: return
+        view?.let { v ->
+            AvatarHelper.applyAvatarToImageView(ctx, v.findViewById(R.id.imgHeaderAvatar))
+            AvatarHelper.applyAvatarToImageView(ctx, v.findViewById(R.id.imgProfileAvatar))
+        }
     }
 }

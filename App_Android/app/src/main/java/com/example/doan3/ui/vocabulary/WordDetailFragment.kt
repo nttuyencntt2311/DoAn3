@@ -159,7 +159,7 @@ class WordDetailFragment : Fragment(), TextToSpeech.OnInitListener {
 
         tabExample.setOnClickListener {
             tvDynamicContent.text = fetchedExample
-            tabExample.setTextColor(Color.parseColor("#0056D2"))
+            tabExample.setTextColor(Color.parseColor("#2563EB"))
             tabSynonyms.setTextColor(Color.parseColor("#888888"))
             tabAntonyms.setTextColor(Color.parseColor("#888888"))
         }

@@ -52,6 +52,15 @@ data class UpdateProfileResponse(val message: String, val user: ProfileData?, va
 data class ChangePasswordRequest(val currentPass: String, val newPass: String)
 data class ChangePasswordResponse(val message: String?, val error: String?)
 
+data class GoogleLoginRequest(val email: String, val name: String)
+data class ForgotPasswordRequest(val email: String)
+data class ForgotPasswordResponse(val message: String?, val demoOtp: String?, val error: String?)
+data class ResetPasswordRequest(val email: String, val otp: String, val newPassword: String)
+data class ResetPasswordResponse(val message: String?, val error: String?)
+data class PersonalVocabRequest(val word: String, val pronunciation: String, val meaning: String, val category: String)
+data class PersonalVocabResponse(val message: String?, val vocabulary: Vocabulary?, val error: String?)
+
+
 // === MODELS GAMIFICATION & STATS ===
 data class UserStatsData(
     val name: String,
@@ -310,6 +319,19 @@ interface ApiService {
     // --- PREDICTIVE FLASHCARDS (SỔ TAY TIÊN TRI) ---
     @GET("api/vocabularies/predict-forgetting")
     fun getPredictiveFlashcards(): Call<PredictForgettingResponse>
+
+    // --- QUÊN MẬT KHẨU OTP & TỪ VỰNG CÁ NHÂN ---
+    @POST("api/auth/google-login")
+    fun googleLogin(@Body request: GoogleLoginRequest): Call<LoginResponse>
+
+    @POST("api/auth/forgot-password")
+    fun forgotPassword(@Body request: ForgotPasswordRequest): Call<ForgotPasswordResponse>
+
+    @POST("api/auth/reset-password")
+    fun resetPassword(@Body request: ResetPasswordRequest): Call<ResetPasswordResponse>
+
+    @POST("api/vocabularies/personal")
+    fun addPersonalVocab(@Body request: PersonalVocabRequest): Call<PersonalVocabResponse>
 
     // --- LEADERBOARD ---
     @GET("api/users/leaderboard")

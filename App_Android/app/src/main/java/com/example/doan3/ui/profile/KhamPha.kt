@@ -347,7 +347,7 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.btnKhamPha)?.setOnClickListener { navigateToMainTab("LEARNING") }
         findViewById<View>(R.id.btnTroLyAI)?.setOnClickListener { navigateToMainTab("AI_ASSISTANT") }
         findViewById<View>(R.id.btnHoSo)?.setOnClickListener { navigateToMainTab("PROFILE") }
-        findViewById<View>(R.id.btnTaiKhoan)?.setOnClickListener { navigateToMainTab("ACCOUNT") }
+        findViewById<View>(R.id.btnTuVung)?.setOnClickListener { navigateToMainTab("VOCABULARY") }
     }
 
     override fun onDestroy() {

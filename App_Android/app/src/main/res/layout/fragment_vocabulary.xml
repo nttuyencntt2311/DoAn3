@@ -43,16 +43,28 @@
                     android:textSize="19sp"
                     android:textStyle="bold" />
 
-                <ImageView
-                    android:id="@+id/btnNotification"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:padding="12dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                <TextView
+                    android:id="@+id/btnAddPersonalWord"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_notifications"
-                    app:tint="#475569" />
+                    android:background="@drawable/bg_button_selected"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="+ Thêm từ"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btnNotification"
+                    android:layout_width="1dp"
+                    android:layout_height="1dp"
+                    android:visibility="gone"
+                    android:src="@drawable/ic_notifications" />
             </RelativeLayout>
 
             <EditText

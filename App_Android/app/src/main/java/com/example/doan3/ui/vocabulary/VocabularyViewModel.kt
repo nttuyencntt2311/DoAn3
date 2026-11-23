@@ -1,35 +1,37 @@
 package com.example.doan3.ui.vocabulary
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.doan3.ui.profile.RetrofitClient
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import com.example.doan3.ui.profile.RetrofitClient
+
 class VocabularyViewModel(application: Application) : AndroidViewModel(application) {
 
-    // --- CÁC BIẾN LƯU TRỮ DỮ LIỆU ---
-
-    // 1. Biến chứa danh sách từ vựng
     private val _vocabularyList = MutableLiveData<List<Vocabulary>>()
     val vocabularyList: LiveData<List<Vocabulary>> get() = _vocabularyList
 
-    // 2. Biến chứa dữ liệu thống kê (Tổng số từ, thành thạo,...)
     private val _vocabStats = MutableLiveData<VocabStatsResponse>()
     val vocabStats: LiveData<VocabStatsResponse> get() = _vocabStats
 
-    // 3. Biến quản lý trạng thái loading
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
-    // 4. Biến quản lý thông báo lỗi
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> get() = _errorMessage
 
+    private val gson = Gson()
+    private val cachePrefs by lazy {
+        getApplication<Application>().getSharedPreferences("VocabCachePrefs", Context.MODE_PRIVATE)
+    }
+
     init {
-        // Tự động fetch cả danh sách và thống kê khi ViewModel được khởi tạo
         fetchVocabularyList()
         fetchStats()
     }
@@ -38,7 +40,21 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
         _errorMessage.value = null
     }
 
-    // --- CÁC HÀM GỌI API ---
+    private fun saveOfflineCache(list: List<Vocabulary>) {
+        try {
+            cachePrefs.edit().putString("CACHED_VOCAB_LIST", gson.toJson(list)).apply()
+        } catch (_: Exception) {}
+    }
+
+    private fun loadOfflineCache(): List<Vocabulary> {
+        return try {
+            val json = cachePrefs.getString("CACHED_VOCAB_LIST", null) ?: return emptyList()
+            val type = object : TypeToken<List<Vocabulary>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
 
     fun fetchVocabularyList() {
         _isLoading.value = true
@@ -48,15 +64,29 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
             override fun onResponse(call: Call<List<Vocabulary>>, response: Response<List<Vocabulary>>) {
                 _isLoading.value = false
                 if (response.isSuccessful) {
-                    _vocabularyList.value = response.body() ?: emptyList()
+                    val list = response.body() ?: emptyList()
+                    _vocabularyList.value = list
+                    if (list.isNotEmpty()) saveOfflineCache(list)
                 } else {
-                    _errorMessage.value = "Lỗi server (danh sách): ${response.code()}"
+                    val cached = loadOfflineCache()
+                    if (cached.isNotEmpty()) {
+                        _vocabularyList.value = cached
+                        _errorMessage.value = "Đang hiển thị kho từ lưu ngoại tuyến (Offline)"
+                    } else {
+                        _errorMessage.value = "Lỗi server (danh sách): ${response.code()}"
+                    }
                 }
             }
 
             override fun onFailure(call: Call<List<Vocabulary>>, t: Throwable) {
                 _isLoading.value = false
-                _errorMessage.value = "Không kết nối được server: ${t.message}"
+                val cached = loadOfflineCache()
+                if (cached.isNotEmpty()) {
+                    _vocabularyList.value = cached
+                    _errorMessage.value = "Không có mạng — đang hiển thị ${cached.size} từ đã lưu offline ✈️"
+                } else {
+                    _errorMessage.value = "Không kết nối được server: ${t.message}"
+                }
             }
         })
     }
@@ -68,16 +98,10 @@ class VocabularyViewModel(application: Application) : AndroidViewModel(applicati
             override fun onResponse(call: Call<VocabStatsResponse>, response: Response<VocabStatsResponse>) {
                 if (response.isSuccessful) {
                     _vocabStats.value = response.body()
-                } else {
-                    // Nếu lỗi chỉ ở phần thống kê, có thể log ra hoặc báo lỗi nhẹ
-                    // _errorMessage.value = "Lỗi tải thống kê: ${response.code()}"
                 }
             }
 
-            override fun onFailure(call: Call<VocabStatsResponse>, t: Throwable) {
-                // Tùy chọn: Báo lỗi nếu rớt mạng khi gọi hàm này
-                // _errorMessage.value = "Lỗi mạng khi tải thống kê"
-            }
+            override fun onFailure(call: Call<VocabStatsResponse>, t: Throwable) {}
         })
     }
 }

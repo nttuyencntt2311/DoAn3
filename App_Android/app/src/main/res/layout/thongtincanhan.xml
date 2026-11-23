@@ -85,9 +85,13 @@
                         app:strokeColor="#BFDBFE"
                         app:strokeWidth="2dp">
                         <ImageView
-                            android:layout_width="52dp"
-                            android:layout_height="52dp"
-                            android:layout_gravity="center"
+                            android:id="@+id/imgPersonalAvatar"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:padding="18dp"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:src="@drawable/ic_person"
                             app:tint="#2563EB" />
                     </com.google.android.material.card.MaterialCardView>
