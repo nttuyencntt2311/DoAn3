@@ -203,5 +203,4 @@ npm run dev
 ## 9. Nhóm thực hiện
 
 - **Đề tài**: Hệ thống Phân tích Hành vi Người học và Gợi ý Lộ trình Học (EdTech XAI) — Đồ án 4
-- **Thành viên thực hiện**: `[Họ và tên — MSSV]`
-- **Giảng viên hướng dẫn**: `[Họ và tên Giảng viên]`
+- **Thành viên thực hiện**: `[Họ và tên: Nguyễn Thái Tuyền — MSSV: CNTT2311002]` `[Họ và tên: Phan Lê Tú Văn - MSSV: CNTT2311008]`
