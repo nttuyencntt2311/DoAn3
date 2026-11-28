@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, X } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { adminFetch } from "../utils/adminApi";
 
 export default function Vocabulary() {
   // 1. Khởi tạo mảng rỗng chờ dữ liệu từ API
@@ -26,11 +26,7 @@ export default function Vocabulary() {
 
   const fetchVocabularies = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/vocabularies`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
-        }
-      });
+      const response = await adminFetch("/api/vocabularies");
       if (response.ok) {
         const data = await response.json();
         setWords(data);
@@ -84,12 +80,7 @@ export default function Vocabulary() {
     );
     if (isConfirm) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/vocabularies/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
-          }
-        });
+        const response = await adminFetch(`/api/vocabularies/${id}`, { method: "DELETE" });
         if (response.ok) {
           setWords(words.filter((word) => word._id !== id));
         } else {
@@ -107,37 +98,37 @@ export default function Vocabulary() {
     e.preventDefault();
     try {
       if (editingId) {
-        const response = await fetch(`${API_BASE_URL}/api/vocabularies/${editingId}`, {
+        const response = await adminFetch(`/api/vocabularies/${editingId}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData)
         });
-        
-        if (response.ok) {
-          const updatedWord = await response.json(); 
-          setWords(
-            words.map((w) =>
-              w._id === editingId ? { ...w, ...formData } : w
-            )
-          );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          alert(errData.message || errData.error || `Không thể cập nhật từ vựng (${response.status})`);
+          return;
         }
+        const updatedWord = await response.json();
+        setWords(
+          words.map((w) =>
+            w._id === editingId ? { ...w, ...updatedWord } : w
+          )
+        );
       } else {
-        const response = await fetch(`${API_BASE_URL}/api/vocabularies`, {
+        const response = await adminFetch("/api/vocabularies", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData)
         });
-        
-        if (response.ok) {
-          const newWord = await response.json();
-          setWords([newWord, ...words]);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          alert(errData.message || errData.error || `Không thể thêm từ vựng (${response.status})`);
+          return;
         }
+        const newWord = await response.json();
+        setWords([newWord, ...words]);
       }
       setIsModalOpen(false);
     } catch (error) {

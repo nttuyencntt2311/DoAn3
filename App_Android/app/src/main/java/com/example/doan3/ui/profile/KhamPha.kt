@@ -160,8 +160,18 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     val allWords = response.body() ?: emptyList()
 
                     if (!predictiveWords.isNullOrEmpty()) {
-                        val targetSet = predictiveWords!!.map { it.trim().lowercase(Locale.ROOT) }.toSet()
-                        studyList = allWords.filter { targetSet.contains(it.word.trim().lowercase(Locale.ROOT)) }
+                        val vocabByWord = allWords.associateBy { it.word.trim().lowercase(Locale.ROOT) }
+                        studyList = predictiveWords!!.mapNotNull { raw ->
+                            val key = raw.trim().lowercase(Locale.ROOT)
+                            if (key.isEmpty()) return@mapNotNull null
+                            vocabByWord[key] ?: Vocabulary(
+                                id = key,
+                                word = raw.trim(),
+                                pronunciation = "",
+                                meaning = "Nhấn loa để nghe và ghi nhớ cụm từ này",
+                                category = currentCategory
+                            )
+                        }
                     } else {
                         studyList = allWords
                             .filter { it.proficiency < 80 && it.category == currentCategory }
@@ -187,13 +197,61 @@ class KhamPhaActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         })
     }
 
+    private fun fetchPhoneticFallback(word: String, targetIndex: Int) {
+        Thread {
+            try {
+                val firstToken = word.trim().split(Regex("\\s+")).firstOrNull() ?: return@Thread
+                val url = java.net.URL("https://api.dictionaryapi.dev/api/v2/entries/en/${java.net.URLEncoder.encode(firstToken, "UTF-8")}")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                }
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val arr = org.json.JSONArray(body)
+                    if (arr.length() > 0) {
+                        val obj = arr.getJSONObject(0)
+                        var phonetic = obj.optString("phonetic", "")
+                        if (phonetic.isBlank()) {
+                            val phArr = obj.optJSONArray("phonetics")
+                            if (phArr != null) {
+                                for (i in 0 until phArr.length()) {
+                                    val t = phArr.getJSONObject(i).optString("text", "")
+                                    if (t.isNotBlank()) {
+                                        phonetic = t
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                        if (phonetic.isNotBlank()) {
+                            runOnUiThread {
+                                if (!isFinishing && !isDestroyed && currentIndex == targetIndex) {
+                                    tvPronunciation.text = phonetic
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }.start()
+    }
+
     private fun loadWordToUI() {
         if (currentIndex < studyList.size) {
             val currentWord = studyList[currentIndex]
             tvWord.text = currentWord.word
             tvPronunciation.text = currentWord.pronunciation
-            tvMeaning.text = currentWord.meaning
+            val cleanMeaning = if (currentWord.meaning.isBlank() || currentWord.meaning == "Từ vựng mới") {
+                "Thuật ngữ: ${currentWord.word} (Chạm loa để luyện phát âm)"
+            } else {
+                currentWord.meaning
+            }
+            tvMeaning.text = cleanMeaning
             resetCardToFront()
+            if (currentWord.pronunciation.isBlank()) {
+                fetchPhoneticFallback(currentWord.word, currentIndex)
+            }
         } else {
             showSessionCompleteDialog()
         }

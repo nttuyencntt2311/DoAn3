@@ -32,6 +32,7 @@ router.get('/sessions/user/:userId', verifyToken, aiController.getUserChatSessio
 // ==========================================
 router.post('/generate-roadmap', verifyToken, aiController.generateRoadmap);
 router.get('/my-roadmap', verifyToken, aiController.getMyRoadmap);
+router.put('/my-roadmaps/:roadmapId/activate', verifyToken, aiController.activateRoadmap);
 // Sinh câu hỏi trắc nghiệm theo chủ đề chặng học
 router.get('/generate-quiz', verifyToken, aiController.generateStepQuiz);
 router.post('/roadmap/complete-step', verifyToken, aiController.completeStep);

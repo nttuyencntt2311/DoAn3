@@ -2,6 +2,7 @@ import os
 import math
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import xgboost as xgb
 import shap
@@ -9,6 +10,13 @@ import pandas as pd
 import numpy as np
 
 app = FastAPI(title="EdNet XAI Prediction Service (Bản Chốt Chuẩn Hóa)")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ==========================================
 # 1. LOAD MÔ HÌNH XGBOOST VÀ SHAP EXPLAINER
@@ -225,17 +233,30 @@ def predict_forgetting(data: ForgettingRequest):
         word_difficulty = min(0.95, max(0.15, (1.0 - data.proficiency / 100.0) * 0.7 + min(data.mistake_count, 5) * 0.06))
         rolling_est = max(0.05, min(0.95, data.proficiency / 100.0))
 
-        input_dict = {
-            "user_history_acc": [data.user_history_acc],
-            "user_questions_attempted": [data.user_questions_attempted],
-            "question_difficulty": [word_difficulty],
-            "rolling_acc_5": [rolling_est],
-            "log_time_diff": [log_time_diff_val],
-            "elapsed_time": [safe_avg_time],
-            "user_avg_elapsed_time": [safe_avg_time],
-        }
-        input_df = pd.DataFrame(input_dict)[booster.feature_names]
-        shap_res = _format_shap_response(booster, explainer, input_df)
+        # Ưu tiên mô hình Pre-Quiz (6 đặc trưng, không phụ thuộc elapsed_time giả lập)
+        if prequiz_booster is not None and prequiz_explainer is not None:
+            input_dict = {
+                "user_history_acc": [data.user_history_acc],
+                "user_questions_attempted": [data.user_questions_attempted],
+                "question_difficulty": [word_difficulty],
+                "rolling_acc_5": [rolling_est],
+                "user_avg_elapsed_time": [safe_avg_time],
+                "log_time_diff": [log_time_diff_val],
+            }
+            input_df = pd.DataFrame(input_dict)[prequiz_booster.feature_names]
+            shap_res = _format_shap_response(prequiz_booster, prequiz_explainer, input_df)
+        else:
+            input_dict = {
+                "user_history_acc": [data.user_history_acc],
+                "user_questions_attempted": [data.user_questions_attempted],
+                "question_difficulty": [word_difficulty],
+                "rolling_acc_5": [rolling_est],
+                "log_time_diff": [log_time_diff_val],
+                "elapsed_time": [safe_avg_time],
+                "user_avg_elapsed_time": [safe_avg_time],
+            }
+            input_df = pd.DataFrame(input_dict)[booster.feature_names]
+            shap_res = _format_shap_response(booster, explainer, input_df)
 
         # Kết hợp thêm đường cong quên Ebbinghaus R = exp(-t / S)
         # Độ bền trí nhớ S (ngày) tăng theo review_count & proficiency, giảm theo mistake_count

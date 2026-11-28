@@ -5,6 +5,7 @@ const Roadmap = require("../models/Roadmap");
 const User = require("../models/User");
 const Vocabulary = require("../models/Vocabulary");
 const xaiService = require("../service/xaiService");
+const History = require("../models/History");
 
 // ==========================================
 // MOCK DATA: PHAO CỨU SINH KHI DEMO BỊ LỖI MẠNG / QUÁ TẢI API
@@ -74,15 +75,16 @@ const MOCK_QUIZ_FALLBACK = [
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // ==========================================
-// 1. TẠO PHIÊN CHAT MỚI (Mở phòng chat)
+// 1. TẠO PHIÊN CHAT MỚI (Mở phòng chat — Bảo mật theo JWT)
 // ==========================================
 exports.createChatSession = async (req, res) => {
   try {
-    const { userId, chatType, firstMessage } = req.body;
+    const authUserId = req.user.userId || req.user.id || req.user._id;
+    const { chatType, firstMessage } = req.body;
     const title = firstMessage
       ? firstMessage.substring(0, 20) + "..."
       : "Cuộc trò chuyện mới";
-    const newSession = new ChatSession({ userId, chatType, title });
+    const newSession = new ChatSession({ userId: authUserId, chatType, title });
     await newSession.save();
     res
       .status(201)
@@ -94,16 +96,21 @@ exports.createChatSession = async (req, res) => {
 };
 
 // ==========================================
-// 2. GỬI TIN NHẮN & LƯU DB
+// 2. GỬI TIN NHẮN & LƯU DB (Chống IDOR)
 // ==========================================
 exports.chatWithAI = async (req, res) => {
   try {
+    const authUserId = req.user.userId || req.user.id || req.user._id;
     const { sessionId, message } = req.body;
     if (!message)
       return res.status(400).json({ error: "Tin nhắn không được để trống!" });
 
     let chatHistory = [];
     if (sessionId) {
+      const session = await ChatSession.findOne({ _id: sessionId, userId: authUserId });
+      if (!session) {
+        return res.status(403).json({ error: "Bạn không có quyền truy cập phiên chat này!" });
+      }
       const rawHistory = await ChatMessage.find({ sessionId })
         .sort({ createdAt: -1 })
         .limit(10);
@@ -117,7 +124,82 @@ exports.chatWithAI = async (req, res) => {
       await ChatSession.findByIdAndUpdate(sessionId, { updatedAt: new Date() });
     }
 
-    const aiReply = await aiService.generateChatReply(message, chatHistory);
+    // Tổng hợp ngữ cảnh XAI của học viên để Gia sư Chat cá nhân hóa ví dụ & tư vấn
+    let xaiContext = null;
+    try {
+      const [user, recentHistories] = await Promise.all([
+        User.findById(authUserId).select("name level streakDays quizzesCount timeLearnedMinutes lastStudyDate vocabProgress"),
+        History.find({ userId: String(authUserId) }).sort({ createdAt: -1 }).limit(10),
+      ]);
+
+      if (user) {
+        const progress = user.vocabProgress || [];
+        const weakEntries = [...progress]
+          .filter((p) => (p.proficiency || 0) < 80 || (p.mistakeCount || 0) > 0)
+          .sort((a, b) => (b.mistakeCount || 0) - (a.mistakeCount || 0) || (a.proficiency || 0) - (b.proficiency || 0))
+          .slice(0, 6);
+
+        const weakWords = [];
+        for (const item of weakEntries) {
+          let wordStr = "";
+          if (item.word && !/^[0-9a-fA-F]{24}$/.test(String(item.word))) {
+            wordStr = String(item.word).trim();
+          } else if (item.wordId && /^[0-9a-fA-F]{24}$/.test(String(item.wordId))) {
+            const vDoc = await Vocabulary.findById(item.wordId).select("word").catch(() => null);
+            if (vDoc?.word) wordStr = vDoc.word;
+          }
+          if (wordStr && !weakWords.includes(wordStr)) weakWords.push(wordStr);
+        }
+
+        let scoreSum = 0;
+        let qSum = 0;
+        let elapsedSum = 0;
+        let elapsedCount = 0;
+        for (const h of recentHistories) {
+          scoreSum += Number(h.score) || 0;
+          qSum += Number(h.totalQuestions) || 0;
+          if (h.avgElapsedTimeMs > 0) {
+            elapsedSum += Number(h.avgElapsedTimeMs);
+            elapsedCount++;
+          }
+        }
+        const histAcc = qSum > 0 ? scoreSum / qSum : 0.5;
+        const avgElapsedMs = elapsedCount > 0 ? Math.round(elapsedSum / elapsedCount) : 23000;
+        const timeDiffSec = user.lastStudyDate
+          ? Math.max(0, (Date.now() - new Date(user.lastStudyDate).getTime()) / 1000)
+          : 86400;
+
+        let shapSummary = null;
+        const asksPersonalXai = /yếu|năng lực|điểm|xai|shap|ôn gì|lộ trình|tư vấn|đánh giá|kết quả|tiến bộ|yeu|nang luc|on gi|tu van|danh gia/i.test(message);
+        if (asksPersonalXai) {
+          shapSummary = await xaiService.getWeaknessPrediction({
+            historyAcc: Number(histAcc.toFixed(2)),
+            totalQuestions: qSum || (user.quizzesCount || 0) * 5,
+            questionDifficulty: 0.5,
+            avgTime: avgElapsedMs,
+            rollingAcc5: Number(histAcc.toFixed(2)),
+            timeDiff: timeDiffSec,
+            elapsedTime: avgElapsedMs,
+          });
+        }
+
+        xaiContext = {
+          userName: user.name || "Học viên",
+          level: user.level || 1,
+          streakDays: user.streakDays || 0,
+          accuracyPercent: Math.round(histAcc * 100),
+          avgThinkingSec: Number((avgElapsedMs / 1000).toFixed(1)),
+          weakWords: weakWords.slice(0, 5),
+          predictedAccuracy: shapSummary?.predicted_accuracy ?? null,
+          negativeFactors: shapSummary?.xai_explanation?.negative_factors || [],
+          counterfactual: shapSummary?.counterfactual?.summary_vi || "",
+        };
+      }
+    } catch (ctxErr) {
+      console.warn("⚠️ Bỏ qua lỗi nạp ngữ cảnh XAI cho Chat:", ctxErr.message);
+    }
+
+    const aiReply = await aiService.generateChatReply(message, chatHistory, xaiContext);
 
     if (sessionId) {
       const aiMsg = new ChatMessage({ sessionId, role: "ai", text: aiReply });
@@ -131,11 +213,16 @@ exports.chatWithAI = async (req, res) => {
 };
 
 // ==========================================
-// 3. LẤY LẠI LỊCH SỬ TIN NHẮN CŨ
+// 3. LẤY LẠI LỊCH SỬ TIN NHẮN CŨ (Chống IDOR)
 // ==========================================
 exports.getChatHistory = async (req, res) => {
   try {
+    const authUserId = req.user.userId || req.user.id || req.user._id;
     const { sessionId } = req.params;
+    const session = await ChatSession.findOne({ _id: sessionId, userId: authUserId });
+    if (!session) {
+      return res.status(403).json({ error: "Bạn không có quyền xem lịch sử phiên chat này!" });
+    }
     const messages = await ChatMessage.find({ sessionId }).sort({
       createdAt: 1,
     });
@@ -147,12 +234,16 @@ exports.getChatHistory = async (req, res) => {
 };
 
 // ==========================================
-// 4. LẤY DANH SÁCH CÁC PHÒNG CHAT CỦA USER
+// 4. LẤY DANH SÁCH CÁC PHÒNG CHAT CỦA USER (Chống IDOR)
 // ==========================================
 exports.getUserChatSessions = async (req, res) => {
   try {
+    const authUserId = String(req.user.userId || req.user.id || req.user._id);
     const { userId } = req.params;
-    const sessions = await ChatSession.find({ userId }).sort({ updatedAt: -1 });
+    if (userId && String(userId) !== authUserId) {
+      return res.status(403).json({ error: "Không được phép xem danh sách phòng chat của người khác!" });
+    }
+    const sessions = await ChatSession.find({ userId: authUserId }).sort({ updatedAt: -1 });
     res.status(200).json({ sessions });
   } catch (error) {
     console.error("Lỗi lấy danh sách phòng chat:", error);
@@ -180,10 +271,13 @@ exports.generateRoadmap = async (req, res) => {
         const weakVocabs = weakIds.length > 0 ? await Vocabulary.find({ _id: { $in: weakIds } }).limit(20) : [];
 
         const weakWords = weakVocabs.map((v) => v.word);
+        const IGNORED_CATS = new Set(["tất cả", "tat ca", "tổng hợp", "tong hop", "all", ""]);
         const catCounts = {};
         weakVocabs.forEach((v) => {
-          const cat = v.category || "Tổng hợp";
-          catCounts[cat] = (catCounts[cat] || 0) + 1;
+          const cat = (v.category || "").trim();
+          if (cat && !IGNORED_CATS.has(cat.toLowerCase())) {
+            catCounts[cat] = (catCounts[cat] || 0) + 1;
+          }
         });
         const weakCategories = Object.entries(catCounts)
           .sort((a, b) => b[1] - a[1])
@@ -211,6 +305,10 @@ exports.generateRoadmap = async (req, res) => {
         });
 
         xaiContext = {
+          userName: user.name || "Học viên",
+          level: user.level || 1,
+          streakDays: user.streakDays || 0,
+          expectation: (expectation || "").trim(),
           predictedAccuracy: shapEval?.predicted_accuracy ?? Math.round(histAcc * 100),
           weakCategories,
           weakWords,
@@ -276,21 +374,42 @@ exports.generateRoadmap = async (req, res) => {
       maxProgress: s.maxProgress || 30,
     }));
 
-    const updatedRoadmap = await Roadmap.findOneAndUpdate(
-      { userId: userId },
-      {
-        overallProgressPercent: 0,
-        motivationMessage: customMotivation,
-        steps: steps,
-      },
-      { upsert: true, returnDocument: "after" },
-    );
+    // Tự động gỡ unique index cũ trên userId (nếu còn sót từ schema cũ) để lưu được nhiều lộ trình
+    try {
+      await Roadmap.collection.dropIndex("userId_1");
+    } catch (_) {}
+
+    const cleanTopic = (target || "Lộ trình cá nhân").replace(/^Chủ đề:\s*/i, "").trim();
+
+    // Đánh dấu các lộ trình cũ là không active (vẫn giữ nguyên tiến độ trong DB)
+    await Roadmap.updateMany({ userId: userId }, { $set: { isActive: false } });
+
+    const updatedRoadmap = await Roadmap.create({
+      userId: userId,
+      topic: cleanTopic,
+      target: target || "",
+      currentLevel: currentLevel || "",
+      isActive: true,
+      overallProgressPercent: 0,
+      motivationMessage: customMotivation,
+      steps: steps,
+    });
+
+    const allUserRoadmaps = await Roadmap.find({ userId: userId }).sort({ updatedAt: -1 }).limit(10);
 
     res.status(200).json({
+      id: updatedRoadmap._id,
       userId: updatedRoadmap.userId,
+      topic: updatedRoadmap.topic,
       overallProgressPercent: updatedRoadmap.overallProgressPercent,
       motivationMessage: updatedRoadmap.motivationMessage,
       steps: updatedRoadmap.steps,
+      savedRoadmaps: allUserRoadmaps.map((r) => ({
+        id: r._id,
+        topic: r.topic || "Lộ trình cá nhân",
+        overallProgressPercent: r.overallProgressPercent || 0,
+        isActive: Boolean(r.isActive),
+      })),
     });
   } catch (error) {
     console.error("Lỗi khi gen Roadmap:", error);
@@ -301,24 +420,51 @@ exports.generateRoadmap = async (req, res) => {
 // ==========================================
 // 6. LẤY LỘ TRÌNH HIỆN TẠI CỦA USER
 // ==========================================
+function getWeeklyProgressFromUser(user) {
+  if (!user) {
+    return { weeklyLessonsCompleted: 0, weeklyGoalTarget: 5, isWeeklyRewardClaimed: false, streakDays: 0 };
+  }
+  const now = new Date();
+  const lastDate = user.lastLessonDate ? new Date(user.lastLessonDate) : new Date(0);
+  const diffDays = (now - lastDate) / (1000 * 60 * 60 * 24);
+  const isSameWeek = diffDays < 7 && now.getDay() >= lastDate.getDay();
+  return {
+    weeklyLessonsCompleted: isSameWeek ? Math.min(5, user.weeklyLessonsCompleted || 0) : 0,
+    weeklyGoalTarget: 5,
+    isWeeklyRewardClaimed: isSameWeek ? Boolean(user.isWeeklyRewardClaimed) : false,
+    streakDays: user.streakDays || 0,
+  };
+}
+
 exports.getMyRoadmap = async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user._id;
-    const roadmap = await Roadmap.findOne({ userId: userId });
+    const [allRoadmaps, user] = await Promise.all([
+      Roadmap.find({ userId: userId }).sort({ isActive: -1, updatedAt: -1 }).limit(10),
+      User.findById(userId).select("streakDays weeklyLessonsCompleted isWeeklyRewardClaimed lastLessonDate"),
+    ]);
+    const weeklyInfo = getWeeklyProgressFromUser(user);
+    const roadmap = allRoadmaps.find((r) => r.isActive) || allRoadmaps[0] || null;
 
     if (!roadmap) {
       return res.status(200).json({
         userId: userId,
+        topic: "",
         overallProgressPercent: 0,
         motivationMessage:
           "Bạn chưa có lộ trình. Hãy để AI thiết kế cho bạn nhé!",
         steps: [],
+        savedRoadmaps: [],
+        ...weeklyInfo,
       });
     }
     res.status(200).json({
+      id: roadmap._id,
       userId: roadmap.userId,
+      topic: roadmap.topic || "Lộ trình cá nhân",
       overallProgressPercent: roadmap.overallProgressPercent,
       motivationMessage: roadmap.motivationMessage,
+      ...weeklyInfo,
       steps: roadmap.steps.map((s) => ({
         id: s.id,
         title: s.title,
@@ -328,10 +474,49 @@ exports.getMyRoadmap = async (req, res) => {
         currentProgress: s.currentProgress,
         maxProgress: s.maxProgress,
       })),
+      savedRoadmaps: allRoadmaps.map((r) => ({
+        id: r._id,
+        topic: r.topic || "Lộ trình cá nhân",
+        overallProgressPercent: r.overallProgressPercent || 0,
+        isActive: r._id.toString() === roadmap._id.toString(),
+      })),
     });
   } catch (error) {
     console.error("Lỗi khi lấy Roadmap:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.activateRoadmap = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user._id;
+    const { roadmapId } = req.params;
+    const targetMap = await Roadmap.findOne({ _id: roadmapId, userId });
+    if (!targetMap) {
+      return res.status(404).json({ error: "Không tìm thấy lộ trình đã lưu!" });
+    }
+    await Roadmap.updateMany({ userId }, { $set: { isActive: false } });
+    targetMap.isActive = true;
+    await targetMap.save();
+
+    const allRoadmaps = await Roadmap.find({ userId }).sort({ isActive: -1, updatedAt: -1 }).limit(10);
+    res.status(200).json({
+      id: targetMap._id,
+      userId: targetMap.userId,
+      topic: targetMap.topic || "Lộ trình cá nhân",
+      overallProgressPercent: targetMap.overallProgressPercent,
+      motivationMessage: targetMap.motivationMessage,
+      steps: targetMap.steps,
+      savedRoadmaps: allRoadmaps.map((r) => ({
+        id: r._id,
+        topic: r.topic || "Lộ trình cá nhân",
+        overallProgressPercent: r.overallProgressPercent || 0,
+        isActive: r._id.toString() === targetMap._id.toString(),
+      })),
+    });
+  } catch (error) {
+    console.error("Lỗi activateRoadmap:", error);
+    res.status(500).json({ error: "Không thể chuyển đổi lộ trình" });
   }
 };
 
@@ -509,7 +694,7 @@ exports.completeStep = async (req, res) => {
     const userId = req.user.id || req.user.userId || req.user._id;
     const { stepId, score, totalQuestions } = req.body;
 
-    const roadmap = await Roadmap.findOne({ userId });
+    const roadmap = (await Roadmap.findOne({ userId, isActive: true })) || (await Roadmap.findOne({ userId, "steps.id": stepId })) || (await Roadmap.findOne({ userId }));
     if (!roadmap)
       return res.status(404).json({ error: "Không tìm thấy lộ trình!" });
 

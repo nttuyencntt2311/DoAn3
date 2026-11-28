@@ -11,10 +11,16 @@ const roadmapStepSchema = new mongoose.Schema({
 });
 
 const roadmapSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    topic: { type: String, default: "Lộ trình cá nhân" },
+    target: { type: String, default: "" },
+    currentLevel: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
     overallProgressPercent: { type: Number, default: 0 },
     motivationMessage: { type: String, default: "" },
     steps: [roadmapStepSchema]
 }, { timestamps: true });
+
+roadmapSchema.index({ userId: 1, isActive: 1 });
 
 module.exports = mongoose.model('Roadmap', roadmapSchema);

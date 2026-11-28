@@ -1,13 +1,11 @@
 package com.example.doan3.ui.roadmap
 
-// Các trạng thái của 1 chặng học
 enum class StepStatus {
-    COMPLETED,  // Đã hoàn thành (Xanh lá)
-    CURRENT,    // Đang học (Xanh dương)
-    LOCKED      // Chưa mở khóa (Xám)
+    COMPLETED,
+    CURRENT,
+    LOCKED
 }
 
-// Dữ liệu cho 1 chặng học (1 node trên timeline)
 data class RoadmapStep(
     val id: String,
     val title: String,
@@ -18,12 +16,25 @@ data class RoadmapStep(
     val maxProgress: Int = 0
 )
 
-// Dữ liệu tổng quan AI trả về cho cả màn hình
+data class SavedRoadmapSummary(
+    val id: String,
+    val topic: String,
+    val overallProgressPercent: Int = 0,
+    val isActive: Boolean = false
+)
+
 data class UserRoadmapResponse(
+    val id: String? = null,
     val userId: String,
+    val topic: String? = null,
     val overallProgressPercent: Int,
     val motivationMessage: String,
-    val steps: List<RoadmapStep>
+    val steps: List<RoadmapStep>,
+    val savedRoadmaps: List<SavedRoadmapSummary>? = null,
+    val weeklyLessonsCompleted: Int = 0,
+    val weeklyGoalTarget: Int = 5,
+    val isWeeklyRewardClaimed: Boolean = false,
+    val streakDays: Int = 0
 )
 
 data class GenerateRoadmapRequest(

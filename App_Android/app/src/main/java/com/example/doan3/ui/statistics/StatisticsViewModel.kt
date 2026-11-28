@@ -16,7 +16,8 @@ data class LearningStats(
     val totalHours: Int,
     val totalWords: Int,
     val accuracyPercent: Int,
-    val chartData: List<Int>?
+    val chartData: List<Int>?,
+    val chartLabels: List<String>? = null
 )
 
 class StatisticsViewModel : ViewModel() {
@@ -27,35 +28,46 @@ class StatisticsViewModel : ViewModel() {
     private val _memoriesData = MutableLiveData<List<MemoryItem>>(emptyList())
     val memoriesData: LiveData<List<MemoryItem>> get() = _memoriesData
 
-    fun fetchRealStatistics(context: Context) {
-        RetrofitClient.getInstance(context).getLearningStats()
+    fun fetchRealStatistics(context: Context, range: String = "this_week") {
+        RetrofitClient.getInstance(context).getLearningStats(range)
             .enqueue(object : Callback<LearningStatsResponse> {
                 override fun onResponse(call: Call<LearningStatsResponse>, response: Response<LearningStatsResponse>) {
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
                         val nested = body.stats
+                        val defaultLabels = if (range == "month") {
+                            listOf("Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4")
+                        } else {
+                            listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+                        }
 
                         _statsData.value = LearningStats(
                             streakDays = nested?.streakDays ?: body.streakDays ?: 0,
                             totalHours = nested?.totalHours ?: body.totalHours ?: 0,
                             totalWords = nested?.totalWords ?: body.totalWords ?: 0,
                             accuracyPercent = nested?.accuracyPercent ?: body.accuracyPercent ?: 0,
-                            chartData = nested?.chartData ?: body.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0)
+                            chartData = nested?.chartData ?: body.chartData ?: List(defaultLabels.size) { 0 },
+                            chartLabels = nested?.chartLabels ?: body.chartLabels ?: defaultLabels
                         )
                         _memoriesData.value = body.memories?.reversed() ?: emptyList()
                     } else {
-                        setEmptyStats()
+                        setEmptyStats(range)
                     }
                 }
 
                 override fun onFailure(call: Call<LearningStatsResponse>, t: Throwable) {
-                    setEmptyStats()
+                    setEmptyStats(range)
                 }
             })
     }
 
-    private fun setEmptyStats() {
-        _statsData.value = LearningStats(0, 0, 0, 0, listOf(0, 0, 0, 0, 0, 0, 0))
+    private fun setEmptyStats(range: String = "this_week") {
+        val defaultLabels = if (range == "month") {
+            listOf("Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4")
+        } else {
+            listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+        }
+        _statsData.value = LearningStats(0, 0, 0, 0, List(defaultLabels.size) { 0 }, defaultLabels)
         _memoriesData.value = emptyList()
     }
 }

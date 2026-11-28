@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, BookOpen, Activity } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { adminFetch } from "../utils/adminApi";
 
 export default function Dashboard() {
   // 1. Khởi tạo state để chứa dữ liệu thực từ API
@@ -10,6 +10,7 @@ export default function Dashboard() {
     activeUsers: 0,
   });
   const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // 2. Gọi API khi màn hình vừa load
   useEffect(() => {
@@ -19,11 +20,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       // Thay URL này bằng endpoint Backend thực tế 
-    const response = await fetch(`${API_BASE_URL}/api/stats/dashboard`, {
-        headers: {
-            "Authorization": `Bearer ${localStorage.getItem("adminToken")}`
-        }
-    });
+    const response = await adminFetch("/api/stats/dashboard");
       
       if (response.ok) {
         const data = await response.json();
@@ -35,6 +32,8 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu tổng quan:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,7 +110,7 @@ export default function Dashboard() {
               </div>
             ))
           ) : (
-            <div className="p-5 text-gray-500 text-center">Đang tải dữ liệu hoạt động...</div>
+            <div className="p-5 text-gray-500 text-center">{loading ? "Đang tải dữ liệu hoạt động..." : "Chưa có hoạt động nào gần đây."}</div>
           )}
         </div>
       </div>

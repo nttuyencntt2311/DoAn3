@@ -48,8 +48,25 @@ class ChatAdapter(private val messageList: ArrayList<ChatMessage>) :
 
     override fun getItemCount(): Int = messageList.size
 
+    private var typingIndex: Int = -1
+
     fun addMessage(message: ChatMessage) {
         messageList.add(message)
         notifyItemInserted(messageList.size - 1)
+    }
+
+    fun showTypingIndicator() {
+        if (typingIndex != -1) return
+        messageList.add(ChatMessage(text = "🧠 *LexiVT AI đang suy nghĩ và soạn câu trả lời...*", isUser = false))
+        typingIndex = messageList.size - 1
+        notifyItemInserted(typingIndex)
+    }
+
+    fun hideTypingIndicator() {
+        if (typingIndex in messageList.indices) {
+            messageList.removeAt(typingIndex)
+            notifyItemRemoved(typingIndex)
+        }
+        typingIndex = -1
     }
 }

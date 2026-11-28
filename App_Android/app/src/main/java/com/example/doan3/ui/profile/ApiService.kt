@@ -81,6 +81,7 @@ data class LearningStatsResponse(
     val totalWords: Int? = null,
     val accuracyPercent: Int? = null,
     val chartData: List<Int>? = null,
+    val chartLabels: List<String>? = null,
     val memories: List<MemoryItem>? = null
 )
 
@@ -89,7 +90,8 @@ data class StatsData(
     val totalHours: Int,
     val totalWords: Int,
     val accuracyPercent: Int,
-    val chartData: List<Int>?
+    val chartData: List<Int>?,
+    val chartLabels: List<String>? = null
 )
 
 data class MemoryItem(
@@ -212,9 +214,16 @@ data class GenerateCustomQuizRequest(val content: String, val questionCount: Int
 data class GenerateCustomQuizResponse(val message: String, val categoryName: String)
 data class CustomCategoriesResponse(val success: Boolean, val categories: List<String>)
 
-// === MODEL CẬP NHẬT ĐIỂM ===
+// === MODEL CẬP NHẬT ĐIỂM & NHẬN QUÀ TUẦN ===
 data class ProficiencyRequest(val proficiency: Int, val userId: String)
 data class ProficiencyResponse(val message: String, val wordsLearned: Int, val xp: Int)
+data class ClaimWeeklyRewardResponse(
+    val message: String? = null,
+    val rewardXp: Int = 0,
+    val currentXp: Int = 0,
+    val currentLevel: Int = 1,
+    val error: String? = null
+)
 
 // ==========================================
 //             API INTERFACE
@@ -238,7 +247,7 @@ interface ApiService {
     fun getUserStats(): Call<UserStatsResponse>
 
     @GET("api/stats/learning")
-    fun getLearningStats(): Call<LearningStatsResponse>
+    fun getLearningStats(@Query("range") range: String = "this_week"): Call<LearningStatsResponse>
 
     @PUT("api/auth/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<ChangePasswordResponse>
@@ -294,6 +303,9 @@ interface ApiService {
     @GET("api/ai/my-roadmap")
     suspend fun getRoadmapForUser(): Response<UserRoadmapResponse>
 
+    @PUT("api/ai/my-roadmaps/{roadmapId}/activate")
+    fun activateRoadmap(@Path("roadmapId") roadmapId: String): Call<UserRoadmapResponse>
+
     @POST("api/ai/generate-roadmap")
     suspend fun generateRoadmap(
         @Body request: com.example.doan3.ui.roadmap.GenerateRoadmapRequest
@@ -308,6 +320,9 @@ interface ApiService {
 
     @POST("api/ai/roadmap/complete-step")
     suspend fun completeRoadmapStep(@Body body: Map<String, String>): retrofit2.Response<Any>
+
+    @POST("api/ai/claim-weekly-reward")
+    fun claimWeeklyReward(): Call<ClaimWeeklyRewardResponse>
 
     // --- CUSTOM QUIZ ---
     @POST("api/vocabularies/custom-quiz")
@@ -342,8 +357,11 @@ interface ApiService {
 //             RETROFIT CLIENT
 // ==========================================
 object RetrofitClient {
-    // 🚀 Sử dụng cổng 3000 hoặc 5000 tùy vào cấu hình Node.js
-    const val BASE_URL = "http://10.0.2.2:8080/"
+        // Đổi thành IP LAN máy tính (vd: "http://192.168.1.10:8080/") khi chạy trên điện thoại thật
+    private const val EMULATOR_BASE_URL = "http://10.0.2.2:8080/"
+    private const val PHYSICAL_DEVICE_BASE_URL = "http://192.168.1.100:8080/"
+    private const val USE_PHYSICAL_DEVICE = false
+    val BASE_URL = if (USE_PHYSICAL_DEVICE) PHYSICAL_DEVICE_BASE_URL else EMULATOR_BASE_URL
 
     var token: String = ""
 

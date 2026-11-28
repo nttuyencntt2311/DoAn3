@@ -6,6 +6,7 @@ const Vocabulary = require("../models/Vocabulary");
 const verifyToken = require("../middleware/authMiddleware");
 const axios = require("axios");
 const aiService = require("../service/aiService");
+const xaiService = require("../service/xaiService");
 const router = express.Router();
 
 // =====================================
@@ -97,33 +98,95 @@ router.post("/submit", verifyToken, async (req, res) => {
       for (let wrongWord of lowercaseWrongWords) {
         let vocab = vocabularies.find(v => v.word === wrongWord);
         
-        // ĐÃ NÂNG CẤP: Dịch khi từ mới tinh HOẶC từ đã bị lưu nhầm nghĩa cũ
-        if (!vocab || vocab.meaning === "Từ vựng AI sinh ra" || vocab.meaning === "Từ vựng mới") {
-          let vietnameseMeaning = "Từ vựng mới";
-          try {
-            // Gọi API dịch thuật miễn phí của Google
-            const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(wrongWord)}`;
-            const transRes = await axios.get(translateUrl);
-            
-            // Bóc tách kết quả trả về để lấy nghĩa Tiếng Việt
-            if (transRes.data && transRes.data[0] && transRes.data[0][0]) {
-              vietnameseMeaning = transRes.data[0][0][0]; 
+        // Tự động bổ sung cả nghĩa tiếng Việt lẫn phiên âm (phonetic) nếu từ mới hoặc bị thiếu
+        const needsMeaning =
+          !vocab ||
+          !vocab.meaning ||
+          vocab.meaning === "Từ vựng AI sinh ra" ||
+          vocab.meaning === "Từ vựng mới";
+        const needsPhonetic = !vocab || !vocab.phonetic || vocab.phonetic.trim() === "";
+
+        if (needsMeaning || needsPhonetic) {
+          let vietnameseMeaning = vocab?.meaning || "";
+          let fetchedPhonetic = vocab?.phonetic || "";
+
+          // 1. Lấy phiên âm IPA từ Dictionary API (ưu tiên cho từ đơn)
+          if (needsPhonetic) {
+            try {
+              const firstToken = wrongWord.split(/\s+/)[0];
+              const dictRes = await axios.get(
+                `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(wrongWord)}`,
+                { timeout: 3500 }
+              );
+              const entry = Array.isArray(dictRes.data) ? dictRes.data[0] : null;
+              if (entry) {
+                fetchedPhonetic =
+                  entry.phonetic ||
+                  (entry.phonetics || []).find((p) => p && p.text)?.text ||
+                  "";
+              }
+              if (!fetchedPhonetic && firstToken && firstToken !== wrongWord) {
+                const dictRes2 = await axios.get(
+                  `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(firstToken)}`,
+                  { timeout: 2500 }
+                );
+                const entry2 = Array.isArray(dictRes2.data) ? dictRes2.data[0] : null;
+                fetchedPhonetic =
+                  entry2?.phonetic ||
+                  (entry2?.phonetics || []).find((p) => p && p.text)?.text ||
+                  "";
+              }
+            } catch (_) {
+              // Bỏ qua nếu cụm từ không có trong từ điển đơn
             }
-          } catch (err) {
-            console.error("Không thể tự động dịch nghĩa:", err.message);
+          }
+
+          // 2. Dịch nghĩa tiếng Việt (Google Translate -> fallback Gemini AI)
+          if (needsMeaning) {
+            try {
+              const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(wrongWord)}`;
+              const transRes = await axios.get(translateUrl, { timeout: 4000 });
+              if (transRes.data && transRes.data[0] && transRes.data[0][0]) {
+                const candidate = String(transRes.data[0][0][0] || "").trim();
+                if (candidate && candidate.toLowerCase() !== wrongWord.toLowerCase()) {
+                  vietnameseMeaning = candidate;
+                }
+              }
+            } catch (err) {
+              console.warn("Google Translate không phản hồi:", err.message);
+            }
+
+            if (
+              (!vietnameseMeaning || vietnameseMeaning === "Từ vựng mới" || vietnameseMeaning === "Từ vựng AI sinh ra") &&
+              aiService.genAI &&
+              process.env.GEMINI_API_KEY
+            ) {
+              try {
+                const model = aiService.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+                const prompt = `Dịch ngắn gọn (tối đa 8 từ) thuật ngữ tiếng Anh "${wrongWord}" sang tiếng Việt tự nhiên. Chỉ trả về đúng nghĩa tiếng Việt, không giải thích thêm.`;
+                const aiRes = await model.generateContent(prompt);
+                const translated = aiRes.response.text().replace(/["*`\n]/g, "").trim();
+                if (translated) vietnameseMeaning = translated;
+              } catch (_) {}
+            }
+
+            if (!vietnameseMeaning) {
+              vietnameseMeaning = `Thuật ngữ: ${wrongWord}`;
+            }
           }
 
           if (!vocab) {
-            // Trương hợp 1: Từ hoàn toàn chưa có trong Database
             vocab = new Vocabulary({
               word: wrongWord,
-              meaning: vietnameseMeaning, // Lưu nghĩa chuẩn xác
-              proficiency: 0
+              phonetic: fetchedPhonetic,
+              meaning: vietnameseMeaning,
+              category: "Ôn tập XAI",
+              proficiency: 0,
             });
             await vocab.save();
           } else {
-            // Trường hợp 2: Từ đã có nhưng bị lỗi nghĩa cũ -> Cập nhật lại nghĩa mới!
-            vocab.meaning = vietnameseMeaning;
+            if (needsMeaning) vocab.meaning = vietnameseMeaning;
+            if (needsPhonetic && fetchedPhonetic) vocab.phonetic = fetchedPhonetic;
             await vocab.save();
           }
         }
@@ -142,8 +205,8 @@ router.post("/submit", verifyToken, async (req, res) => {
           user.vocabProgress[vocabIndex].lastReviewedDate = new Date();
         } else {
           user.vocabProgress.push({
-            word: vocab._id,
-            wordId: vocab._id,
+            word: vocab.word,
+            wordId: vocab._id.toString(),
             proficiency: 0,
             mistakeCount: 1,
             reviewCount: 1,
@@ -227,26 +290,37 @@ router.post("/submit", verifyToken, async (req, res) => {
         }
       }
 
-      // Cấu trúc Data chuẩn 7 biến gửi sang Python XGBoost
-      const studentData = {
-        user_history_acc: Number(accuracy.toFixed(2)),
-        user_questions_attempted: user.quizzesCount * (totalQuestions || 10),
-        question_difficulty: normalizedDifficulty,
-        user_avg_elapsed_time: avg_time || avgTimeMs,
-        
-        // 3 Biến mới cho bản chốt
-        rolling_acc_5: Number(accuracy.toFixed(2)), // Tạm lấy tỉ lệ hiện tại làm phong độ
-        time_diff: timeDiffSeconds,
-        elapsed_time: avgTimeMs // Giả định thời gian làm câu hiện tại bằng mức trung bình
-      };
+      // Tính user_history_acc, rolling_acc_5 và tổng số câu thực tế từ bảng History
+      const pastHistories = await HistoryModel.find({ userId }).sort({ createdAt: -1 }).limit(50);
+      let histScoreSum = 0;
+      let histQuestionSum = 0;
+      const recentQuestionResults = [];
+      for (const h of pastHistories) {
+        histScoreSum += Number(h.score) || 0;
+        histQuestionSum += Number(h.totalQuestions) || 0;
+        if (recentQuestionResults.length < 5 && Array.isArray(h.questionLogs)) {
+          for (let qi = h.questionLogs.length - 1; qi >= 0 && recentQuestionResults.length < 5; qi--) {
+            recentQuestionResults.push(h.questionLogs[qi].isCorrect ? 1 : 0);
+          }
+        }
+      }
+      const realHistoryAcc = histQuestionSum > 0 ? histScoreSum / histQuestionSum : accuracy;
+      const realRollingAcc5 =
+        recentQuestionResults.length > 0
+          ? recentQuestionResults.reduce((a, b) => a + b, 0) / recentQuestionResults.length
+          : accuracy;
+      const realAttempted = histQuestionSum > 0 ? histQuestionSum : user.quizzesCount * (totalQuestions || 10);
 
-      // Bắn dữ liệu sang Python Microservice (đọc từ biến môi trường hoặc mặc định cổng 8000)
-      const pythonAiUrl = process.env.PYTHON_AI_URL || "http://127.0.0.1:8000";
-      const aiResponse = await axios.post(
-        `${pythonAiUrl}/predict-weakness`,
-        studentData
-      );
-      aiReport = aiResponse.data;
+      // Gọi Python Microservice qua xaiService (có Connection: close, timeout 8s & retry chống socket hang up)
+      aiReport = await xaiService.getWeaknessPrediction({
+        historyAcc: Number(realHistoryAcc.toFixed(2)),
+        totalQuestions: realAttempted,
+        questionDifficulty: normalizedDifficulty,
+        avgTime: avg_time || avgTimeMs,
+        rollingAcc5: Number(realRollingAcc5.toFixed(2)),
+        timeDiff: timeDiffSeconds,
+        elapsedTime: avgTimeMs,
+      });
     } catch (aiError) {
       console.error(
         "⚠️ AI Server không phản hồi, dùng báo cáo dự phòng!",

@@ -1,4 +1,5 @@
 const express = require("express");
+const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../models/User");
@@ -85,6 +86,9 @@ router.post("/login", async (req, res) => {
 
     // 3. Lưu Refresh Token vào Database
     user.refreshTokens.push(refreshToken);
+    if (user.refreshTokens.length > 5) {
+      user.refreshTokens = user.refreshTokens.slice(-5);
+    }
     await user.save();
 
     res.status(200).json({
@@ -145,6 +149,9 @@ router.post("/admin-login", async (req, res) => {
     );
 
     user.refreshTokens.push(refreshToken);
+    if (user.refreshTokens.length > 5) {
+      user.refreshTokens = user.refreshTokens.slice(-5);
+    }
     await user.save();
 
     res.status(200).json({
@@ -489,8 +496,41 @@ router.post("/reset-password", async (req, res) => {
 // =====================================
 router.post("/google-login", async (req, res) => {
   try {
-    const email = (req.body.email || "").trim().toLowerCase();
-    const displayName = (req.body.name || "").trim();
+    const { idToken } = req.body;
+    let email = (req.body.email || "").trim().toLowerCase();
+    let displayName = (req.body.name || "").trim();
+
+    // Xác thực Google ID Token khi có truyền idToken hoặc server đã cấu hình GOOGLE_CLIENT_ID
+    if (idToken || process.env.GOOGLE_CLIENT_ID) {
+      if (!idToken) {
+        return res.status(401).json({ error: "Thiếu Google ID Token để xác thực!" });
+      }
+      try {
+        const tokenInfoRes = await axios.get(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+          { timeout: 5000 }
+        );
+        const tokenInfo = tokenInfoRes.data || {};
+        if (
+          process.env.GOOGLE_CLIENT_ID &&
+          tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID
+        ) {
+          return res.status(401).json({ error: "Google ID Token không khớp ứng dụng!" });
+        }
+        if (tokenInfo.email_verified !== "true" && tokenInfo.email_verified !== true) {
+          return res.status(401).json({ error: "Email Google chưa được xác minh!" });
+        }
+        email = (tokenInfo.email || "").trim().toLowerCase();
+        displayName = (tokenInfo.name || displayName || "").trim();
+      } catch (verifyErr) {
+        return res.status(401).json({ error: "Google ID Token không hợp lệ hoặc đã hết hạn!" });
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      return res.status(403).json({
+        error: "Đăng nhập Google yêu cầu cấu hình GOOGLE_CLIENT_ID trên môi trường Production!",
+      });
+    }
+
     if (!email || !email.includes("@")) {
       return res.status(400).json({ error: "Email tài khoản Google không hợp lệ!" });
     }
@@ -506,6 +546,11 @@ router.post("/google-login", async (req, res) => {
         gender: "Nam",
       });
       await user.save();
+    }
+
+    // Chặn tuyệt đối tài khoản Admin đăng nhập qua luồng Google Student
+    if (user.role === "admin") {
+      return res.status(403).json({ error: "Tài khoản Quản trị viên không được phép đăng nhập qua luồng này!" });
     }
 
     if (user.status === "Banned") {
@@ -525,6 +570,9 @@ router.post("/google-login", async (req, res) => {
     );
 
     user.refreshTokens.push(refreshToken);
+    if (user.refreshTokens.length > 5) {
+      user.refreshTokens = user.refreshTokens.slice(-5);
+    }
     await user.save();
 
     res.status(200).json({

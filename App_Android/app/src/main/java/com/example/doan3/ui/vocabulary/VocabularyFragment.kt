@@ -21,6 +21,9 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import com.example.doan3.ui.profile.PersonalVocabRequest
 import com.example.doan3.ui.profile.PersonalVocabResponse
+import android.content.Intent
+import com.example.doan3.ui.profile.KhamPhaActivity
+import com.example.doan3.ui.profile.PredictForgettingResponse
 import com.example.doan3.ui.profile.RetrofitClient
 import com.example.doan3.ui.profile.SoundHapticHelper
 import com.google.android.material.tabs.TabLayout
@@ -79,7 +82,46 @@ class VocabularyFragment : Fragment(), TextToSpeech.OnInitListener {
         binding.btnAddPersonalWord.setOnClickListener { showAddPersonalWordDialog() }
 
         binding.btnNotification.setOnClickListener {
-            Toast.makeText(requireContext(), "Không có thông báo mới", Toast.LENGTH_SHORT).show()
+            val ctx = context ?: return@setOnClickListener
+            Toast.makeText(ctx, "🧠 Đang kiểm tra từ vựng sắp quên...", Toast.LENGTH_SHORT).show()
+            RetrofitClient.getInstance(ctx).getPredictiveFlashcards()
+                .enqueue(object : Callback<PredictForgettingResponse> {
+                    override fun onResponse(
+                        call: Call<PredictForgettingResponse>,
+                        response: Response<PredictForgettingResponse>
+                    ) {
+                        if (!isAdded) return
+                        val cards = response.body()?.predictiveFlashcards ?: emptyList()
+                        if (cards.isEmpty()) {
+                            AlertDialog.Builder(ctx)
+                                .setTitle("Trí nhớ đang rất tốt! 🌟")
+                                .setMessage("Sổ tay Tiên tri XAI chưa phát hiện từ nào sắp quên hôm nay. Tiếp tục giữ vững phong độ nhé!")
+                                .setPositiveButton("Đóng", null)
+                                .show()
+                        } else {
+                            val preview = cards.take(5).joinToString("\n") {
+                                "• ${it.wordText}: ${it.meaning}"
+                            }
+                            AlertDialog.Builder(ctx)
+                                .setTitle("🔔 Nhắc ôn XAI (${cards.size} từ dễ quên)")
+                                .setMessage("Hệ thống XAI phát hiện ${cards.size} từ đang có nguy cơ quên cao:\n\n$preview")
+                                .setNegativeButton("Để sau", null)
+                                .setPositiveButton("Ôn ngay 🔥") { _, _ ->
+                                    val intent = Intent(ctx, KhamPhaActivity::class.java).apply {
+                                        putStringArrayListExtra("PREDICTIVE_WORDS", ArrayList(cards.map { it.wordText }))
+                                        putExtra("CATEGORY_NAME", "Sổ tay Tiên tri XAI")
+                                    }
+                                    startActivity(intent)
+                                }
+                                .show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<PredictForgettingResponse>, t: Throwable) {
+                        if (!isAdded) return
+                        Toast.makeText(ctx, "Không thể kiểm tra nhắc ôn lúc này", Toast.LENGTH_SHORT).show()
+                    }
+                })
         }
 
         // Khởi tạo màu chip ban đầu đồng bộ

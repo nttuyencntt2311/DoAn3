@@ -176,9 +176,12 @@ exports.updateProficiency = async (req, res) => {
     let isNewlyMastered = false;
 
     if (vocabIndex > -1) {
-      // Đã từng học -> Cập nhật điểm
+      // Đã từng học -> Cập nhật điểm, thời điểm ôn gần nhất & số lần ôn cho Ebbinghaus/XAI
       const oldProficiency = user.vocabProgress[vocabIndex].proficiency || 0;
       user.vocabProgress[vocabIndex].proficiency = proficiency;
+      user.vocabProgress[vocabIndex].lastReviewedDate = new Date();
+      user.vocabProgress[vocabIndex].reviewCount =
+        (user.vocabProgress[vocabIndex].reviewCount || 0) + 1;
 
       // ĐỒNG BỘ ĐIỂM (Dùng 80 cho khớp 100% với Frontend Android)
       if (oldProficiency < 80 && proficiency >= 80) {
@@ -274,13 +277,28 @@ exports.getVocabStats = async (req, res) => {
     const masteryPercentage =
       totalWords === 0 ? 0 : Math.round((masteredWords / totalWords) * 100);
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    let newWordsThisWeek = 0;
+    if (userId) {
+      const userForWeek = await User.findById(userId).select("vocabProgress");
+      const progressWeek = (userForWeek && userForWeek.vocabProgress) ? userForWeek.vocabProgress : [];
+      newWordsThisWeek = progressWeek.filter(
+        (p) => p.lastReviewedDate && new Date(p.lastReviewedDate) >= sevenDaysAgo
+      ).length;
+    }
+    if (newWordsThisWeek === 0) {
+      newWordsThisWeek = await Vocabulary.countDocuments({
+        createdAt: { $gte: sevenDaysAgo },
+      });
+    }
+
     res.status(200).json({
       totalWords,
       masteryPercentage,
       masteredWords,
       learningWords,
       newWords,
-      newWordsThisWeek: 15,
+      newWordsThisWeek,
     });
   } catch (error) {
     res
@@ -1281,7 +1299,7 @@ exports.addPersonalVocab = async (req, res) => {
     if (!vocab) {
       vocab = new Vocabulary({
         word: rawWord,
-        pronunciation: pronunciation || "",
+        phonetic: pronunciation || req.body.phonetic || "",
         meaning,
         category,
         proficiency: 20,

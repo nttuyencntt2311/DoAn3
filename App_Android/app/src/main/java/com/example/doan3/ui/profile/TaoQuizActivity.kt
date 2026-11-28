@@ -2,7 +2,21 @@ package com.example.doan3.ui.profile
 
 import android.content.Intent
 import android.net.Uri
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.Gravity
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.SeekBar
@@ -26,6 +40,10 @@ class TaoQuizActivity : AppCompatActivity() {
 
     private var selectedQuantity = 10
     private var selectedDifficulty = "Trung bình"
+    private var loadingDialog: AlertDialog? = null
+    private val loadingHandler = Handler(Looper.getMainLooper())
+    private var loadingRunnable: Runnable? = null
+    private var pulseAnimator: ObjectAnimator? = null
 
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -138,6 +156,7 @@ class TaoQuizActivity : AppCompatActivity() {
     private fun generateQuizWithAI(content: String, type: String, difficulty: String, quantity: Int) {
         binding.btnTaoQuiz.isEnabled = false
         binding.btnTaoQuiz.text = "AI đang xử lý..."
+        showAiQuizLoadingDialog(true)
 
         val enrichedContent = "[$type | Độ khó: $difficulty] $content"
         val request = GenerateCustomQuizRequest(content = enrichedContent, questionCount = quantity)
@@ -149,6 +168,7 @@ class TaoQuizActivity : AppCompatActivity() {
                     response: Response<GenerateCustomQuizResponse>
                 ) {
                     if (isFinishing || isDestroyed) return
+                    showAiQuizLoadingDialog(false)
                     binding.btnTaoQuiz.isEnabled = true
                     binding.btnTaoQuiz.text = "Tạo Quiz ngay"
 
@@ -185,6 +205,7 @@ class TaoQuizActivity : AppCompatActivity() {
 
                 override fun onFailure(call: Call<GenerateCustomQuizResponse>, t: Throwable) {
                     if (isFinishing || isDestroyed) return
+                    showAiQuizLoadingDialog(false)
                     binding.btnTaoQuiz.isEnabled = true
                     binding.btnTaoQuiz.text = "Tạo Quiz ngay"
                     Toast.makeText(
@@ -222,5 +243,101 @@ class TaoQuizActivity : AppCompatActivity() {
                 binding.btnQty20.setTextColor(ContextCompat.getColor(this, R.color.white))
             }
         }
+    }
+
+    private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
+
+    private fun showAiQuizLoadingDialog(show: Boolean) {
+        if (show) {
+            if (loadingDialog == null) {
+                val container = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(24.dp(), 26.dp(), 24.dp(), 24.dp())
+                    background = GradientDrawable().apply {
+                        setColor(Color.WHITE)
+                        cornerRadius = 24.dp().toFloat()
+                    }
+                }
+                val iconBadge = TextView(this).apply {
+                    text = "✨"
+                    textSize = 32f
+                    gravity = Gravity.CENTER
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(Color.parseColor("#EEF2FF"))
+                    }
+                    layoutParams = LinearLayout.LayoutParams(64.dp(), 64.dp()).apply {
+                        bottomMargin = 14.dp()
+                    }
+                }
+                pulseAnimator = ObjectAnimator.ofFloat(iconBadge, View.SCALE_X, 0.92f, 1.08f).apply {
+                    duration = 700L
+                    repeatMode = ValueAnimator.REVERSE
+                    repeatCount = ValueAnimator.INFINITE
+                    start()
+                }
+                container.addView(iconBadge)
+
+                container.addView(TextView(this).apply {
+                    text = "LexiVT AI đang tạo bộ Quiz"
+                    textSize = 17f
+                    setTypeface(null, Typeface.BOLD)
+                    setTextColor(Color.parseColor("#0F172A"))
+                    gravity = Gravity.CENTER
+                })
+
+                val tips = listOf(
+                    "📄 Đang phân tích nội dung tài liệu của bạn...",
+                    "🧠 Đang trích xuất từ vựng & câu hỏi trọng tâm...",
+                    "🎯 Đang cân chỉnh độ khó phù hợp trình độ...",
+                    "🚀 Sắp xong rồi, chuẩn bị làm bài nhé!"
+                )
+                val statusTv = TextView(this).apply {
+                    text = tips[0]
+                    textSize = 13.5f
+                    setTextColor(Color.parseColor("#475569"))
+                    gravity = Gravity.CENTER
+                    setPadding(0, 8.dp(), 0, 16.dp())
+                }
+                container.addView(statusTv)
+
+                container.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                    isIndeterminate = true
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 8.dp())
+                })
+
+                var idx = 0
+                val r = object : Runnable {
+                    override fun run() {
+                        idx = (idx + 1) % tips.size
+                        statusTv.text = tips[idx]
+                        loadingHandler.postDelayed(this, 1800L)
+                    }
+                }
+                loadingRunnable = r
+                loadingHandler.postDelayed(r, 1800L)
+
+                loadingDialog = AlertDialog.Builder(this)
+                    .setView(container)
+                    .setCancelable(false)
+                    .create().apply {
+                        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                    }
+            }
+            loadingDialog?.show()
+        } else {
+            loadingRunnable?.let { loadingHandler.removeCallbacks(it) }
+            loadingRunnable = null
+            pulseAnimator?.cancel()
+            pulseAnimator = null
+            loadingDialog?.dismiss()
+            loadingDialog = null
+        }
+    }
+
+    override fun onDestroy() {
+        showAiQuizLoadingDialog(false)
+        super.onDestroy()
     }
 }

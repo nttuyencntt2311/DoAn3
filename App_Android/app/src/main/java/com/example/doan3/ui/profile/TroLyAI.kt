@@ -93,31 +93,82 @@ class TroLyAIFragment : Fragment() {
     }
 
     private fun showRoadmapFormDialog() {
-        val dialog = BottomSheetDialog(requireContext())
+        val ctx = requireContext()
+        val dialog = BottomSheetDialog(ctx)
         val dialogBinding = DialogCreateRoadmapBinding.inflate(layoutInflater)
         dialog.setContentView(dialogBinding.root)
 
-        dialogBinding.spinnerGoal.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            arrayOf("Giao tiếp công việc", "Thi IELTS/TOEIC", "Du lịch", "Lấy lại căn bản")
-        )
-        dialogBinding.spinnerLevel.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            arrayOf("Mất gốc", "Cơ bản", "Trung cấp")
-        )
-        dialogBinding.spinnerTime.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            arrayOf("15 phút/ngày", "30 phút/ngày", "1 tiếng/ngày")
-        )
+        val goals = arrayOf("Chủ đề: Hợp đồng & Kinh doanh", "Chủ đề: Môi trường văn phòng", "Chủ đề: Công nghệ thông tin (IT)", "Chủ đề: Kế toán & Tài chính", "Chủ đề: Giao tiếp & Du lịch", "Luyện thi IELTS / TOEIC")
+        val levels = arrayOf("Mới bắt đầu (A1-A2)", "Trung cấp (B1-B2)", "Nâng cao (C1+)")
+        val times = arrayOf("5 phút/ngày", "10 phút/ngày", "15 phút/ngày", "20 phút/ngày", "30 phút/ngày")
+
+        dialogBinding.spinnerGoal.adapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_dropdown_item, goals)
+        dialogBinding.spinnerLevel.adapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_dropdown_item, levels)
+        dialogBinding.spinnerTime.adapter = ArrayAdapter(ctx, android.R.layout.simple_spinner_dropdown_item, times)
+
+        // Tự động điền sẵn theo hồ sơ Onboarding & lần chọn trước của người dùng
+        val prefs = ctx.getSharedPreferences("DoAn3Prefs", android.content.Context.MODE_PRIVATE)
+        val savedGoal = prefs.getString("USER_GOAL", "") ?: ""
+        val savedLevel = prefs.getString("USER_LEVEL_GOAL", "") ?: ""
+        val savedMins = prefs.getInt("DAILY_GOAL_MINUTES", 15)
+        val savedName = prefs.getString("USER_NAME", "Học viên") ?: "Học viên"
+        val savedUserLevel = AvatarHelper.getUserLevel(ctx)
+
+        val goalIdx = goals.indexOfFirst { savedGoal.isNotBlank() && it.contains(savedGoal, ignoreCase = true) }
+        if (goalIdx >= 0) dialogBinding.spinnerGoal.setSelection(goalIdx)
+
+        val levelIdx = levels.indexOfFirst { savedLevel.isNotBlank() && it.contains(savedLevel.take(6), ignoreCase = true) }
+        if (levelIdx >= 0) dialogBinding.spinnerLevel.setSelection(levelIdx)
+
+        val timeIdx = times.indexOfFirst { it.startsWith("$savedMins ") }
+        if (timeIdx >= 0) dialogBinding.spinnerTime.setSelection(timeIdx) else dialogBinding.spinnerTime.setSelection(2)
+
+        // Nạp hồ sơ XAI thật (các từ dễ quên) hiển thị trực tiếp lên thẻ đầu popup
+        dialogBinding.tvXaiProfileInput.text = "$savedName • Cấp $savedUserLevel • Đang đọc Sổ tay Tiên tri XAI..."
+        var topWeakWordsText = ""
+        RetrofitClient.getInstance(ctx).getPredictiveFlashcards().enqueue(object : Callback<PredictForgettingResponse> {
+            override fun onResponse(call: Call<PredictForgettingResponse>, response: Response<PredictForgettingResponse>) {
+                if (!dialog.isShowing) return
+                val cards = response.body()?.predictiveFlashcards ?: emptyList()
+                if (cards.isNotEmpty()) {
+                    topWeakWordsText = cards.take(4).joinToString(", ") { it.wordText }
+                    dialogBinding.tvXaiProfileInput.text =
+                        "$savedName • Cấp $savedUserLevel • Phát hiện ${cards.size} từ dễ quên ($topWeakWordsText...) ➝ AI sẽ ưu tiên vá đúng nhóm từ này ở Chặng 1!"
+                } else {
+                    dialogBinding.tvXaiProfileInput.text =
+                        "$savedName • Cấp $savedUserLevel • Hồ sơ XAI đã sẵn sàng để thiết kế lộ trình phù hợp nhất cho bạn."
+                }
+            }
+
+            override fun onFailure(call: Call<PredictForgettingResponse>, t: Throwable) {
+                if (!dialog.isShowing) return
+                dialogBinding.tvXaiProfileInput.text = "$savedName • Cấp $savedUserLevel • Sẵn sàng khởi tạo lộ trình cá nhân hóa."
+            }
+        })
+
+        // 3 chip gợi ý nhanh điền trực tiếp vào ô mong muốn
+        dialogBinding.chipQuickXaiPatch.setOnClickListener {
+            val hintWords = if (topWeakWordsText.isNotBlank()) " ($topWeakWordsText)" else ""
+            dialogBinding.edtExpectation.setText("Ưu tiên ôn lại dứt điểm các từ có nguy cơ quên cao trong Sổ tay Tiên tri XAI$hintWords.")
+        }
+        dialogBinding.chipQuickInterview.setOnClickListener {
+            dialogBinding.edtExpectation.setText("Chuẩn bị phỏng vấn xin việc ngành CNTT trong 30 ngày tới, trọng tâm từ vựng công sở & kỹ thuật.")
+        }
+        dialogBinding.chipQuickIelts.setOnClickListener {
+            dialogBinding.edtExpectation.setText("Nâng band IELTS lên 7.0+, tập trung từ vựng học thuật và phản xạ làm đề nhanh.")
+        }
 
         dialogBinding.btnGenerate.setOnClickListener {
             val goal = dialogBinding.spinnerGoal.selectedItem.toString()
             val level = dialogBinding.spinnerLevel.selectedItem.toString()
             val time = dialogBinding.spinnerTime.selectedItem.toString()
             val expectation = dialogBinding.edtExpectation.text.toString().trim()
+
+            // Lưu lại lựa chọn để lần sau mở form nhớ đúng sở thích người dùng
+            prefs.edit()
+                .putString("USER_GOAL", goal)
+                .putString("USER_LEVEL_GOAL", level)
+                .apply()
 
             dialog.dismiss()
 

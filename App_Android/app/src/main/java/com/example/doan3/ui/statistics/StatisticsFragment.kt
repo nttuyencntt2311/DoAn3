@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.doan3.MainActivity
+import com.example.doan3.R
 import com.example.doan3.databinding.FragmentStatisticsBinding
 import com.example.doan3.ui.profile.MemoryItem
 import com.example.doan3.ui.profile.RetrofitClient
@@ -71,6 +72,7 @@ class StatisticsFragment : Fragment() {
         }
 
         setupTabs()
+        setupChartRangeChips()
         setupWhatIfSimulator()
         renderXaiCognitiveProfile()
         viewModel.fetchRealStatistics(requireContext())
@@ -86,7 +88,7 @@ class StatisticsFragment : Fragment() {
             binding.tvTotalWords.text = stats.totalWords.toString()
             binding.tvAccuracy.text = "${stats.accuracyPercent}%"
 
-            drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0))
+            drawChart(stats.chartData ?: listOf(0, 0, 0, 0, 0, 0, 0), stats.chartLabels ?: listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN"))
             renderMemoriesSection()
             renderXaiCognitiveProfile()
             updateWhatIfResult()
@@ -598,15 +600,38 @@ class StatisticsFragment : Fragment() {
         }
     }
 
-    private fun drawChart(data: List<Int>) {
+    private fun setupChartRangeChips() {
+        val chips = listOf(
+            Triple(binding.btnRangeThisWeek, "this_week", "Hoạt động tuần này"),
+            Triple(binding.btnRangeLastWeek, "last_week", "Hoạt động tuần trước"),
+            Triple(binding.btnRangeMonth, "month", "Hoạt động tháng này")
+        )
+
+        fun selectChip(activeView: TextView, range: String, title: String) {
+            chips.forEach { (tv, _, _) ->
+                val isActive = tv == activeView
+                tv.setBackgroundResource(if (isActive) R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+                tv.setTextColor(if (isActive) Color.WHITE else Color.parseColor("#64748B"))
+            }
+            binding.tvChartTitle.text = title
+            viewModel.fetchRealStatistics(requireContext(), range)
+        }
+
+        chips.forEach { (tv, range, title) ->
+            tv.setOnClickListener { selectChip(tv, range, title) }
+        }
+    }
+
+    private fun drawChart(data: List<Int>, labels: List<String> = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")) {
         binding.chartContainer.removeAllViews()
-        val daysOfWeek = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+        val daysOfWeek = if (labels.isNotEmpty()) labels else listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+        binding.chartContainer.weightSum = daysOfWeek.size.toFloat()
 
         val maxPercent = 100f
-        val maxHeightDp = 92
+        val maxHeightDp = 82
         val radiusPx = 7.dp().toFloat()
 
-        for (i in 0 until 7) {
+        for (i in daysOfWeek.indices) {
             val percent = if (i < data.size) data[i] else 0
 
             val columnLayout = LinearLayout(requireContext()).apply {

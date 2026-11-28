@@ -210,6 +210,7 @@ class ChatAIActivity : AppCompatActivity() {
         setSendingState(true)
         chatAdapter.addMessage(ChatMessage(text = userText, isUser = true))
         edtChatInput.setText("")
+        chatAdapter.showTypingIndicator()
         rvChatMessages.scrollToPosition(chatAdapter.itemCount - 1)
 
         if (currentSessionId == null) {
@@ -234,6 +235,7 @@ class ChatAIActivity : AppCompatActivity() {
                         activeSessionUserId = userId
                         sendChatToBackend(firstMessage, currentSessionId!!)
                     } else {
+                        chatAdapter.hideTypingIndicator()
                         setSendingState(false)
                         Toast.makeText(this@ChatAIActivity, "Lỗi tạo phòng chat!", Toast.LENGTH_SHORT).show()
                     }
@@ -241,6 +243,7 @@ class ChatAIActivity : AppCompatActivity() {
 
                 override fun onFailure(call: Call<CreateSessionResponse>, t: Throwable) {
                     if (isFinishing || isDestroyed) return
+                    chatAdapter.hideTypingIndicator()
                     setSendingState(false)
                     Toast.makeText(this@ChatAIActivity, "Mất kết nối mạng!", Toast.LENGTH_SHORT).show()
                 }
@@ -253,6 +256,7 @@ class ChatAIActivity : AppCompatActivity() {
         RetrofitClient.getInstance(this).sendChatMessage(request)
             .enqueue(object : Callback<ChatResponse> {
                 override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
+                    chatAdapter.hideTypingIndicator()
                     setSendingState(false)
                     if (isFinishing || isDestroyed) return
                     if (response.isSuccessful && response.body() != null) {
@@ -265,6 +269,7 @@ class ChatAIActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
+                    chatAdapter.hideTypingIndicator()
                     setSendingState(false)
                     if (isFinishing || isDestroyed) return
                     Toast.makeText(this@ChatAIActivity, "Mất kết nối máy chủ!", Toast.LENGTH_SHORT).show()

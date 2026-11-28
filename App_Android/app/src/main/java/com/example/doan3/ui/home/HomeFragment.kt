@@ -31,7 +31,12 @@ import com.google.gson.Gson
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.appcompat.app.AlertDialog
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import android.content.Context
 import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
@@ -73,7 +78,15 @@ class HomeFragment : Fragment() {
         }
 
         binding.cardNextLesson.setOnClickListener {
-            (activity as? MainActivity)?.openRoadmapScreen()
+            val fallbackCat = viewModel.fallbackCategory.value
+            if (viewModel.hasRoadmapStep.value == true || fallbackCat.isNullOrBlank()) {
+                (activity as? MainActivity)?.openRoadmapScreen()
+            } else {
+                val intent = Intent(requireContext(), KhamPhaActivity::class.java).apply {
+                    putExtra("CATEGORY_NAME", fallbackCat)
+                }
+                startActivity(intent)
+            }
         }
 
         binding.ivAvatar.setOnClickListener {
@@ -112,6 +125,7 @@ class HomeFragment : Fragment() {
         val ctx = context ?: return
         viewModel.fetchUserData(ctx)
         syncDailyVocabProgress()
+        renderDailyGoalCard()
         checkPredictiveFlashcards()
     }
 
@@ -160,6 +174,42 @@ class HomeFragment : Fragment() {
                 tv.setTextColor(Color.parseColor("#94A3B8"))
             }
             tv.background = bg
+        }
+    }
+
+    private fun renderDailyGoalCard() {
+        val ctx = context ?: return
+        if (_binding == null) return
+        val prefs = ctx.getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        val goalMins = prefs.getInt("DAILY_GOAL_MINUTES", 10).coerceAtLeast(5)
+        val todayKey = "TODAY_STUDY_MINS_" + SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        val doneMins = prefs.getInt(todayKey, 0).coerceAtLeast(0)
+        val pct = ((doneMins * 100) / goalMins).coerceIn(0, 100)
+
+        binding.progressDailyGoal.progress = pct
+        if (doneMins >= goalMins) {
+            binding.tvDailyGoalLabel.text = "🎉 Hoàn thành mục tiêu hôm nay!"
+            binding.tvDailyGoalValue.text = "$doneMins / $goalMins phút ✓"
+            binding.tvDailyGoalValue.setTextColor(Color.parseColor("#059669"))
+        } else {
+            binding.tvDailyGoalLabel.text = "🎯 Mục tiêu hôm nay"
+            binding.tvDailyGoalValue.text = "$doneMins / $goalMins phút ▾"
+            binding.tvDailyGoalValue.setTextColor(Color.parseColor("#2563EB"))
+        }
+
+        binding.layoutDailyGoal.setOnClickListener {
+            val options = arrayOf("5 phút / ngày (Nhẹ nhàng)", "10 phút / ngày (Tiêu chuẩn)", "15 phút / ngày (Tăng tốc)", "30 phút / ngày (Chuyên sâu)")
+            val values = intArrayOf(5, 10, 15, 30)
+            val checkedIdx = values.indexOf(goalMins).coerceAtLeast(1)
+            AlertDialog.Builder(ctx)
+                .setTitle("Chỉnh mục tiêu học mỗi ngày 🎯")
+                .setSingleChoiceItems(options, checkedIdx) { dialog, which ->
+                    prefs.edit().putInt("DAILY_GOAL_MINUTES", values[which]).apply()
+                    renderDailyGoalCard()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Đóng", null)
+                .show()
         }
     }
 
@@ -495,6 +545,13 @@ class HomeFragment : Fragment() {
                     val allWords = response.body() ?: emptyList()
                     val masteredCount = allWords.count { it.proficiency >= 80 }
                     viewModel.updateDailyVocabularyProgress(masteredCount)
+                    val nextCategoryEntry = allWords
+                        .filter { it.proficiency < 80 && it.category.isNotBlank() }
+                        .groupBy { it.category }
+                        .maxByOrNull { it.value.size }
+                    if (nextCategoryEntry != null) {
+                        viewModel.updateNextLessonFallback(nextCategoryEntry.key, nextCategoryEntry.value.size)
+                    }
                 }
             }
 

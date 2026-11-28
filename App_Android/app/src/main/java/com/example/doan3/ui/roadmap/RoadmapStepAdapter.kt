@@ -84,9 +84,17 @@ class RoadmapStepAdapter : RecyclerView.Adapter<RoadmapStepAdapter.StepViewHolde
                     binding.tvStepDesc.setTextColor(Color.parseColor("#64748B"))
 
                     binding.tvTag.visibility = View.VISIBLE
-                    binding.tvTag.text = "Đã hoàn thành"
+                    binding.tvTag.text = "Đã hoàn thành ✓"
                     binding.tvTag.setTextColor(Color.parseColor("#059669"))
-                    binding.tvTag.setBackgroundColor(Color.TRANSPARENT)
+                    binding.tvTag.setBackgroundColor(Color.parseColor("#ECFDF5"))
+
+                    binding.btnContinueLearning.visibility = View.VISIBLE
+                    binding.btnContinueLearning.text = "Tiếp tục học ngay"
+                    binding.btnContinueLearning.text = "Ôn lại chặng này"
+                    binding.btnContinueLearning.setOnClickListener {
+                        val questionCount = (position + 1) * 5
+                        onContinueClickListener?.invoke(step, questionCount)
+                    }
                 }
 
                 StepStatus.CURRENT -> {

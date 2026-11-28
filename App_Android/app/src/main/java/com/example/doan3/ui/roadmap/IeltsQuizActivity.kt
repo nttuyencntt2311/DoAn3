@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.doan3.R
@@ -68,6 +69,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var isSubmitted: Boolean = false
 
     private val PREFS_NAME = "QuizProgressPrefs"
+    private var currentStepId = ""
     private var currentStepTitle = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +79,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         ttsEngine = TextToSpeech(this, this)
 
+        currentStepId = intent.getStringExtra("STEP_ID") ?: ""
         currentStepTitle = intent.getStringExtra("STEP_TITLE") ?: "Giao tiếp cơ bản"
         val stepDesc = intent.getStringExtra("STEP_DESC") ?: ""
         val questionCount = intent.getIntExtra("QUESTION_COUNT", 5)
@@ -85,6 +88,11 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         binding.tvCategory.text = currentStepTitle.uppercase()
 
         setupListeners()
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                confirmExitQuiz()
+            }
+        })
 
         sessionResumeTimestamp = System.currentTimeMillis()
 
@@ -229,7 +237,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun setupListeners() {
-        binding.btnBack.setOnClickListener { finish() }
+        binding.btnBack.setOnClickListener { confirmExitQuiz() }
         binding.tvSkipQuestion.setOnClickListener { skipQuestion() }
         binding.tvGetHint.setOnClickListener {
             if (quizList.isNotEmpty() && currentQuestionIndex < quizList.size) {
@@ -602,9 +610,12 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         } else {
             (finalElapsedMillis / max(1, quizList.size))
         }
-        getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
-            .edit()
+        val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+        val todayKey = "TODAY_STUDY_MINS_" + java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(java.util.Date())
+        val updatedTodayMins = prefs.getInt(todayKey, 0) + calculatedMinutes
+        prefs.edit()
             .putLong("USER_AVG_TIME_MS", exactAvgMs)
+            .putInt(todayKey, updatedTodayMins)
             .apply()
 
         val completionBonus = if (quizList.isNotEmpty()) (50 * score) / quizList.size else 0
@@ -626,6 +637,21 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             try {
                 val api = RetrofitClient.getInstance(applicationContext)
                 val response = api.submitQuiz(request).execute()
+
+                // Nếu bài Quiz thuộc một chặng Lộ trình AI và học viên đạt >= 50%, gọi API mở khóa chặng tiếp theo
+                if (response.isSuccessful && currentStepId.isNotBlank() && quizList.isNotEmpty() && score * 2 >= quizList.size) {
+                    try {
+                        api.completeRoadmapStep(
+                            mapOf(
+                                "stepId" to currentStepId,
+                                "score" to score.toString(),
+                                "totalQuestions" to quizList.size.toString()
+                            )
+                        )
+                    } catch (stepErr: Exception) {
+                        stepErr.printStackTrace()
+                    }
+                }
 
                 withContext(Dispatchers.Main) {
                     if (isFinishing || isDestroyed) return@withContext
@@ -669,6 +695,26 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
 
+    private fun friendlyShapSummary(item: com.example.doan3.ui.profile.ShapDetail): Pair<String, String> {
+        val pos = item.shapScore >= 0.0
+        val impact = when {
+            kotlin.math.abs(item.shapScore) >= 0.35 -> if (pos) "Hỗ trợ rất tốt" else "Ảnh hưởng lớn"
+            kotlin.math.abs(item.shapScore) >= 0.15 -> if (pos) "Hỗ trợ tốt" else "Cần chú ý"
+            else -> if (pos) "Tích cực nhẹ" else "Lưu ý nhỏ"
+        }
+        val label = when (item.feature) {
+            "question_difficulty" -> if (pos) "Độ khó bài học vừa sức với bạn" else "Độ khó bài học khá thử thách"
+            "elapsed_time" -> if (pos) "Tốc độ đọc đề & suy nghĩ ổn định" else "Thời gian suy nghĩ chưa đều"
+            "user_avg_elapsed_time" -> if (pos) "Nhịp làm bài trung bình rất tốt" else "Cần giữ nhịp suy nghĩ ổn định hơn"
+            "log_time_diff" -> if (pos) "Lịch ôn tập đều đặn" else "Khoảng nghỉ giữa các buổi hơi lâu"
+            "user_history_acc" -> if (pos) "Nền tảng kiến thức lịch sử vững" else "Nền tảng từ vựng cần củng cố thêm"
+            "rolling_acc_5" -> if (pos) "Phong độ các câu gần đây đang lên" else "Phong độ các câu gần đây hơi chững"
+            "user_questions_attempted" -> if (pos) "Kinh nghiệm luyện tập phong phú" else "Cần luyện thêm để quen dạng bài"
+            else -> item.viDescription.substringBefore(" (")
+        }
+        return Pair(label, impact)
+    }
+
     private fun showAiPostMortemDialog(aiReport: AiReport, finalXp: Int) {
         if (isFinishing || isDestroyed) return
         val bottomSheet = BottomSheetDialog(this)
@@ -679,40 +725,189 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             setBackgroundColor(Color.WHITE)
         }
 
+        val accuracyPct = if (quizList.isNotEmpty()) (score * 100) / quizList.size else 0
+        val isRoadmapQuiz = currentStepId.isNotBlank()
+        val passedStep = !isRoadmapQuiz || (quizList.isNotEmpty() && score * 2 >= quizList.size)
+
         val titleText = TextView(this).apply {
-            text = "BÁO CÁO PHÂN TÍCH NĂNG LỰC (XAI)"
+            text = "BÁO CÁO PHÂN TÍCH HỌC TẬP"
             textSize = 19f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.parseColor("#0F172A"))
             gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 10.dp())
+            setPadding(0, 0, 0, 6.dp())
         }
         layout.addView(titleText)
 
         val accText = TextView(this).apply {
-            val isGood = aiReport.predictedAccuracy >= 50.0
-            val colorStr = if (isGood) "#16A34A" else "#EA580C"
-            val status = if (isGood) "Duy trì ổn định 🚀" else "Cần cải thiện thêm ⚠️"
-
-            text = "Kết quả: $score / ${quizList.size} câu đúng\nXác suất thành thạo dự kiến: ${aiReport.predictedAccuracy}%\n($status)"
-            textSize = 16f
+            val isGood = accuracyPct >= 60
+            val colorStr = if (isGood) "#059669" else "#D97706"
+            val status = when {
+                accuracyPct >= 80 -> "Xuất sắc 🚀"
+                accuracyPct >= 50 -> "Đạt yêu cầu 👍"
+                else -> "Cần ôn thêm một chút 🌱"
+            }
+            text = "Kết quả: $score / ${quizList.size} câu đúng ($accuracyPct%) • $status"
+            textSize = 15.5f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.parseColor(colorStr))
-            setPadding(0, 0, 0, 12.dp())
+            setPadding(0, 0, 0, 10.dp())
             gravity = android.view.Gravity.CENTER
         }
         layout.addView(accText)
 
+        // Banner trạng thái qua chặng Lộ trình AI (rõ ràng cho người học)
+        if (isRoadmapQuiz) {
+            val stepBanner = TextView(this).apply {
+                text = if (passedStep) {
+                    "🎉 Chúc mừng! Bạn đã hoàn thành chặng này và mở khóa chặng tiếp theo."
+                } else {
+                    "📌 Bạn cần đạt tối thiểu 50% số câu đúng để hoàn thành và mở khóa chặng tiếp theo. Ôn từ sai rồi thử lại nhé!"
+                }
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.parseColor(if (passedStep) "#065F46" else "#9A3412"))
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(Color.parseColor(if (passedStep) "#ECFDF5" else "#FFF7ED"))
+                    cornerRadius = 12.dp().toFloat()
+                    setStroke(1.dp(), Color.parseColor(if (passedStep) "#A7F3D0" else "#FED7AA"))
+                }
+                setPadding(12.dp(), 10.dp(), 12.dp(), 10.dp())
+            }
+            val bannerLp = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = 12.dp() }
+            layout.addView(stepBanner, bannerLp)
+        }
+
+        // 1. ĐƯA NHẬN XÉT GIA SƯ AI LÊN ĐẦU (DỄ HIỂU NHẤT CHO NGƯỜI HỌC)
+        val pedFeedback = aiReport.pedagogicalFeedback
+        if (!pedFeedback.isNullOrBlank()) {
+            val fbBox = TextView(this).apply {
+                text = "🎓 Nhận xét từ gia sư AI: $pedFeedback"
+                textSize = 14f
+                setTextColor(Color.parseColor("#065F46"))
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(Color.parseColor("#ECFDF5"))
+                    cornerRadius = 14.dp().toFloat()
+                }
+                setPadding(14.dp(), 12.dp(), 14.dp(), 12.dp())
+            }
+            val fbParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = 10.dp() }
+            layout.addView(fbBox, fbParams)
+        }
+
+        // 2. GỢI Ý HÀNH ĐỘNG (WHAT-IF)
+        val cfSummary = aiReport.counterfactual?.summaryVi
+        if (!cfSummary.isNullOrBlank()) {
+            val cfBox = TextView(this).apply {
+                text = "💡 Gợi ý cải thiện ngay: $cfSummary"
+                textSize = 13.5f
+                setTextColor(Color.parseColor("#1E3A8A"))
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(Color.parseColor("#EFF6FF"))
+                    cornerRadius = 14.dp().toFloat()
+                }
+                setPadding(14.dp(), 12.dp(), 14.dp(), 12.dp())
+            }
+            val cfParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = 12.dp() }
+            layout.addView(cfBox, cfParams)
+        }
+
+        // 3. TÓM TẮT ĐIỂM MẠNH & ĐIỂM CẦN CẢI THIỆN BẰNG NGÔN NGỮ TỰ NHIÊN
         val detailedShap = aiReport.xaiExplanation.detailedShap
         if (!detailedShap.isNullOrEmpty()) {
-            val chartTitle = TextView(this).apply {
-                text = "📊 Biểu đồ đóng góp SHAP (Xanh: Tích cực | Đỏ: Rủi ro)"
-                textSize = 14f
+            val summaryTitle = TextView(this).apply {
+                text = "✨ Tóm tắt thói quen làm bài của bạn"
+                textSize = 14.5f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(Color.parseColor("#1E293B"))
-                setPadding(0, 4.dp(), 0, 8.dp())
+                setTextColor(Color.parseColor("#0F172A"))
+                setPadding(0, 2.dp(), 0, 6.dp())
             }
-            layout.addView(chartTitle)
+            layout.addView(summaryTitle)
+
+            detailedShap.take(4).forEach { item ->
+                val isPositive = item.shapScore >= 0.0
+                val (friendlyLabel, impactBadge) = friendlyShapSummary(item)
+                val row = android.widget.LinearLayout(this).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    setPadding(10.dp(), 8.dp(), 10.dp(), 8.dp())
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setColor(Color.parseColor("#F8FAFC"))
+                        cornerRadius = 10.dp().toFloat()
+                    }
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = 6.dp() }
+                }
+                val txt = TextView(this).apply {
+                    text = "${if (isPositive) "✅" else "⚠️"} $friendlyLabel"
+                    textSize = 13f
+                    setTextColor(Color.parseColor("#334155"))
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                    )
+                }
+                val badge = TextView(this).apply {
+                    text = impactBadge
+                    textSize = 11.5f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(Color.parseColor(if (isPositive) "#047857" else "#B91C1C"))
+                }
+                row.addView(txt)
+                row.addView(badge)
+                layout.addView(row)
+            }
+
+            if (wrongWordsList.isNotEmpty()) {
+                val wrongTv = TextView(this).apply {
+                    text = "📌 Từ vựng cần ôn lại (${wrongWordsList.distinct().size} từ): ${wrongWordsList.distinct().joinToString(", ")}"
+                    textSize = 13f
+                    setTextColor(Color.parseColor("#B91C1C"))
+                    setPadding(4.dp(), 4.dp(), 4.dp(), 8.dp())
+                }
+                layout.addView(wrongTv)
+            }
+
+            // 4. MỤC THU GỌN BIỂU ĐỒ KỸ THUẬT SHAP (GIỮ NGUYÊN CHỈ SỐ ĐỂ DEMO/BẢO VỆ ĐỒ ÁN)
+            val shapDetailsContainer = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                visibility = View.GONE
+                setPadding(10.dp(), 10.dp(), 10.dp(), 8.dp())
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(Color.parseColor("#F8FAFC"))
+                    cornerRadius = 12.dp().toFloat()
+                    setStroke(1.dp(), Color.parseColor("#E2E8F0"))
+                }
+            }
+
+            val toggleShapBtn = TextView(this).apply {
+                text = "🔬 Xem phân tích kỹ thuật SHAP (${aiReport.predictedAccuracy}% dự kiến) ▾"
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.parseColor("#2563EB"))
+                gravity = android.view.Gravity.CENTER
+                setPadding(8.dp(), 10.dp(), 8.dp(), 10.dp())
+                setOnClickListener {
+                    if (shapDetailsContainer.visibility == View.GONE) {
+                        shapDetailsContainer.visibility = View.VISIBLE
+                        text = "🔬 Ẩn phân tích kỹ thuật SHAP ▴"
+                    } else {
+                        shapDetailsContainer.visibility = View.GONE
+                        text = "🔬 Xem phân tích kỹ thuật SHAP (${aiReport.predictedAccuracy}% dự kiến) ▾"
+                    }
+                }
+            }
+            layout.addView(toggleShapBtn)
 
             val maxAbsShap = detailedShap.maxOfOrNull { kotlin.math.abs(it.shapScore) }
                 ?.coerceAtLeast(0.05) ?: 1.0
@@ -720,19 +915,17 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             detailedShap.take(5).forEach { item ->
                 val isPositive = item.shapScore >= 0.0
                 val barColor = if (isPositive) Color.parseColor("#16A34A") else Color.parseColor("#DC2626")
-                val bgTrackColor = Color.parseColor("#F1F5F9")
 
                 val rowContainer = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.VERTICAL
                     setPadding(0, 3.dp(), 0, 6.dp())
                 }
-
                 val headerRow = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.HORIZONTAL
                 }
                 val labelTv = TextView(this).apply {
                     text = item.viDescription
-                    textSize = 13f
+                    textSize = 12.5f
                     setTextColor(Color.parseColor("#334155"))
                     layoutParams = android.widget.LinearLayout.LayoutParams(
                         0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
@@ -741,7 +934,7 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 val scoreTv = TextView(this).apply {
                     val sign = if (isPositive) "+" else ""
                     text = "$sign${String.format(Locale.US, "%.2f", item.shapScore)}"
-                    textSize = 13f
+                    textSize = 12.5f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(barColor)
                 }
@@ -751,116 +944,43 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                 val barTrack = android.widget.LinearLayout(this).apply {
                     orientation = android.widget.LinearLayout.HORIZONTAL
-                    setBackgroundColor(bgTrackColor)
+                    setBackgroundColor(Color.parseColor("#E2E8F0"))
                     layoutParams = android.widget.LinearLayout.LayoutParams(
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 8.dp()
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 7.dp()
                     ).apply { setMargins(0, 4.dp(), 0, 0) }
                 }
-
                 val ratio = (kotlin.math.abs(item.shapScore) / maxAbsShap).toFloat().coerceIn(0.06f, 1.0f)
-                val filledBar = View(this).apply {
+                barTrack.addView(View(this).apply {
                     setBackgroundColor(barColor)
-                    layoutParams = android.widget.LinearLayout.LayoutParams(
-                        0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, ratio
-                    )
-                }
-                val emptyBar = View(this).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, ratio)
+                })
+                barTrack.addView(View(this).apply {
                     setBackgroundColor(Color.TRANSPARENT)
-                    layoutParams = android.widget.LinearLayout.LayoutParams(
-                        0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (1.0f - ratio).coerceAtLeast(0f)
-                    )
-                }
-                barTrack.addView(filledBar)
-                barTrack.addView(emptyBar)
+                    layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (1.0f - ratio).coerceAtLeast(0f))
+                })
                 rowContainer.addView(barTrack)
-
-                layout.addView(rowContainer)
+                shapDetailsContainer.addView(rowContainer)
             }
-        }
-
-        val posTitle = TextView(this).apply {
-            text = "🌟 Nhân tố tích cực (Ưu điểm):"
-            setTextColor(Color.parseColor("#059669"))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 8.dp(), 0, 2.dp())
-        }
-        layout.addView(posTitle)
-
-        aiReport.xaiExplanation.positiveFactors.forEach { factor ->
-            val pt = TextView(this).apply {
-                text = "• ${formatFactorText(factor)}"
-                setPadding(8.dp(), 4.dp(), 0, 4.dp())
-                setTextColor(Color.parseColor("#334155"))
-            }
-            layout.addView(pt)
-        }
-
-        val negTitle = TextView(this).apply {
-            text = "⚠️ Nhân tố rủi ro (Hạn chế):"
-            setTextColor(Color.parseColor("#DC2626"))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 10.dp(), 0, 2.dp())
-        }
-        layout.addView(negTitle)
-
-        aiReport.xaiExplanation.negativeFactors.forEach { factor ->
-            val nt = TextView(this).apply {
-                text = "• ${formatFactorText(factor)}"
-                setPadding(8.dp(), 4.dp(), 0, 4.dp())
-                setTextColor(Color.parseColor("#334155"))
-            }
-            layout.addView(nt)
-        }
-
-        val cfSummary = aiReport.counterfactual?.summaryVi
-        if (!cfSummary.isNullOrBlank()) {
-            val cfBox = TextView(this).apply {
-                text = "💡 Gợi ý cải thiện (What-If XAI):\n$cfSummary"
-                textSize = 13.5f
-                setTextColor(Color.parseColor("#1E3A8A"))
-                setBackgroundColor(Color.parseColor("#EFF6FF"))
-                setPadding(12.dp(), 10.dp(), 12.dp(), 10.dp())
-            }
-            val cfParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, 10.dp(), 0, 0) }
-            layout.addView(cfBox, cfParams)
-        }
-
-        val pedFeedback = aiReport.pedagogicalFeedback
-        if (!pedFeedback.isNullOrBlank()) {
-            val fbBox = TextView(this).apply {
-                text = "🎓 Nhận xét gia sư XAI:\n$pedFeedback"
-                textSize = 13.5f
-                setTextColor(Color.parseColor("#065F46"))
-                setBackgroundColor(Color.parseColor("#ECFDF5"))
-                setPadding(12.dp(), 10.dp(), 12.dp(), 10.dp())
-            }
-            val fbParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { setMargins(0, 8.dp(), 0, 0) }
-            layout.addView(fbBox, fbParams)
+            layout.addView(shapDetailsContainer)
         }
 
         val btnClose = Button(this).apply {
-            text = "NHẬN +$finalXp XP & HOÀN THÀNH"
+            text = "NHẬN +$finalXp XP & XEM TỔNG KẾT"
             setBackgroundColor(Color.parseColor("#2563EB"))
             setTextColor(Color.WHITE)
             setPadding(0, 12.dp(), 0, 12.dp())
             setOnClickListener {
                 bottomSheet.dismiss()
-                val fb = listOfNotNull(aiReport.counterfactual?.summaryVi, aiReport.pedagogicalFeedback)
+                val fb = listOfNotNull(aiReport.pedagogicalFeedback, aiReport.counterfactual?.summaryVi)
                     .filter { it.isNotBlank() }
-                    .joinToString("\n\n")
+                    .joinToString(" ")
                 openQuizSummary(finalXp, fb)
             }
         }
         val btnParams = android.widget.LinearLayout.LayoutParams(
             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(0, 16.dp(), 0, 0) }
+        ).apply { setMargins(0, 14.dp(), 0, 0) }
 
         layout.addView(btnClose, btnParams)
         scrollView.addView(layout)
@@ -906,6 +1026,19 @@ class IeltsQuizActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         } else {
             pendingSpeechText = text
         }
+    }
+
+    private fun confirmExitQuiz() {
+        if (isSubmitted || quizList.isEmpty()) {
+            finish()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Tạm dừng bài học?")
+            .setMessage("Bạn đang làm đến câu ${currentQuestionIndex + 1}/${quizList.size}. Tiến độ của bạn sẽ được tự động lưu lại để lần sau học tiếp.")
+            .setPositiveButton("Ở lại học tiếp", null)
+            .setNegativeButton("Tạm thoát") { _, _ -> finish() }
+            .show()
     }
 
     override fun onDestroy() {

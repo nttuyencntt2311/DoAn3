@@ -124,9 +124,10 @@
                         android:layout_height="24dp"
                         android:src="@drawable/ic_fire" />
                     <TextView
+                        android:id="@+id/tvWeeklyStreak"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="5"
+                        android:text="0"
                         android:textColor="#C2410C"
                         android:textSize="17sp"
                         android:textStyle="bold" />
@@ -138,9 +139,10 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
                     <TextView
+                        android:id="@+id/tvWeeklyGoalTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mục tiêu tuần"
+                        android:text="Mục tiêu tuần (0/5)"
                         android:textColor="#0F172A"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -149,11 +151,11 @@
                         android:layout_height="6dp"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal">
-                        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#F59E0B" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#F59E0B" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#F59E0B" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0"/>
+                        <View android:id="@+id/weeklyBar1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0" android:layout_marginEnd="4dp"/>
+                        <View android:id="@+id/weeklyBar2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0" android:layout_marginEnd="4dp"/>
+                        <View android:id="@+id/weeklyBar3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0" android:layout_marginEnd="4dp"/>
+                        <View android:id="@+id/weeklyBar4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0" android:layout_marginEnd="4dp"/>
+                        <View android:id="@+id/weeklyBar5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="#E2E8F0"/>
                     </LinearLayout>
                 </LinearLayout>
                 <com.google.android.material.button.MaterialButton

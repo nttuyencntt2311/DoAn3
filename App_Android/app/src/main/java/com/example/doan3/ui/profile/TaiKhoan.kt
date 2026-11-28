@@ -12,6 +12,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.appcompat.widget.SwitchCompat
 import android.Manifest
 import android.content.pm.PackageManager
@@ -132,9 +134,11 @@ class TaiKhoanFragment : Fragment() {
                 .setTitle("Chọn ngôn ngữ ứng dụng")
                 .setSingleChoiceItems(options, currentIdx) { dialog, which ->
                     val chosen = options[which]
+                    val langTag = if (chosen == "English") "en" else "vi"
                     prefs.edit().putString("APP_LANGUAGE", chosen).apply()
                     tvCurrentLanguage?.text = chosen
-                    Toast.makeText(requireContext(), "Đã chọn ngôn ngữ: $chosen", Toast.LENGTH_SHORT).show()
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(langTag))
+                    Toast.makeText(requireContext(), "Đã chuyển ngôn ngữ sang: $chosen", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
                 .setNegativeButton("Đóng", null)

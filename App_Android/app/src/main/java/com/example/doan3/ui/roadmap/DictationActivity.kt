@@ -9,10 +9,15 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.doan3.R
+import com.example.doan3.ui.profile.QuestionLog
 import com.example.doan3.ui.profile.RetrofitClient
+import com.example.doan3.ui.profile.SubmitQuizRequest
+import com.example.doan3.ui.profile.SubmitQuizResponse
 import com.example.doan3.ui.profile.SoundHapticHelper
 import com.example.doan3.ui.vocabulary.Vocabulary
 import com.google.android.material.button.MaterialButton
@@ -35,6 +40,10 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var score = 0
     private var isChecked = false
     private val wrongWords = arrayListOf<String>()
+    private val questionLogs = mutableListOf<QuestionLog>()
+    private var sessionStartMs = 0L
+    private var wordStartMs = 0L
+    private var isSubmitting = false
 
     private lateinit var tvCounter: TextView
     private lateinit var progressBar: LinearProgressIndicator
@@ -50,7 +59,12 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         tts = TextToSpeech(this, this)
 
-        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener { confirmExitDictation() }
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                confirmExitDictation()
+            }
+        })
         tvCounter = findViewById(R.id.tvDictationCounter)
         progressBar = findViewById(R.id.progressDictation)
         tvHintMeaning = findViewById(R.id.tvDictationHintMeaning)
@@ -117,6 +131,8 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         currentIndex = 0
         score = 0
         wrongWords.clear()
+        questionLogs.clear()
+        sessionStartMs = System.currentTimeMillis()
         showCurrentWord()
     }
 
@@ -130,6 +146,7 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         edtAnswer.isEnabled = true
         tvFeedback.visibility = View.GONE
         btnCheck.text = "Kiểm tra đáp án"
+        wordStartMs = System.currentTimeMillis()
         speakCurrent(1.0f)
     }
 
@@ -150,7 +167,11 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         edtAnswer.isEnabled = false
         tvFeedback.visibility = View.VISIBLE
 
-        if (userInput.equals(item.word.trim(), ignoreCase = true)) {
+        val elapsedMs = (System.currentTimeMillis() - wordStartMs).coerceAtLeast(500L)
+        val isCorrect = userInput.equals(item.word.trim(), ignoreCase = true)
+        questionLogs.add(QuestionLog(question = item.word, topic = "Dictation", isCorrect = isCorrect, elapsedTimeMs = elapsedMs))
+
+        if (isCorrect) {
             score++
             SoundHapticHelper.playCorrect(btnCheck)
             tvFeedback.setTextColor(Color.parseColor("#047857"))
@@ -172,17 +193,77 @@ class DictationActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             currentIndex++
             showCurrentWord()
         } else {
-            val intent = Intent(this, QuizSummaryActivity::class.java).apply {
-                putExtra("SCORE", score)
-                putExtra("TOTAL", words.size)
-                putExtra("EARNED_XP", score * 10)
-                putExtra("STEP_TITLE", "Luyện Nghe & Chép chính tả (Dictation)")
-                putExtra("XAI_FEEDBACK", "Bạn đã hoàn thành bài luyện kỹ năng Nghe – Viết! Luyện tập đều đặn giúp tăng phản xạ chính tả nhanh hơn.")
-                putStringArrayListExtra("WRONG_WORDS", wrongWords)
+            if (isSubmitting) return
+            isSubmitting = true
+            btnCheck.isEnabled = false
+            btnCheck.text = "Đang đồng bộ kết quả XAI..."
+
+            val totalElapsed = (System.currentTimeMillis() - sessionStartMs).coerceAtLeast(1000L)
+            val minutes = (totalElapsed / 60000L).toInt().coerceIn(1, 60)
+            val prefs = getSharedPreferences("DoAn3Prefs", Context.MODE_PRIVATE)
+            val todayKey = "TODAY_STUDY_MINS_" + java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(java.util.Date())
+            prefs.edit().putInt(todayKey, prefs.getInt(todayKey, 0) + minutes).apply()
+            val avgMs = if (questionLogs.isNotEmpty()) {
+                questionLogs.map { it.elapsedTimeMs }.average().toLong()
+            } else {
+                totalElapsed / words.size.coerceAtLeast(1)
             }
-            startActivity(intent)
-            finish()
+            val earnedXp = score * 10
+
+            val req = SubmitQuizRequest(
+                topic = "Luyện Nghe & Chép chính tả (Dictation)",
+                score = score,
+                totalQuestions = words.size,
+                earnedXp = earnedXp,
+                learnedWords = score,
+                timeSpentMinutes = minutes,
+                difficulty = 3,
+                wrongWords = wrongWords.distinct(),
+                avgElapsedTimeMs = avgMs,
+                questionLogs = questionLogs
+            )
+
+            val defaultFeedback = "Bạn đã hoàn thành bài luyện kỹ năng Nghe – Viết! Các từ viết sai đã được đồng bộ vào Sổ tay Tiên tri XAI để nhắc ôn đúng lúc."
+            RetrofitClient.getInstance(this).submitQuiz(req).enqueue(object : Callback<SubmitQuizResponse> {
+                override fun onResponse(call: Call<SubmitQuizResponse>, response: Response<SubmitQuizResponse>) {
+                    if (isFinishing || isDestroyed) return
+                    val aiFb = response.body()?.aiReport?.pedagogicalFeedback?.takeIf { it.isNotBlank() }
+                        ?: defaultFeedback
+                    openSummary(earnedXp, aiFb)
+                }
+
+                override fun onFailure(call: Call<SubmitQuizResponse>, t: Throwable) {
+                    if (isFinishing || isDestroyed) return
+                    openSummary(earnedXp, defaultFeedback)
+                }
+            })
         }
+    }
+
+    private fun openSummary(earnedXp: Int, feedback: String) {
+        val intent = Intent(this, QuizSummaryActivity::class.java).apply {
+            putExtra("SCORE", score)
+            putExtra("TOTAL", words.size)
+            putExtra("EARNED_XP", earnedXp)
+            putExtra("STEP_TITLE", "Luyện Nghe & Chép chính tả (Dictation)")
+            putExtra("XAI_FEEDBACK", feedback)
+            putStringArrayListExtra("WRONG_WORDS", wrongWords)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun confirmExitDictation() {
+        if (isSubmitting || words.isEmpty()) {
+            finish()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Thoát bài luyện nghe?")
+            .setMessage("Bạn đang ở từ ${currentIndex + 1}/${words.size}. Nếu thoát lúc này phiên luyện nghe hiện tại sẽ chưa được lưu điểm.")
+            .setPositiveButton("Tiếp tục nghe", null)
+            .setNegativeButton("Thoát") { _, _ -> finish() }
+            .show()
     }
 
     override fun onDestroy() {

@@ -19,17 +19,51 @@ router.get('/learning', verifyToken, async (req, res) => {
     const user = await UserModel.findById(userId);
     if (!user) return res.status(404).json({ error: "Không tìm thấy người dùng" });
 
-    // 1. Tạo mảng dữ liệu biểu đồ 7 ngày qua từ bảng History
+    // 1. Tạo mảng dữ liệu biểu đồ theo bộ lọc range: this_week | last_week | month (múi giờ VN UTC+7)
+    const range = String(req.query.range || 'this_week');
     const histories = await HistoryModel.find({ userId }).sort({ createdAt: 1 });
-    let chartData = [0, 0, 0, 0, 0, 0, 0]; 
-    histories.forEach(h => {
-      const date = new Date(h.createdAt);
-      let dayIndex = date.getDay() - 1; // 0 là CN, 1 là T2...
-      if (dayIndex === -1) dayIndex = 6; // Đổi CN xuống cuối mảng (Index 6)
-      
-      chartData[dayIndex] += (h.totalQuestions || 0) * 5; 
-      if (chartData[dayIndex] > 100) chartData[dayIndex] = 100; // Tối đa 100% cột
-    });
+    const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    const nowVn = new Date(Date.now() + VN_OFFSET_MS);
+    const vnDayOfWeek = nowVn.getUTCDay(); // 0=CN, 1=T2..6=T7
+    const daysSinceMonday = vnDayOfWeek === 0 ? 6 : vnDayOfWeek - 1;
+    const todayStartVnMs = Date.UTC(nowVn.getUTCFullYear(), nowVn.getUTCMonth(), nowVn.getUTCDate());
+    const thisWeekMondayVnMs = todayStartVnMs - daysSinceMonday * DAY_MS;
+
+    let chartLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    let chartData = [0, 0, 0, 0, 0, 0, 0];
+
+    if (range === 'month') {
+      chartLabels = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
+      chartData = [0, 0, 0, 0];
+      const curYear = nowVn.getUTCFullYear();
+      const curMonth = nowVn.getUTCMonth();
+
+      histories.forEach((h) => {
+        const createdMs = new Date(h.createdAt).getTime();
+        if (Number.isNaN(createdMs)) return;
+        const vnDate = new Date(createdMs + VN_OFFSET_MS);
+        if (vnDate.getUTCFullYear() !== curYear || vnDate.getUTCMonth() !== curMonth) return;
+        const dayOfMonth = vnDate.getUTCDate(); // 1..31
+        const weekIdx = Math.min(3, Math.floor((dayOfMonth - 1) / 7));
+        chartData[weekIdx] = Math.min(100, chartData[weekIdx] + (h.totalQuestions || 0) * 3);
+      });
+    } else {
+      const startVnMs = range === 'last_week' ? thisWeekMondayVnMs - 7 * DAY_MS : thisWeekMondayVnMs;
+      const endVnMs = startVnMs + 7 * DAY_MS;
+
+      histories.forEach((h) => {
+        const createdMs = new Date(h.createdAt).getTime();
+        if (Number.isNaN(createdMs)) return;
+        const hVnMs = createdMs + VN_OFFSET_MS;
+        if (hVnMs < startVnMs || hVnMs >= endVnMs) return;
+        const vnDate = new Date(hVnMs);
+        let dayIndex = vnDate.getUTCDay() - 1;
+        if (dayIndex === -1) dayIndex = 6;
+        chartData[dayIndex] = Math.min(100, chartData[dayIndex] + (h.totalQuestions || 0) * 5);
+      });
+    }
 
     // 2. TÍNH TOÁN TIẾN ĐỘ TỪ VỰNG CÁ NHÂN HÓA THEO user.vocabProgress
     const totalWordsCount = await VocabularyModel.countDocuments();
@@ -63,16 +97,44 @@ router.get('/learning', verifyToken, async (req, res) => {
         totalHours: Math.round(safeMinutes / 60),
         totalWords: masteredCount,
         accuracyPercent: realAccuracy,
-        chartData: chartData
+        chartData: chartData,
+        chartLabels: chartLabels,
+        chartRange: range
       },
-      memories: [
-        {
+      memories: (() => {
+        const list = [];
+        list.push({
           date: "Hôm nay",
-          title: `🔥 Chuỗi ${user.streakDays || 0} ngày rực cháy`,
-          description: `Bạn đã duy trì thói quen học tiếng Anh liên tiếp chuẩn chỉ!`,
-          xp: user.xp || 0
+          title: `🔥 Chuỗi ${user.streakDays || 0} ngày học liên tiếp`,
+          description: `Bạn đang ở Cấp ${user.level || 1} với ${(user.xp || 0).toLocaleString()} XP tích lũy.`,
+          xp: user.xp || 0,
+        });
+        if (masteredCount > 0) {
+          list.push({
+            date: "Thành tích từ vựng",
+            title: `📚 Chinh phục ${masteredCount} từ vựng thành thạo`,
+            description: `Độ phủ vốn từ đạt ${masteryPercent}% trên tổng kho ${totalWordsCount} từ.`,
+            xp: masteredCount * 5,
+          });
         }
-      ]
+        const recentQuizzes = histories.slice(-3).reverse();
+        recentQuizzes.forEach((h) => {
+          const dStr = new Date(new Date(h.createdAt).getTime() + VN_OFFSET_MS)
+            .toISOString()
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join("/");
+          const pct = h.totalQuestions > 0 ? Math.round(((h.score || 0) / h.totalQuestions) * 100) : 0;
+          list.push({
+            date: dStr,
+            title: `🎯 Hoàn thành: ${h.topic || "Bài luyện tập Quiz"}`,
+            description: `Đạt ${h.score || 0}/${h.totalQuestions || 0} câu đúng (${pct}%).`,
+            xp: (h.score || 0) * 10,
+          });
+        });
+        return list;
+      })()
     });
 
   } catch (error) {

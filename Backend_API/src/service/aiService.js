@@ -2,36 +2,49 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Groq = require("groq-sdk"); // Import thêm thư viện Groq
 
 // Khởi tạo Key (Nhớ thêm GROQ_API_KEY vào file .env nhé)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const groq = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+  : null;
 
 // 🚀 FIX LỖI 500 TẠI ĐÂY: Export genAI ra để aiController có thể tái sử dụng
 exports.genAI = genAI;
 
 // THÊM THAM SỐ chatHistory VÀO ĐÂY (Mặc định là mảng rỗng nếu không truyền vào)
-exports.generateChatReply = async (userMessage, chatHistory = []) => {
+exports.generateChatReply = async (userMessage, chatHistory = [], xaiContext = null) => {
+    const xaiBlock = xaiContext ? `
+HỒ SƠ HỌC TẬP & XAI THỰC TẾ CỦA HỌC VIÊN HIỆN TẠI (chỉ dùng số liệu này, không bịa thêm):
+- Học viên: ${xaiContext.userName} (Cấp ${xaiContext.level}, chuỗi ${xaiContext.streakDays} ngày)
+- Độ chính xác lịch sử: ${xaiContext.accuracyPercent}% | Tốc độ suy nghĩ TB: ${xaiContext.avgThinkingSec} giây/câu
+- Các từ vựng học viên đang hay sai / dễ quên: ${(xaiContext.weakWords || []).join(", ") || "Chưa có"}
+${xaiContext.predictedAccuracy !== null ? `- Xác suất thành thạo XAI dự kiến: ${xaiContext.predictedAccuracy}%` : ""}
+${(xaiContext.negativeFactors || []).length > 0 ? `- Yếu tố rủi ro XAI: ${xaiContext.negativeFactors.join("; ")}` : ""}
+${xaiContext.counterfactual ? `- Gợi ý cải thiện What-If: ${xaiContext.counterfactual}` : ""}
+` : "";
+
     const systemInstruction = `
-Bạn là một AI Giáo viên tiếng Anh xuất sắc, linh hoạt và thực dụng cho người Việt.
-Nhiệm vụ của bạn là hỗ trợ học viên trực tiếp trên ứng dụng di động.
+Bạn là Gia sư Tiếng Anh AI thông minh (LexiVT XAI) hỗ trợ học viên Việt Nam trên điện thoại.
+${xaiBlock}
+Hãy hiểu ĐÚNG Ý ĐỊNH của học viên (KỂ CẢ KHI HỌ GÕ TIẾNG VIỆT KHÔNG DẤU như "thi qua khu" = Thì quá khứ, "hien tai don" = Thì hiện tại đơn, "cau bi dong" = Câu bị động, "cau dieu kien" = Câu điều kiện...):
 
-Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trên CÁCH HỌC VIÊN HỎI:
+📘 TRƯỜNG HỢP 1: HỎI NGỮ PHÁP / CHỦ ĐIỂM TIẾNG ANH (ví dụ: "thi qua khu", "hiện tại hoàn thành", "phân biệt a/an/the", "câu bị động"...)
+-> Giải thích rõ ràng, dễ hiểu trên điện thoại bằng gạch đầu dòng ngắn:
+- **Công thức:** Khẳng định / Phủ định / Nghi vấn (ngắn gọn).
+- **Cách dùng & Dấu hiệu nhận biết:** 2–3 ý cốt lõi nhất.
+- **Ví dụ:** 2 câu ví dụ kèm dịch tiếng Việt. Nếu học viên có danh sách *từ vựng hay sai / dễ quên* ở trên, hãy chủ động lồng 1 từ vào ví dụ một cách tự nhiên và thêm 1 dòng nhỏ: *💡 Ôn kèm từ bạn hay nhầm: **[từ]***.
 
-⚡ TRƯỜNG HỢP 1: HỎI NHANH / TRA TỪ (Học viên chỉ gõ 1 từ, hoặc hỏi ngắn gọn "nghĩa của từ X")
--> Phải trả lời SIÊU NGẮN GỌN trong đúng 3 dòng:
-- Dòng 1: **[Từ vựng]** (Phiên âm) -> Nghĩa tiếng Việt.
-- Dòng 2: Loại từ + Giải thích thêm cực ngắn (nếu có đa nghĩa).
-- Dòng 3: *Ví dụ:* 1 câu tiếng Anh ngắn (kèm dịch nghĩa tiếng Việt).
+⚡ TRƯỜNG HỢP 2: TRA TỪ VỰNG TIẾNG ANH (CHỈ áp dụng khi học viên gõ từ/cụm từ tiếng Anh hoặc hỏi rõ "nghĩa của từ X")
+-> Trả lời gọn 3 dòng:
+- **[Từ vựng]** /phiên âm/ → Nghĩa tiếng Việt.
+- Loại từ + giải thích sắc thái cực ngắn.
+- *Ví dụ:* 1 câu tiếng Anh ngắn (kèm dịch tiếng Việt).
 
-📖 TRƯỜNG HỢP 2: YÊU CẦU CHI TIẾT (Học viên có các từ "giải thích chi tiết", "phân biệt", "cách dùng", hoặc hỏi ngữ pháp phức tạp)
--> Phải giải thích CẶN KẼ, CÓ CHIỀU SÂU nhưng TRÌNH BÀY DỄ NHÌN:
-- Cấu trúc: Dùng các gạch đầu dòng (-), in đậm (**) để phân chia ý. 
-- Nội dung: Giải thích quy tắc, sắc thái ý nghĩa (trang trọng/suồng sã), hoặc ngữ cảnh sử dụng.
-- Phân biệt: Chủ động so sánh với các từ/cấu trúc dễ nhầm lẫn nếu thấy cần thiết.
-- Ví dụ: Cung cấp ít nhất 2-3 câu ví dụ đa dạng (kèm dịch nghĩa).
+🧠 TRƯỜNG HỢP 3: HỎI VỀ NĂNG LỰC, ĐIỂM YẾU, HOẶC GỢI Ý ÔN TẬP (ví dụ: "mình đang yếu gì?", "hôm nay nên học gì?", "đánh giá giúp mình")
+-> Dựa trực tiếp vào HỒ SƠ HỌC TẬP & XAI ở trên để phân tích ngắn gọn, thân thiện (không dùng thuật ngữ kỹ thuật như 'SHAP') và đưa ra 1–2 việc cần làm ngay.
 
-🚫 QUY TẮC BẮT BUỘC CHUNG:
-- Tuyệt đối KHÔNG chào hỏi rườm rà (Không viết: "Chào bạn", "Tuyệt quá", "Tôi sẽ giúp bạn..."). Đập ngay vào trọng tâm.
-- Không viết những đoạn văn bản dài liền mạch. Bắt buộc ngắt dòng ngắn để tối ưu việc đọc trên màn hình điện thoại nhỏ.
+🚫 QUY TẮC BẮT BUỘC:
+- KHÔNG chào hỏi rườm rà, đi thẳng vào trọng tâm.
+- Ngắt dòng ngắn, dùng **in đậm** và gạch đầu dòng để dễ đọc trên màn hình điện thoại.
 `;
 
     // ==========================================
@@ -81,6 +94,10 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
     // ==========================================
     console.log("⚠️ TOÀN BỘ SERVER GEMINI ĐÃ SẬP! Kích hoạt máy chủ dự phòng Groq (Llama 3)...");
     
+    if (!groq) {
+        throw new Error("Hệ thống Gemini đang bận và máy chủ dự phòng Groq chưa được cấu hình (GROQ_API_KEY).");
+    }
+
     try {
         // CHUẨN BỊ MẢNG TIN NHẮN CHO GROQ
         const groqMessages = [
@@ -98,13 +115,23 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
         // Cuối cùng đẩy câu hỏi mới nhất của User vào
         groqMessages.push({ role: "user", content: userMessage });
 
-        const chatCompletion = await groq.chat.completions.create({
-            messages: groqMessages,
-            model: "llama3-8b-8192", // Model nhẹ, siêu tốc độ của Llama 3
-        });
-
-        console.log("✅ Groq Llama 3 đã cứu giá thành công!");
-        return chatCompletion.choices[0].message.content;
+        const groqModels = [
+            process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile"
+        ];
+        for (const groqModel of groqModels) {
+            try {
+                const chatCompletion = await groq.chat.completions.create({
+                    messages: groqMessages,
+                    model: groqModel,
+                });
+                console.log(`✅ Groq (${groqModel}) đã cứu giá thành công!`);
+                return chatCompletion.choices[0].message.content;
+            } catch (mErr) {
+                console.warn(`⚠️ Groq model ${groqModel} thất bại:`, mErr.message);
+            }
+        }
+        throw new Error("Tất cả model Groq dự phòng đều không phản hồi.");
 
     } catch (groqError) {
         console.error("❌ Cả Google và Groq đều sập!");
@@ -118,9 +145,11 @@ Hãy ĐIỀU CHỈNH ĐỘ DÀI VÀ CHI TIẾT của câu trả lời dựa trê
 exports.generateRoadmapJSON = async (target, currentLevel, freeTime, xaiContext = null) => {
     const xaiBlock = xaiContext ? `
 HỒ SƠ HÀNH VI & PHÂN TÍCH XAI (SHAP) THỰC TẾ CỦA HỌC VIÊN:
+- Tên học viên: ${xaiContext.userName || "Học viên"} (Cấp ${xaiContext.level || 1}, Chuỗi ${xaiContext.streakDays || 0} ngày liên tiếp)
+- Mong muốn cụ thể của học viên: ${xaiContext.expectation || "Không có ghi chú thêm"}
 - Xác suất làm đúng dự kiến hiện tại: ${xaiContext.predictedAccuracy}%
 - Các chủ đề yếu cần ưu tiên: ${(xaiContext.weakCategories || []).join(", ") || "Chưa có dữ liệu"}
-- Các từ vựng hay làm sai gần đây: ${(xaiContext.weakWords || []).slice(0, 8).join(", ") || "Chưa có"}
+- Các từ vựng dễ quên / hay sai gần đây: ${(xaiContext.weakWords || []).slice(0, 8).join(", ") || "Chưa có"}
 - Top yếu tố rủi ro từ SHAP: ${(xaiContext.negativeFactors || []).join("; ") || "Chưa phát hiện rủi ro lớn"}
 ` : "";
 
@@ -131,7 +160,11 @@ Học viên có thông tin sau:
 - Trình độ hiện tại: ${currentLevel}
 - Thời gian rảnh: ${freeTime}
 ${xaiBlock}
-Hãy tạo một lộ trình học tập cá nhân hóa gồm 4 chặng (steps), ưu tiên khắc phục trực tiếp các điểm yếu/rủi ro SHAP ở trên.
+Hãy tạo một lộ trình học tập cá nhân hóa gồm 4 chặng (steps) đi sâu ĐÚNG VÀO CHỦ ĐỀ/MỤC TIÊU "${target}" (TUYỆT ĐỐI không dùng các từ chung chung vô nghĩa như "Tất cả" hay "Tổng hợp" trong tên chặng):
+- Chặng 1: Từ vựng nền tảng cốt lõi của chủ đề "${target}".
+- Chặng 2: Cụm từ & tình huống ngữ cảnh thực tế của chủ đề "${target}".
+- Chặng 3: Vá các từ vựng dễ quên & khắc phục trực tiếp rủi ro SHAP/Ebbinghaus của học viên.
+- Chặng 4: Kiểm tra tổng hợp (Mastery Test) & phản xạ nâng cao cho chủ đề "${target}".
 BẮT BUỘC trả về ĐÚNG định dạng JSON dưới đây, không kèm text giải thích, không dùng markdown (\`\`\`json):
 {
   "motivationMessage": "Một câu động viên ngắn gọn, truyền cảm hứng dựa trên mục tiêu và hồ sơ hành vi của họ",

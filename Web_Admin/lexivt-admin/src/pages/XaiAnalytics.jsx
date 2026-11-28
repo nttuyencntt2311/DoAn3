@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { BrainCircuit, AlertTriangle, Users, TrendingUp, RefreshCw } from "lucide-react";
+import { BrainCircuit, AlertTriangle, Users, TrendingUp, RefreshCw, Download, Search } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { adminFetch } from "../utils/adminApi";
 
 export default function XaiAnalytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [riskFilter, setRiskFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchXaiAnalytics();
@@ -16,11 +18,7 @@ export default function XaiAnalytics() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/stats/xai-analytics`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
+      const response = await adminFetch("/api/stats/xai-analytics");
       if (!response.ok) {
         throw new Error(`Lỗi máy chủ (${response.status})`);
       }
@@ -58,6 +56,42 @@ export default function XaiAnalytics() {
 
   const importance = data?.globalImportance || [];
   const students = data?.atRiskStudents || [];
+  const filteredStudents = students.filter((st) => {
+    const matchRisk = riskFilter === "All" || st.risk_level === riskFilter;
+    const q = searchQuery.trim().toLowerCase();
+    const matchSearch =
+      !q ||
+      (st.name || "").toLowerCase().includes(q) ||
+      (st.email || "").toLowerCase().includes(q) ||
+      (st.top_risk_driver || "").toLowerCase().includes(q);
+    return matchRisk && matchSearch;
+  });
+
+  const handleExportCsv = () => {
+    if (filteredStudents.length === 0) {
+      alert("Không có dữ liệu học viên để xuất CSV.");
+      return;
+    }
+    const headers = ["Họ tên", "Email", "Xác suất dự kiến (%)", "Mức rủi ro", "Nguyên nhân SHAP hàng đầu"];
+    const escapeCell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = filteredStudents.map((st) => [
+      escapeCell(st.name),
+      escapeCell(st.email),
+      escapeCell(st.predicted_accuracy),
+      escapeCell(st.risk_level),
+      escapeCell(st.top_risk_driver),
+    ].join(","));
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `lexivt_xai_at_risk_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
   const summary = data?.summary || { studentsAnalyzed: 0, atRiskCount: 0, avgPredictedAccuracy: 0 };
 
   return (
@@ -146,10 +180,39 @@ export default function XaiAnalytics() {
 
       {/* At-Risk Students Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200 bg-gray-50/50">
+        <div className="p-6 border-b border-gray-200 bg-gray-50/50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <h2 className="text-lg font-bold text-gray-800">
-            Danh sách Học viên cần hỗ trợ sớm (At-Risk Students — Xếp theo rủi ro)
+            Danh sách Học viên cần hỗ trợ sớm ({filteredStudents.length}/{students.length})
           </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm tên, email, nguyên nhân..."
+                className="pl-9 pr-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+              className="text-sm bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="All">Tất cả mức rủi ro</option>
+              <option value="Cao">Rủi ro Cao (&lt;45%)</option>
+              <option value="Trung bình">Trung bình (45–64%)</option>
+              <option value="Thấp">Thấp (≥65%)</option>
+            </select>
+            <button
+              onClick={handleExportCsv}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 text-sm font-medium transition-colors"
+            >
+              <Download size={16} />
+              Xuất CSV
+            </button>
+          </div>
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
@@ -161,8 +224,8 @@ export default function XaiAnalytics() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {students.length > 0 ? (
-              students.map((st) => (
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map((st) => (
                 <tr key={st.user_id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <p className="font-semibold text-gray-800">{st.name}</p>
